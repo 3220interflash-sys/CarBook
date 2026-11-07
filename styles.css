@@ -1,6 +1,7 @@
 /* CarBook styles. Design tokens first; change colours and fonts here only.
    Look: clean white screens, green for the brand and actions, golden (goldfish) yellow as the highlight.
    Red means "needs attention now", amber means "coming up soon", always with a word, never colour alone.
+   Always light: the owner chose a white look, so the app does not switch to dark mode.
    Layout: one column, simple bordered lists, a white tab bar, one yellow add button. */
 :root {
   --bg: #FFFFFF;
@@ -23,24 +24,6 @@
   --r: 16px;
   --tap: 48px;
   color-scheme: light;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0F1412; --surface: #161D1A; --surface-2: #1E2622; --fg: #EEF3F0; --mut: #9BA8A1; --line: #26302B;
-    --green: #4BD892; --green-ink: #5EE0A0; --green-tint: #12301F; --on-green: #062016;
-    --yellow: #FFD24D; --yellow-tint: #332B10; --on-yellow: #2A2000;
-    --red: #FF8A80; --red-tint: #3A1E1B; --amber: #FFB35C; --amber-tint: #382711;
-    --cat-doc: #22A077; --cat-service: #5F8CEB; --cat-warranty: #C07A30;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0F1412; --surface: #161D1A; --surface-2: #1E2622; --fg: #EEF3F0; --mut: #9BA8A1; --line: #26302B;
-  --green: #4BD892; --green-ink: #5EE0A0; --green-tint: #12301F; --on-green: #062016;
-  --yellow: #FFD24D; --yellow-tint: #332B10; --on-yellow: #2A2000;
-  --red: #FF8A80; --red-tint: #3A1E1B; --amber: #FFB35C; --amber-tint: #382711;
-  --cat-doc: #22A077; --cat-service: #5F8CEB; --cat-warranty: #C07A30;
-  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -100,10 +83,6 @@ p { margin: 0; }
 .tag.bad { background: var(--red-tint); color: var(--red); } .tag.warn { background: var(--amber-tint); color: var(--amber); }
 .tag.ok { background: var(--green-tint); color: var(--green-ink); } .tag.none { background: var(--surface-2); color: var(--mut); }
 .year .date { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--yellow-tint); color: var(--on-yellow); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.05; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .year .date { color: var(--yellow); } }
-:root[data-theme="dark"] .year .date { color: var(--yellow); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .vchev { color: var(--yellow); } }
-:root[data-theme="dark"] .vchev { color: var(--yellow); }
 .year .date b { font-size: 17px; }
 .year .date span { font-size: 11.5px; font-weight: 600; }
 .link-btn { display: inline-flex; align-items: center; gap: 6px; min-height: var(--tap); padding: 0 4px; margin-top: 4px; background: none; border: 0; color: var(--green-ink); font-weight: 700; }

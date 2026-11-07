@@ -29,7 +29,7 @@ The app is for owners who are not vehicle experts and want to know they are doin
 - White background. Green (`--green`) for the brand and main actions; goldfish yellow (`--yellow`) as the highlight (add button, dates, the car card). Red means needs attention now, amber means coming up soon, green means on track, always with a word next to the colour.
 - Four tabs: Home (status, to do, year ahead), My car (papers, maintenance, records, settings), Money (fuel and spending), Ask. One yellow + button adds anything.
 - Lists show only a name and a status. Everything else (mileage, cost, garage, oil grade) lives in the detail sheet that opens on tap. Every item's detail explains what it is and what to do in plain language (`about_*` and `todo_*` in `strings.js`).
-- Plus Jakarta Sans for everything (system fonts are the offline fallback). Flat bordered lists, no gradients or decorative shadows. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Light and dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
+- Plus Jakarta Sans for everything (system fonts are the offline fallback). Flat bordered lists, no gradients or decorative shadows. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Always light (white): the owner chose this, so there is no dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
 
 ## Next steps, in order
 1. Sinhala and Tamil translations. Text is now in `strings.js`; fill in the `si` and `ta` blocks and have a native speaker check them. A language shows in the picker once it has a `langName`.
