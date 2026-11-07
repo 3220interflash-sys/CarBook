@@ -1,0 +1,44 @@
+{
+  "name": "CarBook",
+  "short_name": "CarBook",
+  "description": "Deadlines, service records and fuel for your vehicle.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#EDF3EF",
+  "theme_color": "#EDF3EF",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "id": "./",
+  "lang": "en",
+  "orientation": "portrait",
+  "categories": [
+    "auto",
+    "productivity",
+    "lifestyle"
+  ]
+}
