@@ -377,6 +377,7 @@ function viewToday(v) {
   <h2>${esc(t('yourData'))}</h2>
   <div class="small mut" style="margin-bottom:10px">${esc(t('dataNote'))}</div>
   <div class="actions" style="margin-top:0"><button class="btn quiet" data-act="export">${esc(t('export'))}</button><button class="btn quiet" data-act="import">${esc(t('import'))}</button></div>
+  <p class="small" style="margin:14px 4px 0"><a href="privacy.html" style="color:var(--accent);font-weight:700">${esc(t('privacyPolicy'))}</a></p>
   <input type="file" id="imp" accept="application/json" hidden>`;
 }
 

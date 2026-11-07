@@ -190,6 +190,7 @@ const STRINGS = {
     replace: 'Replace',
     notExport: 'That file is not a CarBook export.',
     language: 'Language',
+    privacyPolicy: 'Privacy policy',
 
     // fuel
     avgPrice: 'average price per litre',
