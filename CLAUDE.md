@@ -13,7 +13,9 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 - `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-*.png`: make it installable and work offline. After changing any app file, bump `VERSION` in `sw.js` so phones pick up the new copy. A new file must also be added to `FILES` there
 
 ## Product rules
-- **Phase 1 (now):** document vault with expiry reminders, fuel log, service log with oil details, component condition, "Ask" questions for the mechanic, cost summary.
+- **Phase 1 (now):** five tabs. Today (value tiles and the next-up card), Reminders (focus cards, a 12-month roadmap of renewals, warranty ends and estimated service dates, and the document list), Fuel (periods from 1 month to 5 years with spend and price-per-litre charts, compared with the period before), Service (condition and history), Ask (a chat about the owner's records, plus questions for the mechanic).
+- Estimated service dates use the owner's average km per day from the last year of records. Always label them "estimated".
+- Comparisons with an earlier period only show when the records cover all of that period.
 - **Phase 2 (later):** selective sharing, verification levels, garage-confirmed entries, maintenance score, buyer tools.
 - Deadlines cascade: emission test, then insurance, then revenue licence. Electric and hybrid vehicles are exempt from the emission test.
 - Intervals in `INTERVALS` are defaults only. The owner's manual comes first. Never state invented specs as fact.
@@ -37,3 +39,5 @@ Friendly, modern and relaxed, not corporate. Soft mint background, rounded white
 - Data is stored only on this device. Clearing browser data erases it. Export regularly until cloud backup exists.
 - No automatic photo reading yet. Fields are typed by hand.
 - Fuel economy assumes the tank is filled each time.
+- The Ask chat gives real AI answers only inside the claude.ai preview, which lets a page ask Claude. Everywhere else it answers common questions from the records with simple rules (`localAnswer` in `app.js`). Real AI everywhere needs the small CarBook server from step 3; keep `AI_RULES` as its instructions.
+- Chart colours for roadmap categories (`--cat-*` in `styles.css`) were checked for colour blindness. Re-check them if you change them.
