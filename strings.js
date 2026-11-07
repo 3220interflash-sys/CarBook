@@ -335,7 +335,7 @@ const STRINGS = {
     sugPrice: 'How has the price per litre changed?',
     send: 'Send',
     stop: 'Stop',
-    newChat: 'Start a new chat',
+    newChat: 'New chat',
     thinking: 'Thinking…',
     srcAI: 'AI answer from your records',
     srcLocal: 'Worked out from your records',
@@ -449,6 +449,34 @@ const STRINGS = {
     todo_tyres: 'Ask a tyre shop to check the tread depth and the tyre’s age, printed as a date code on the side.',
     about_plugs: 'Spark plugs light the fuel inside a petrol engine. Worn plugs waste fuel and make starting harder.',
     todo_plugs: 'Ask about replacing them at the distance your owner’s manual gives.',
+
+    // home banner and cards
+    heroNow: 'Needs your attention now',
+    heroSoon: 'Coming up soon',
+    heroNext: 'Next up. You’re on track',
+    heroWhatToDo: 'What to do',
+    heroSetupLabel: 'Welcome',
+    heroSetupTitle: 'Let’s set up your car',
+    heroSetupBtn: 'Add your first record',
+    seeAll: 'See all',
+    atAGlance: 'At a glance',
+    finishSetupCount: n => `${n} ${n === 1 ? 'thing' : 'things'} to add for full reminders`,
+
+    // wheel alignment
+    'svc_Wheel alignment': 'Wheel alignment',
+    about_alignment: 'Wheel alignment sets the angle of the wheels so the car drives straight. When it is off, tyres wear unevenly and the car can pull to one side.',
+    todo_alignment: 'Have it checked as often as your owner’s manual or tyre shop suggests, after hitting a big pothole, or if the steering wheel is not straight. CarBook uses a default of every 10,000 km or 12 months.',
+
+    // chat screen
+    assistantName: 'CarBook assistant',
+    assistantSubAI: 'Answers from your records',
+    assistantSubLocal: 'Quick answers from your records',
+    chatHello: name => `Hi! I know everything you’ve logged for ${name}. Ask me about deadlines, services or spending.`,
+    sugMechanic: 'Questions for my mechanic',
+    mechIntro: 'Here’s what to ask at the garage, based on your records:',
+    mechSheetTitle: 'Questions for your mechanic',
+    askHeroTitle: 'Ask me about your car',
+    askHeroSub: 'Deadlines, services, fuel and spending. Tap a question below or type your own.',
 
     // example data
     exampleBatteryWarranty: 'Battery warranty',

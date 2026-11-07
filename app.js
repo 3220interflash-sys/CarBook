@@ -78,14 +78,15 @@ const INTERVALS = {
   battery: { soonYears: 3, dueYears: 4.5 },
   brakes: { km: 30000 },
   tyres: { km: 40000, years: 5 },
-  plugs: { km: 30000 }
+  plugs: { km: 30000 },
+  alignment: { km: 10000, months: 12 }
 };
 // Stored values. Labels come from strings.js.
 const DOC_KINDS = ['emission', 'insurance', 'revenue', 'driving', 'warranty', 'other'];
 const HINTED = ['emission', 'insurance', 'revenue'];
 const VEHICLE_TYPES = ['Car', 'Motorbike', 'Three-wheeler', 'Van'];
 const FUELS = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
-const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Battery', 'Spark plugs', 'Other'];
+const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Wheel alignment', 'Battery', 'Spark plugs', 'Other'];
 const PARTS = ['Genuine', 'Aftermarket', 'Used'];
 const FILTERS = ['Changed', 'Not changed'];
 
@@ -220,6 +221,13 @@ function reminders(v) {
     out.push({ key: 'battery', cat: 'service', title: t('batteryReplace'), sub: age, date: replDate, days: daysTo(replDate), kmLeft: null, est: false,
       s: yrs >= INTERVALS.battery.dueYears ? 'bad' : urgency(daysTo(replDate), null), act: 'addService', kind: 'Battery' });
   }
+  // wheel alignment: by distance or months, whichever comes first (defaults)
+  const al = lastService(v, 'Wheel alignment');
+  if (al) {
+    const byDate = addMonthsISO(al.date, INTERVALS.alignment.months), kmLeft = al.odo + INTERVALS.alignment.km - v.odo, byKmDate = kmDate(kmLeft);
+    const byKm = !!byKmDate && byKmDate < byDate, date = byKm ? byKmDate : byDate;
+    out.push({ key: 'alignment', cat: 'service', title: label('svc_', 'Wheel alignment'), sub: '', date, days: daysTo(date), kmLeft, byKm, est: byKm, s: urgency(daysTo(byDate), kmLeft), act: 'addService', kind: 'Wheel alignment' });
+  }
   // by distance (and tyre age)
   [['Brake pads', INTERVALS.brakes.km], ['Tyres', INTERVALS.tyres.km], ['Spark plugs', INTERVALS.plugs.km]].forEach(([kind, km]) => {
     if (kind === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) return;
@@ -297,7 +305,15 @@ const ICONS = {
   chev: '<path d="M9 6l6 6-6 6"/>',
   doc: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
   shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
-  oil: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  oil: '<path d="M3 10.5h8.5l2.5 2.5h3.5l3-3v6.5a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3z"/><path d="M7 10.5V8h4M8 8V6.5h2M20.5 5.5c0 1.2.9 1.7.9 2.6a.9.9 0 0 1-1.8 0c0-.9.9-1.4.9-2.6z"/>',
+  smoke: '<path d="M7 18.5h10a4 4 0 0 0 .6-8 6 6 0 0 0-11.4-1A4.5 4.5 0 0 0 7 18.5z"/><path d="M9.5 13.5l2 2 3.5-3.5"/>',
+  disc: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="5.5"/><path d="M10 11h4M10.5 13.5h3"/>',
+  idcard: '<rect x="3" y="5.5" width="18" height="13" rx="2"/><circle cx="8.5" cy="11" r="2"/><path d="M5.8 15.8c.6-1.2 1.5-1.8 2.7-1.8s2.1.6 2.7 1.8M14 10h4M14 13h3"/>',
+  ribbon: '<circle cx="12" cy="9" r="5.5"/><path d="M9 13.8L8 21l4-2 4 2-1-7.2"/><path d="M10 9l1.4 1.4L14 7.8"/>',
+  align: '<circle cx="12" cy="12" r="5.5"/><circle cx="12" cy="12" r="1.8"/><path d="M12 6.5v3.7M12 13.8v3.7M1.5 12h3M19.5 12h3M3.5 9.5L1.5 12l2 2.5M20.5 9.5l2 2.5-2 2.5"/>',
+  spark: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 1.8 1.8.7-1.8.7L19 21l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  send: '<path d="M4 12l16-8-6 16-2.5-6.5z"/><path d="M11.5 13.5L20 4"/>',
+  bot: '<rect x="4" y="7" width="16" height="12" rx="4"/><path d="M12 7V4M9 12.5h.01M15 12.5h.01M9.5 16h5"/>',
   battery: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2M7 12h4M9 10v4"/>',
   brake: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3"/>',
   tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v4.5M12 16v4.5M3.5 12H8M16 12h4.5"/>',
@@ -390,8 +406,8 @@ async function sendChat(text) {
   }
   reply.pending = false; chatBusy = false; chatCtl = null; render(); scrollChat();
 }
-function paintBubble(i) { const el = document.querySelector(`[data-bubble="${i}"]`); if (el) el.textContent = chat[i].text; scrollChat(); }
-function scrollChat() { const box = $('#chatlog'); if (box) box.scrollTop = box.scrollHeight; }
+function paintBubble(i) { const el = document.querySelector(`[data-bubble="${i}"]`); if (el) el.textContent = chat[i].text; else render(); scrollChat(); }
+function scrollChat() { if (tab === 'ask') { const c = $('#composer'); if (c) window.scrollTo(0, document.body.scrollHeight); } }
 // ---------- sheets ----------
 const dlg = $('#dlg');
 function sheet(title, body, onSave, opts = {}) {
@@ -562,13 +578,15 @@ function addExample() {
   svc('Brake pads', -560, 37200, 11500);
   svc('Tyres', -640, 35100, 76000);
   svc('Spark plugs', -980, 24800, 6400);
+  svc('Wheel alignment', -300, 43700, 3500, { part: '' });
   save();
 }
 
 // ---------- items: one list of everything to keep on track ----------
-const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs' };
-const KIND_ICON = { emission: 'doc', insurance: 'doc', revenue: 'doc', driving: 'doc', other: 'doc', warranty: 'shield', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug' };
-const maintKinds = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Spark plugs'].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')));
+const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment' };
+const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align' };
+const iconOf = x => svg(ICONS[KIND_ICON[x.kind] || 'doc']);
+const maintKinds = v => ['Oil change', 'Tyres', 'Wheel alignment', 'Battery', 'Brake pads', 'Spark plugs'].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')));
 
 // Reminders plus a "no record yet" item for any maintenance part with no history.
 function allItems(v) {
@@ -593,7 +611,7 @@ const tag = s => `<span class="tag ${s}">${esc(t(TAG[s]))}</span>`;
 
 function itemRow(x, extra = '') {
   return `<li><button class="item" data-act="detail" data-key="${esc(x.key)}">
-    <span class="ic ${x.s}">${svg(ICONS[KIND_ICON[x.kind] || 'doc'])}</span>
+    <span class="ic ${x.s}">${iconOf(x)}</span>
     <span class="it"><span class="t">${esc(x.title)}</span><span class="s">${esc(extra || whenText(x))}</span></span>
     ${tag(x.s)}<span class="chev">${svg(ICONS.chev)}</span></button></li>`;
 }
@@ -620,34 +638,34 @@ function viewOnboard() {
 }
 
 function viewHome(v) {
-  const R = allItems(v), urgent = R.filter(x => x.s === 'bad'), soon = R.filter(x => x.s === 'warn'), missing = R.filter(x => x.s === 'none');
-  const tone = urgent.length ? 'bad' : soon.length ? 'warn' : 'ok';
-  const headline = urgent.length ? t('homeBad', urgent.length) : soon.length ? t('homeWarn', soon.length) : t('homeOk');
-  const todo = [...urgent, ...soon];
-  // next 12 months, dated items only
-  const horizon = addMonthsISO(todayISO(), 12);
-  const year = R.filter(x => x.date && x.days >= 0 && x.date <= horizon).sort((a, b) => a.date.localeCompare(b.date));
-  const shown = showYear ? year : year.slice(0, 5);
+  const R = allItems(v), active = R.filter(x => x.s !== 'none'), missing = R.filter(x => x.s === 'none');
+  const hero = active[0], next = active.slice(1, 8);
   const now = new Date(todayISO() + 'T00:00'), mStart = isoOf(new Date(now.getFullYear(), now.getMonth(), 1));
   const month = fuelStats(v, mStart, addDaysISO(todayISO(), 1));
+  const worst = list => list.some(x => x.s === 'bad') ? 'bad' : list.some(x => x.s === 'warn') ? 'warn' : 'ok';
+  const papers = active.filter(x => x.cat !== 'service'), maint = active.filter(x => x.cat === 'service');
+  let heroHtml;
+  if (!hero) heroHtml = `<section class="hero setup"><div class="hero-art">${svg(ICONS.car)}</div><div class="hero-txt"><p class="hero-label">${esc(t('heroSetupLabel'))}</p><p class="hero-title">${esc(t('heroSetupTitle'))}</p></div><button class="hero-btn" data-act="add">${esc(t('heroSetupBtn'))}</button></section>`;
+  else {
+    const val = valueOf(hero);
+    heroHtml = `<section class="hero ${hero.s}">
+      <p class="hero-label">${esc(t(hero.s === 'bad' ? 'heroNow' : hero.s === 'warn' ? 'heroSoon' : 'heroNext'))}</p>
+      <div class="hero-row"><div class="hero-art">${iconOf(hero)}</div>
+        <div class="hero-txt"><p class="hero-title">${esc(hero.title)}</p><p class="hero-val">${esc(val.big)}${val.unit ? `<small>${esc(val.unit)}</small>` : ''}</p>${val.small ? `<p class="hero-when">${esc(val.small)}${hero.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div></div>
+      <button class="hero-btn" data-act="detail" data-key="${esc(hero.key)}">${esc(t('heroWhatToDo'))}</button></section>`;
+  }
+  const card = x => { const val = valueOf(x); return `<button class="mini ${x.s}" data-act="detail" data-key="${esc(x.key)}"><span class="mini-ic">${iconOf(x)}</span><span class="mini-t">${esc(x.title)}</span><span class="mini-v">${esc(val.big)}${val.unit ? ` <small>${esc(val.unit)}</small>` : ''}</span>${tag(x.s)}</button>`; };
+  const tile = (icon, label, value, extra, attrs) => `<button class="glance" ${attrs}><span class="g-ic">${svg(ICONS[icon])}</span><span class="g-v">${value}</span><span class="g-l">${esc(label)}</span>${extra || ''}</button>`;
   return `${header(v)}
-  <section class="status ${tone}">
-    <div class="status-ic">${svg(tone === 'ok' ? '<path d="M5 12l5 5 9-10"/>' : '<path d="M12 7v6M12 16.5v.5"/>')}</div>
-    <div><p class="status-h">${esc(headline)}</p><p class="status-s">${esc(t(todo.length ? 'homeTapHint' : 'homeOkSub'))}</p></div>
-  </section>
-  ${todo.length ? `<h2>${esc(t('needsAttention'))}</h2><ul class="list">${todo.map(x => itemRow(x)).join('')}</ul>` : ''}
-  ${missing.length ? `<h2>${esc(t('finishSetup'))}</h2><p class="hint">${esc(t('finishSetupSub'))}</p><ul class="list">${missing.map(x => itemRow(x, t('addToTrack'))).join('')}</ul>` : ''}
-  <h2>${esc(t('yearAhead'))}</h2>
-  ${year.length ? `<ul class="list year">${shown.map(x => `<li><button class="item" data-act="detail" data-key="${esc(x.key)}">
-      <span class="date"><b>${new Date(x.date + 'T00:00').getDate()}</b><span>${esc(new Date(x.date + 'T00:00').toLocaleDateString(loc(), { month: 'short' }))}</span></span>
-      <span class="it"><span class="t">${esc(x.title)}</span><span class="s">${esc(whenText(x))}${x.est ? ' · ' + esc(t('estimated')) : ''}</span></span>
-      <span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
-    ${year.length > 5 ? `<button class="link-btn" data-act="toggleYear">${esc(showYear ? t('showLess') : t('showAllYear', year.length))}</button>` : ''}`
-    : `<p class="hint">${esc(t('roadEmpty'))}</p>`}
-  <h2>${esc(t('thisMonth'))}</h2>
-  <div class="stats">
-    <button class="stat" data-tab="money"><span class="n">${esc(t('rs', n0(month.spent)))}</span><span class="l">${esc(t('fuelThisMonth'))}</span></button>
-    <button class="stat" data-act="odo"><span class="n">${n0(v.odo)}<small>${esc(t('km'))}</small></span><span class="l">${esc(t('odoTapUpdate'))}</span></button>
+  ${heroHtml}
+  ${next.length ? `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div><div class="cards" role="list">${next.map(card).join('')}</div>` : ''}
+  ${missing.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missing.slice(0, 4).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('finishSetupCount', missing.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}
+  <h2>${esc(t('atAGlance'))}</h2>
+  <div class="glances">
+    ${tile('doc', t('papers'), esc(String(papers.length)), tag(worst(papers)), 'data-tab="car"')}
+    ${tile('wrench', t('maintenance'), esc(String(maint.length)), tag(worst(maint)), 'data-tab="car"')}
+    ${tile('fuel', t('fuelThisMonth'), esc(t('rs', n0(month.spent))), '', 'data-tab="money"')}
+    ${tile('gauge', t('odometerShort'), `${n0(v.odo)}<small> ${esc(t('km'))}</small>`, '', 'data-act="odo"')}
   </div>`;
 }
 
@@ -660,10 +678,10 @@ function viewCar(v) {
     <div class="car-main"><p class="car-name">${esc(v.name)}</p><p class="car-sub">${esc([v.plate, v.year, v.fuel && label('fuel_', v.fuel)].filter(Boolean).join(' · '))}</p></div>
     <button class="link-btn" data-act="editVehicle">${esc(t('edit'))}</button>
   </section>
-  <h2>${esc(t('papers'))}</h2><p class="hint">${esc(t('papersSub'))}</p>
+  <h2>${esc(t('papers'))}</h2>
   <ul class="list">${papers.map(x => itemRow(x)).join('')}</ul>
   <button class="link-btn" data-act="addDoc">${svg(ICONS.plus)}${esc(t('addADocument'))}</button>
-  <h2>${esc(t('maintenance'))}</h2><p class="hint">${esc(t('maintSub'))}</p>
+  <h2>${esc(t('maintenance'))}</h2>
   <ul class="list">${maint.map(x => itemRow(x)).join('')}</ul>
   <h2>${esc(t('records'))}</h2>
   <ul class="list">
@@ -756,26 +774,35 @@ function drawFuelCharts(v) {
 }
 
 function viewAsk(v) {
-  const sugg = ['sugNext', 'sugSpend', 'sugOil', 'sugPrice'];
-  return `${header(v)}
-  <section class="chat">
-    <p class="chat-intro">${esc(t(aiSample ? 'chatIntroAI' : 'chatIntroLocal'))}</p>
+  const sugg = [['sugNext', 'gauge'], ['sugSpend', 'fuel'], ['sugOil', 'oil'], ['sugPrice', 'money']];
+  const bubble = (m, i) => m.role === 'user'
+    ? `<div class="msg me"><div class="bubble"><span data-bubble="${i}">${esc(m.text)}</span></div></div>`
+    : `<div class="msg bot"><span class="avatar">${svg(ICONS.bot)}</span><div class="bubble">${m.list
+        ? `<p>${esc(t('mechIntro'))}</p><ol class="qlist">${m.list.map(q => `<li>${esc(q[0])}</li>`).join('')}</ol><button class="bubble-btn" data-act="mechSheet">${esc(t('showMechanic'))}</button>`
+        : `<span data-bubble="${i}">${m.pending ? `<span class="typing"><i></i><i></i><i></i></span>` : esc(m.text)}</span>`}
+      ${!m.pending ? `<span class="src">${esc(t(m.src === 'ai' ? 'srcAI' : 'srcLocal'))}</span>` : ''}</div></div>`;
+  return `<section class="chat-screen">
+    <header class="chat-head"><span class="avatar big">${svg(ICONS.bot)}</span><div><p class="chat-name">${esc(t('assistantName'))}</p><p class="chat-sub"><i class="dot-on"></i>${esc(t(aiSample ? 'assistantSubAI' : 'assistantSubLocal'))}</p></div>
+      ${chat.length ? `<button class="link-btn" data-act="clearchat">${esc(t('newChat'))}</button>` : ''}</header>
     <div class="chatlog" id="chatlog" aria-live="polite">
-      ${chat.length ? chat.map((m, i) => `<div class="bubble ${m.role === 'user' ? 'me' : 'bot'}"><div data-bubble="${i}">${esc(m.pending ? t('thinking') : m.text)}</div>${m.role === 'assistant' && !m.pending ? `<div class="src">${esc(t(m.src === 'ai' ? 'srcAI' : 'srcLocal'))}</div>` : ''}</div>`).join('')
-        : `<div class="chips">${sugg.map(k => `<button class="chipbtn" data-act="suggest" data-q="${esc(t(k))}">${esc(t(k))}</button>`).join('')}</div>`}
+      ${chat.length ? '' : `<div class="ask-hero"><span class="avatar huge">${svg(ICONS.bot)}</span><p class="ask-hero-t">${esc(t('askHeroTitle'))}</p><p class="ask-hero-s">${esc(t('askHeroSub'))}</p></div>`}
+      <div class="msg bot"><span class="avatar">${svg(ICONS.bot)}</span><div class="bubble">${esc(t('chatHello', v.name))}</div></div>
+      ${chat.map(bubble).join('')}
     </div>
-    <form class="composer" id="composer"><label class="sr" for="chatin">${esc(t('chatPlaceholder'))}</label>
-      <input id="chatin" name="q" autocomplete="off" placeholder="${esc(t('chatPlaceholder'))}" ${chatBusy ? 'disabled' : ''}>
-      ${chatBusy && aiSample ? `<button type="button" class="btn quiet" data-act="stopchat">${esc(t('stop'))}</button>` : `<button class="btn" type="submit" ${chatBusy ? 'disabled' : ''}>${esc(t('send'))}</button>`}</form>
-    ${chat.length ? `<button class="link-btn" data-act="clearchat">${esc(t('newChat'))}</button>` : ''}
-  </section>
-  <p class="hint">${esc(t('chatNote'))}</p>
-  <h2>${esc(t('askTitle'))}</h2>
-  <p class="hint">${esc(t('askIntro'))}</p>
-  <div class="actions"><button class="btn quiet wide" data-act="ask">${esc(t('prepare'))}</button></div>
-  ${asked ? `<div class="${mech ? 'mech' : ''}">${asked.map(x => `<div class="q"><p>${esc(x[0])}</p><p class="basis">${esc(t('basedOn', x[1]))}</p></div>`).join('')}</div>
-  <div class="actions"><button class="btn quiet" data-act="mech">${esc(t(mech ? 'normalSize' : 'showMechanic'))}</button></div>
-  <p class="hint">${esc(t('askDisclaimer'))}</p>` : ''}`;
+    <div class="composer-wrap">
+      <div class="chips" role="list">${chat.length ? '' : sugg.map(([k, ic]) => `<button class="chipbtn" data-act="suggest" data-q="${esc(t(k))}">${svg(ICONS[ic])}${esc(t(k))}</button>`).join('')}<button class="chipbtn" data-act="mechQs">${svg(ICONS.wrench)}${esc(t('sugMechanic'))}</button></div>
+      <form class="composer" id="composer"><label class="sr" for="chatin">${esc(t('chatPlaceholder'))}</label>
+        <input id="chatin" name="q" autocomplete="off" placeholder="${esc(t('chatPlaceholder'))}" ${chatBusy ? 'disabled' : ''}>
+        ${chatBusy && aiSample ? `<button type="button" class="send stop" data-act="stopchat" aria-label="${esc(t('stop'))}"><span class="sq"></span></button>` : `<button class="send" type="submit" aria-label="${esc(t('send'))}" ${chatBusy ? 'disabled' : ''}>${svg(ICONS.send)}</button>`}</form>
+      <p class="chat-note">${esc(t('chatNote'))}</p>
+    </div>
+  </section>`;
+}
+
+// The mechanic questions, shown large so the owner can hand the phone over.
+function mechSheet() {
+  const qs = questions(veh());
+  infoSheet(t('mechSheetTitle'), `<div class="mech">${qs.map(q => `<div class="q"><p>${esc(q[0])}</p><p class="basis">${esc(t('basedOn', q[1]))}</p></div>`).join('')}</div><p class="hint" style="margin-top:12px">${esc(t('askDisclaimer'))}</p>`);
 }
 
 // ---------- detail sheets ----------
@@ -790,7 +817,7 @@ const facts = rows => `<dl class="facts">${rows.filter(r => r && r[1] !== '' && 
 function itemDetail(key) {
   const v = veh(), x = findItem(v, key); if (!x) return;
   const info = KIND_INFO[x.kind] || x.kind, val = valueOf(x);
-  const head = `<div class="d-status ${x.s}">${tag(x.s)}<p class="d-big">${esc(x.s === 'none' ? t('noRecordYet') : val.big)}${val.unit && x.s !== 'none' ? `<small>${esc(val.unit)}</small>` : ''}</p>${x.s !== 'none' && val.small ? `<p class="d-small">${esc(val.small)}${x.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div>`;
+  const head = `<div class="d-status ${x.s}"><div class="d-art">${iconOf(x)}</div><div class="d-txt">${tag(x.s)}<p class="d-big">${esc(x.s === 'none' ? t('noRecordYet') : val.big)}${val.unit && x.s !== 'none' ? `<small>${esc(val.unit)}</small>` : ''}</p>${x.s !== 'none' && val.small ? `<p class="d-small">${esc(val.small)}${x.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div></div>`;
   const explain = `<div class="explain"><h4>${esc(t('whatIsIt'))}</h4><p>${esc(t('about_' + info))}</p><h4>${esc(t('whatToDo'))}</h4><p>${esc(t('todo_' + info))}</p></div>`;
   let body = '', actions = '';
   if (x.cat !== 'service') {
@@ -874,6 +901,8 @@ document.addEventListener('click', e => {
     case 'clearchat': chat = []; return render();
     case 'ask': asked = questions(v); mech = false; return render();
     case 'mech': mech = !mech; return render();
+    case 'mechQs': { const qs = questions(v); chat.push({ role: 'user', text: t('sugMechanic') }, { role: 'assistant', text: t('mechIntro') + '\n' + qs.map(q => '• ' + q[0]).join('\n'), list: qs, src: 'local' }); render(); return scrollChat(); }
+    case 'mechSheet': return mechSheet();
     case 'lang': setLang(el.dataset.lang); if (asked) asked = questions(v); return render();
     case 'export': {
       const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }));

@@ -27,7 +27,8 @@ Every record has `id`, `vid` (vehicle id, separate from any owner), `createdAt`,
 ## Design rules
 The app is for owners who are not vehicle experts and want to know they are doing everything right. Plain words, one clear next step, details only when asked.
 - White background. Green (`--green`) for the brand and main actions; goldfish yellow (`--yellow`) as the highlight (add button, dates, the car card). Red means needs attention now, amber means coming up soon, green means on track, always with a word next to the colour.
-- Four tabs: Home (status, to do, year ahead), My car (papers, maintenance, records, settings), Money (fuel and spending), Ask. One yellow + button adds anything.
+- Four tabs: Home (a big coloured banner for the single most urgent item with its own icon, swipeable cards for what's coming up, at-a-glance tiles), My car (papers, maintenance, records, settings), Money (fuel and spending), Ask (a chat screen with an assistant avatar, bubbles, quick-question chips and a send bar; the mechanic questions are a chip). One yellow + button adds anything.
+- Show, don't write: every item has its own icon (`KIND_ICON` in `app.js`), and screens lead with icons and numbers rather than sentences.
 - Lists show only a name and a status. Everything else (mileage, cost, garage, oil grade) lives in the detail sheet that opens on tap. Every item's detail explains what it is and what to do in plain language (`about_*` and `todo_*` in `strings.js`).
 - Plus Jakarta Sans for everything (system fonts are the offline fallback). Flat bordered lists, no gradients or decorative shadows. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Always light (white): the owner chose this, so there is no dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
 

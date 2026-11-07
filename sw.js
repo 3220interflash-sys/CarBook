@@ -2,7 +2,7 @@
 /* CarBook offline support.
    Keeps a copy of the app's files on the phone so it opens without internet.
    When you change any app file, bump VERSION so phones fetch the new copy. */
-const VERSION = 'carbook-v7';
+const VERSION = 'carbook-v9';
 const FILES = ['./', 'index.html', 'styles.css', 'strings.js', 'app.js', 'manifest.webmanifest', 'icon.svg', 'privacy.html', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 const FONT_CACHE = 'carbook-fonts';
 
