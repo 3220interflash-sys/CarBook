@@ -39,10 +39,10 @@ Car maintenance, Vehicle management, Reminders, Fuel tracker, Expense tracker
 
 ## Contact details
 - Email: [contact email]
-- Website: https://3220interflash-sys.github.io/carbook/
+- Website: https://3220interflash-sys.github.io/CarBook/
 
 ## Privacy policy URL
-https://3220interflash-sys.github.io/carbook/privacy.html
+https://3220interflash-sys.github.io/CarBook/privacy.html
 
 ## Graphics (all in this folder)
 - App icon (512 × 512): app-icon-512.png

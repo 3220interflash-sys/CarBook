@@ -2,7 +2,7 @@
 
 A vehicle ownership companion for Sri Lanka. Owners never miss a deadline, keep every service record, and know what to ask their mechanic.
 
-**Try it:** https://3220interflash-sys.github.io/carbook/
+**Try it:** https://3220interflash-sys.github.io/CarBook/
 
 - Works offline and installs on a phone from the browser.
 - No accounts. Records stay on the owner's device.
