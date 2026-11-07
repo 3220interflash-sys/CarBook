@@ -13,7 +13,7 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 - `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-*.png`: make it installable and work offline. After changing any app file, bump `VERSION` in `sw.js` so phones pick up the new copy. A new file must also be added to `FILES` there
 
 ## Product rules
-- **Phase 1 (now):** five tabs. Today (value tiles and the next-up card), Reminders (focus cards, a 12-month roadmap of renewals, warranty ends and estimated service dates, and the document list), Fuel (periods from 1 month to 5 years with spend and price-per-litre charts, compared with the period before), Service (condition and history), Ask (a chat about the owner's records, plus questions for the mechanic).
+- **Phase 1 (now):** deadlines and renewals, maintenance status with plain explanations, a year-ahead plan with estimated service dates, fuel and spending trends (1 month to 5 years, compared with the period before), service and fuel records, and Ask (a chat about the owner's records, plus questions for the mechanic).
 - Estimated service dates use the owner's average km per day from the last year of records. Always label them "estimated".
 - Comparisons with an earlier period only show when the records cover all of that period.
 - **Phase 2 (later):** selective sharing, verification levels, garage-confirmed entries, maintenance score, buyer tools.
@@ -25,7 +25,11 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 Every record has `id`, `vid` (vehicle id, separate from any owner), `createdAt`, `source` ("owner" for now; later "receipt" and "garage"), and an optional photo. Keep it that way. Never silently overwrite history: add `updatedAt` and, when sharing arrives, an audit trail. Docs, fuel and service records carry `visibility: 'private'`. Renewing a document keeps the old expiry in `history`.
 
 ## Design rules
-Friendly, modern and relaxed, not corporate. Soft mint background, rounded white cards with soft shadows, one green brand colour (from the icon), a bold green "next up" card on Today, colour-coded status pills (green fine, amber soon, red due), a floating tab bar, pill-shaped buttons. Bricolage Grotesque for headings and numbers, DM Sans for text (system fonts are the offline fallback). Sentence case, no all-caps labels, no emoji. Large tap targets (48px or more). Light and dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
+The app is for owners who are not vehicle experts and want to know they are doing everything right. Plain words, one clear next step, details only when asked.
+- White background. Green (`--green`) for the brand and main actions; goldfish yellow (`--yellow`) as the highlight (add button, dates, the car card). Red means needs attention now, amber means coming up soon, green means on track, always with a word next to the colour.
+- Four tabs: Home (status, to do, year ahead), My car (papers, maintenance, records, settings), Money (fuel and spending), Ask. One yellow + button adds anything.
+- Lists show only a name and a status. Everything else (mileage, cost, garage, oil grade) lives in the detail sheet that opens on tap. Every item's detail explains what it is and what to do in plain language (`about_*` and `todo_*` in `strings.js`).
+- Plus Jakarta Sans for everything (system fonts are the offline fallback). Flat bordered lists, no gradients or decorative shadows. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Light and dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
 
 ## Next steps, in order
 1. Sinhala and Tamil translations. Text is now in `strings.js`; fill in the `si` and `ta` blocks and have a native speaker check them. A language shows in the picker once it has a `langName`.
@@ -40,4 +44,4 @@ Friendly, modern and relaxed, not corporate. Soft mint background, rounded white
 - No automatic photo reading yet. Fields are typed by hand.
 - Fuel economy assumes the tank is filled each time.
 - The Ask chat gives real AI answers only inside the claude.ai preview, which lets a page ask Claude. Everywhere else it answers common questions from the records with simple rules (`localAnswer` in `app.js`). Real AI everywhere needs the small CarBook server from step 3; keep `AI_RULES` as its instructions.
-- Chart colours for roadmap categories (`--cat-*` in `styles.css`) were checked for colour blindness. Re-check them if you change them.
+- Status colours were checked for readable contrast in light and dark mode. Re-check them if you change them.

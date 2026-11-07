@@ -286,17 +286,29 @@ function periodData(v, p) {
 }
 
 // ---------- ui state ----------
-let tab = 'today', asked = null, mech = false, period = '6M', fsel = null;
+let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false;
+const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICONS = {
-  today: '<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
-  reminders: '<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  home: '<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
+  car: '<path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/><circle cx="7.5" cy="15" r=".5"/><circle cx="16.5" cy="15" r=".5"/>',
+  money: '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/>',
+  ask: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  chev: '<path d="M9 6l6 6-6 6"/>',
+  doc: '<path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/>',
+  shield: '<path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z"/><path d="M9 12l2 2 4-4"/>',
+  oil: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  battery: '<rect x="3" y="7" width="16" height="10" rx="2"/><path d="M21 11v2M7 12h4M9 10v4"/>',
+  brake: '<circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3"/>',
+  tyre: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4"/><path d="M12 3.5v4.5M12 16v4.5M3.5 12H8M16 12h4.5"/>',
+  plug: '<path d="M13 3L6 13h5l-1 8 7-10h-5z"/>',
   fuel: '<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M5 21h10M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M8 8h4"/>',
-  service: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
-  ask: '<path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/>'
+  wrench: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>',
+  gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
+  gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'
 };
-const TABS = [['today', 'tabToday'], ['reminders', 'tabReminders'], ['fuel', 'tabFuel'], ['service', 'tabService'], ['ask', 'tabAsk']];
+const TABS = [['home', 'tabHome'], ['car', 'tabCar'], ['money', 'tabMoney'], ['ask', 'tabAsk']];
 function toast(m) { const el = $('#toast'); el.textContent = m; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 2400); }
-
 // ---------- assistant ----------
 // Real AI answers where the page can reach Claude (the claude.ai preview).
 // Everywhere else, simple answers worked out from the records. A real AI needs a small CarBook server (roadmap).
@@ -553,10 +565,43 @@ function addExample() {
   save();
 }
 
+// ---------- items: one list of everything to keep on track ----------
+const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs' };
+const KIND_ICON = { emission: 'doc', insurance: 'doc', revenue: 'doc', driving: 'doc', other: 'doc', warranty: 'shield', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug' };
+const maintKinds = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Spark plugs'].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')));
+
+// Reminders plus a "no record yet" item for any maintenance part with no history.
+function allItems(v) {
+  const R = reminders(v);
+  maintKinds(v).forEach(k => { if (!R.some(x => x.kind === k)) R.push({ key: 'none-' + k, cat: 'service', title: label('svc_', k), sub: '', date: null, days: null, kmLeft: null, s: 'none', act: 'addService', kind: k }); });
+  return R;
+}
+const findItem = (v, key) => allItems(v).find(x => x.key === key);
+
+// A short plain status line, e.g. "In 12 days" or "720 km to go".
+function whenText(x) {
+  if (x.s === 'none') return t('noRecordYet');
+  if (x.checkNow) return t('askAtService');
+  const kmFirst = x.kmLeft != null && (x.byKm || x.days == null || x.kmLeft <= 1500);
+  if (kmFirst) return x.kmLeft <= 0 ? t('overByKmShort', n0(-x.kmLeft)) : t('kmToGo', n0(x.kmLeft));
+  if (x.days < 0) return t('overByDaysShort', -x.days);
+  if (x.days === 0) return t('dueToday');
+  return t('inTime', x.days < 60 ? t('days', x.days) : t('months', Math.round(x.days / 30)));
+}
+const TAG = { bad: 'tagNow', warn: 'tagSoon', ok: 'tagOk', none: 'tagAdd' };
+const tag = s => `<span class="tag ${s}">${esc(t(TAG[s]))}</span>`;
+
+function itemRow(x, extra = '') {
+  return `<li><button class="item" data-act="detail" data-key="${esc(x.key)}">
+    <span class="ic ${x.s}">${svg(ICONS[KIND_ICON[x.kind] || 'doc'])}</span>
+    <span class="it"><span class="t">${esc(x.title)}</span><span class="s">${esc(extra || whenText(x))}</span></span>
+    ${tag(x.s)}<span class="chev">${svg(ICONS.chev)}</span></button></li>`;
+}
+
 // ---------- views ----------
 function header(v) {
   const h = new Date().getHours(), hi = t(h < 12 ? 'hiMorning' : h < 17 ? 'hiAfternoon' : 'hiEvening');
-  return `<div class="top"><div class="hello">${esc(hi)}</div><button class="vehicle-btn" data-act="switch" aria-label="${esc(t('switchVehicle'))}"><h1 class="display">${esc(v.name)}</h1><div class="sub">${esc([v.plate, v.year, v.fuel && label('fuel_', v.fuel)].filter(Boolean).join('  ·  '))}</div></button></div>`;
+  return `<header class="top"><button class="vehicle-btn" data-act="switch" aria-label="${esc(t('switchVehicle'))}"><span class="hello">${esc(hi)}</span><span class="vname">${esc(v.name)}<span class="vchev">${svg('<path d="M7 10l5 5 5-5"/>')}</span></span></button></header>`;
 }
 
 // Shown only once a second language has a translation started in strings.js.
@@ -566,139 +611,110 @@ function langPicker() {
 }
 
 function viewOnboard() {
-  const car = '<svg viewBox="0 0 512 512" aria-hidden="true"><path d="M118 300l30-76q8-20 30-20h156q22 0 30 20l30 76v62q0 12-12 12h-30q-12 0-12-12v-18H172v18q0 12-12 12h-30q-12 0-12-12z" fill="none" stroke="#fff" stroke-width="26" stroke-linejoin="round"/><circle cx="176" cy="302" r="18" fill="#fff"/><circle cx="336" cy="302" r="18" fill="#fff"/></svg>';
-  return `<div class="welcome"><div class="badge">${car}</div>
-  <h1 class="display">${esc(t('appName'))}</h1>
-  <p class="tag">${esc(t('tagline'))}</p>
+  return `<div class="welcome"><div class="badge">${svg(ICONS.car)}</div>
+  <h1>${esc(t('appName'))}</h1>
+  <p class="tag-line">${esc(t('tagline'))}</p>
   <div class="go"><button class="btn wide" data-act="addVehicle">${esc(t('addYourVehicle'))}</button>
   <button class="btn quiet wide" data-act="example">${esc(t('tryExample'))}</button></div>
-  <p class="small mut" style="margin-top:18px;max-width:34ch">${esc(t('onDevice'))}</p>${langPicker()}</div>`;
+  <p class="small mut">${esc(t('onDevice'))}</p>${langPicker()}</div>`;
 }
 
-// One reminder as a row with its value on the right.
-function reminderRow(x) {
-  const val = valueOf(x);
-  return `<li><button class="row rem" data-act="${x.act}" data-id="${x.id || ''}" data-kind="${esc(x.kind || '')}">
-    <span class="l"><span class="t"><span class="dot ${x.s === 'none' ? '' : x.s}"></span>${esc(x.title)}${x.cat === 'warranty' ? `<span class="chip">${esc(t('catWarranty'))}</span>` : ''}</span><br><span class="d">${esc(x.sub || '')}</span></span>
-    <span class="val ${x.s}"><span class="big">${esc(val.big)}</span>${val.unit ? `<span class="unit">${esc(val.unit)}</span>` : ''}${val.small ? `<span class="small-v">${esc(val.small)}${x.est ? ' · ' + esc(t('estimated')) : ''}</span>` : ''}</span></button></li>`;
-}
-
-// The single most urgent thing, as the big green card.
-function focusCard(x) {
-  if (!x) return `<div class="focus"><div class="when" style="font-size:28px">${esc(t('allClear'))}</div><div class="why">${esc(t('allClearWhy'))}</div></div>`;
-  if (x.s === 'none') return `<div class="focus"><div class="when" style="font-size:26px">${esc(t('startDocs'))}</div><div class="why">${esc(t('startDocsWhy'))}</div></div>`;
-  const val = valueOf(x);
-  return `<div class="focus"><div class="eyebrow-l">${esc(t('nextUp'))}</div><div class="when ${x.s}">${esc(val.big)}${val.unit ? `<span class="u">${esc(val.unit)}</span>` : ''}</div>
-    <div class="what"><b>${esc(x.title)}</b>${val.small ? ' · ' + esc(val.small) : ''}${x.est ? ' · ' + esc(t('estimated')) : ''}</div>${x.sub ? `<div class="why">${esc(x.sub)}</div>` : ''}
-    ${x.act === 'renew' ? `<button class="btn on-dark" data-act="renew" data-id="${x.id}">${esc(t('markRenewed', x.title))}</button>` : ''}</div>`;
-}
-
-function tile(big, unit, lbl, extra = '', cls = '') {
-  const inner = `<span class="num">${esc(big)}${unit ? `<span class="unit">${esc(unit)}</span>` : ''}</span><span class="lbl">${esc(lbl)}</span>${extra}`;
-  return cls === 'go-rem' ? `<button class="tile go-rem" data-tab="reminders">${inner}</button>` : `<div class="tile">${inner}</div>`;
-}
-
-function viewToday(v) {
-  const R = reminders(v), dated = R.filter(x => x.s !== 'none');
-  const urgent = dated[0] && (dated[0].s === 'bad' || dated[0].s === 'warn') ? dated[0] : (dated[0] || R[0]);
-  const nextDoc = R.filter(x => x.cat === 'doc' && x.days != null).sort((a, b) => a.days - b.days)[0], oil = R.find(x => x.key === 'oil' && x.s !== 'none');
+function viewHome(v) {
+  const R = allItems(v), urgent = R.filter(x => x.s === 'bad'), soon = R.filter(x => x.s === 'warn'), missing = R.filter(x => x.s === 'none');
+  const tone = urgent.length ? 'bad' : soon.length ? 'warn' : 'ok';
+  const headline = urgent.length ? t('homeBad', urgent.length) : soon.length ? t('homeWarn', soon.length) : t('homeOk');
+  const todo = [...urgent, ...soon];
+  // next 12 months, dated items only
+  const horizon = addMonthsISO(todayISO(), 12);
+  const year = R.filter(x => x.date && x.days >= 0 && x.date <= horizon).sort((a, b) => a.date.localeCompare(b.date));
+  const shown = showYear ? year : year.slice(0, 5);
   const now = new Date(todayISO() + 'T00:00'), mStart = isoOf(new Date(now.getFullYear(), now.getMonth(), 1));
-  const month = fuelStats(v, mStart, addDaysISO(todayISO(), 1)), lastM = fuelStats(v, isoOf(new Date(now.getFullYear(), now.getMonth() - 1, 1)), mStart);
-  const recent = fuelRows(v).map(x => x.kpl).filter(Boolean).slice(-3);
-  const yearStart = isoOf(new Date(now.getFullYear(), 0, 1)), yFuel = fuelStats(v, yearStart, addDaysISO(todayISO(), 1)).spent;
-  const ySvc = mine(db.service, v).filter(s => s.date >= yearStart).reduce((s, x) => s + (x.cost || 0), 0);
-  const nv = x => x ? valueOf(x) : null, nd = nv(nextDoc), no = nv(oil);
+  const month = fuelStats(v, mStart, addDaysISO(todayISO(), 1));
   return `${header(v)}
-  ${focusCard(urgent)}
-  <div class="tiles">
-    ${nd ? tile(nd.big, nd.unit, t('tileNextDeadline', nextDoc.title), '', 'go-rem') : tile('–', '', t('tileNoDeadline'))}
-    ${no ? tile(no.big, no.unit, t('tileOil'), '', 'go-rem') : tile('–', '', t('tileOilNone'))}
-    ${tile(t('rs', n0(month.spent)), '', t('tileFuelMonth'), lastM.fills ? `<span class="cmp">${esc(t('vsLastMonth', t('rs', n0(lastM.spent))))}</span>` : '')}
-    ${tile(recent.length ? n1(avg(recent)) : '–', recent.length ? t('kplUnit') : '', t('tileKpl'))}
-  </div>
-  <div class="odo"><span class="lbl-l">${esc(t('odometerShort'))}</span><span class="num">${n0(v.odo)}</span><span class="unit">${esc(t('km'))}</span><button class="link" data-act="odo" style="margin-left:auto">${esc(t('update'))}</button></div>
-  <h2>${esc(t('comingUp'))}</h2>
-  <ul class="rows">${R.slice(0, 3).map(reminderRow).join('')}</ul>
-  <div class="actions"><button class="btn quiet wide" data-tab="reminders">${esc(t('seeAllReminders', R.length))}</button></div>
-  <h2>${esc(t('spentThisYear'))}</h2>
-  <div class="tiles">${tile(t('rs', n0(yFuel)), '', t('fuelLabel'))}${tile(t('rs', n0(ySvc)), '', t('servicesLabel'))}</div>
+  <section class="status ${tone}">
+    <div class="status-ic">${svg(tone === 'ok' ? '<path d="M5 12l5 5 9-10"/>' : '<path d="M12 7v6M12 16.5v.5"/>')}</div>
+    <div><p class="status-h">${esc(headline)}</p><p class="status-s">${esc(t(todo.length ? 'homeTapHint' : 'homeOkSub'))}</p></div>
+  </section>
+  ${todo.length ? `<h2>${esc(t('needsAttention'))}</h2><ul class="list">${todo.map(x => itemRow(x)).join('')}</ul>` : ''}
+  ${missing.length ? `<h2>${esc(t('finishSetup'))}</h2><p class="hint">${esc(t('finishSetupSub'))}</p><ul class="list">${missing.map(x => itemRow(x, t('addToTrack'))).join('')}</ul>` : ''}
+  <h2>${esc(t('yearAhead'))}</h2>
+  ${year.length ? `<ul class="list year">${shown.map(x => `<li><button class="item" data-act="detail" data-key="${esc(x.key)}">
+      <span class="date"><b>${new Date(x.date + 'T00:00').getDate()}</b><span>${esc(new Date(x.date + 'T00:00').toLocaleDateString(loc(), { month: 'short' }))}</span></span>
+      <span class="it"><span class="t">${esc(x.title)}</span><span class="s">${esc(whenText(x))}${x.est ? ' · ' + esc(t('estimated')) : ''}</span></span>
+      <span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
+    ${year.length > 5 ? `<button class="link-btn" data-act="toggleYear">${esc(showYear ? t('showLess') : t('showAllYear', year.length))}</button>` : ''}`
+    : `<p class="hint">${esc(t('roadEmpty'))}</p>`}
+  <h2>${esc(t('thisMonth'))}</h2>
+  <div class="stats">
+    <button class="stat" data-tab="money"><span class="n">${esc(t('rs', n0(month.spent)))}</span><span class="l">${esc(t('fuelThisMonth'))}</span></button>
+    <button class="stat" data-act="odo"><span class="n">${n0(v.odo)}<small>${esc(t('km'))}</small></span><span class="l">${esc(t('odoTapUpdate'))}</span></button>
+  </div>`;
+}
+
+function viewCar(v) {
+  const R = allItems(v), papers = R.filter(x => x.cat !== 'service').sort((a, b) => (a.days ?? -1e9) - (b.days ?? -1e9)), maint = maintKinds(v).map(k => R.filter(x => x.kind === k).sort((a, b) => ({ bad: 0, warn: 1, ok: 2, none: 3 })[a.s] - ({ bad: 0, warn: 1, ok: 2, none: 3 })[b.s])[0]).filter(Boolean);
+  const nSvc = mine(db.service, v).length, nFuel = mine(db.fuel, v).length;
+  return `${header(v)}
+  <section class="car-card">
+    <div class="car-ic">${svg(ICONS.car)}</div>
+    <div class="car-main"><p class="car-name">${esc(v.name)}</p><p class="car-sub">${esc([v.plate, v.year, v.fuel && label('fuel_', v.fuel)].filter(Boolean).join(' · '))}</p></div>
+    <button class="link-btn" data-act="editVehicle">${esc(t('edit'))}</button>
+  </section>
+  <h2>${esc(t('papers'))}</h2><p class="hint">${esc(t('papersSub'))}</p>
+  <ul class="list">${papers.map(x => itemRow(x)).join('')}</ul>
+  <button class="link-btn" data-act="addDoc">${svg(ICONS.plus)}${esc(t('addADocument'))}</button>
+  <h2>${esc(t('maintenance'))}</h2><p class="hint">${esc(t('maintSub'))}</p>
+  <ul class="list">${maint.map(x => itemRow(x)).join('')}</ul>
+  <h2>${esc(t('records'))}</h2>
+  <ul class="list">
+    <li><button class="item" data-act="serviceList"><span class="ic plain">${svg(ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('serviceHistory'))}</span><span class="s">${esc(t('nRecords', nSvc))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+    <li><button class="item" data-tab="money"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('fuelHistory'))}</span><span class="s">${esc(t('nFillups', nFuel))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+    <li><button class="item" data-act="odo"><span class="ic plain">${svg(ICONS.gauge)}</span><span class="it"><span class="t">${esc(t('odometerShort'))}</span><span class="s">${n0(v.odo)} ${esc(t('km'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+  </ul>
+  <h2>${esc(t('settings'))}</h2>
+  <ul class="list">
+    <li><button class="item" data-act="export"><span class="ic plain">${svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>')}</span><span class="it"><span class="t">${esc(t('export'))}</span><span class="s">${esc(t('dataNote'))}</span></span></button></li>
+    <li><button class="item" data-act="import"><span class="ic plain">${svg('<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>')}</span><span class="it"><span class="t">${esc(t('import'))}</span></span></button></li>
+    <li><a class="item" href="privacy.html"><span class="ic plain">${svg(ICONS.shield)}</span><span class="it"><span class="t">${esc(t('privacyPolicy'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></a></li>
+  </ul>
   ${langPicker()}
-  <h2>${esc(t('yourData'))}</h2>
-  <div class="small mut" style="margin:0 4px 10px">${esc(t('dataNote'))}</div>
-  <div class="actions" style="margin-top:0"><button class="btn quiet" data-act="export">${esc(t('export'))}</button><button class="btn quiet" data-act="import">${esc(t('import'))}</button></div>
-  <p class="small" style="margin:14px 4px 0"><a href="privacy.html" style="color:var(--accent);font-weight:700">${esc(t('privacyPolicy'))}</a></p>
   <input type="file" id="imp" accept="application/json" hidden>`;
 }
 
-function viewReminders(v) {
-  const R = reminders(v), focus = R.filter(x => x.s === 'bad' || x.s === 'warn'), missing = R.filter(x => x.s === 'none');
-  // 12-month roadmap: everything with a date up to a year ahead, grouped by month. Overdue first.
-  const now = new Date(todayISO() + 'T00:00'), horizon = addMonthsISO(todayISO(), 12);
-  const dated = R.filter(x => x.date && x.date <= horizon).sort((a, b) => a.date.localeCompare(b.date));
-  const months = Array.from({ length: 12 }, (_, i) => { const s = new Date(now.getFullYear(), now.getMonth() + i, 1); return { key: isoOf(s).slice(0, 7), label: s.toLocaleDateString(loc(), { month: 'short' }), long: s.toLocaleDateString(loc(), { month: 'long', year: 'numeric' }) }; });
-  const overdue = dated.filter(x => x.days < 0);
-  const byMonth = months.map(m => ({ ...m, items: dated.filter(x => x.days >= 0 && x.date.slice(0, 7) === m.key) }));
-  const catLabel = x => t(x.cat === 'warranty' ? 'catWarrantyEnds' : x.cat === 'doc' ? 'catRenewal' : 'catService');
-  const roadItem = x => `<li><button class="road-item" data-act="${x.act}" data-id="${x.id || ''}" data-kind="${esc(x.kind || '')}"><span class="road-dot ${x.cat}"></span>
-    <span class="road-main"><span class="road-t">${esc(x.title)}</span><span class="road-d">${esc(catLabel(x))} · ${fmtD(x.date)}${x.est ? ' · ' + esc(t('estimated')) : ''}</span></span>
-    <span class="pill ${x.s}">${esc(x.days < 0 ? t('overdue') : x.days === 0 ? t('today') : t('inDays', x.days))}</span></button></li>`;
-  return `${header(v)}
-  <h2 style="margin-top:22px">${esc(t('focusNow'))}</h2>
-  ${focus.length ? `<div class="focus-grid">${focus.map(x => { const val = valueOf(x); return `<button class="fcard ${x.s}" data-act="${x.act}" data-id="${x.id || ''}" data-kind="${esc(x.kind || '')}">
-      <span class="pill ${x.s}">${esc(t(x.s === 'bad' ? 'statusDue' : 'statusSoon'))}</span>
-      <span class="fbig">${esc(val.big)}${val.unit ? `<span class="unit">${esc(val.unit)}</span>` : ''}</span>
-      <span class="ft">${esc(x.title)}</span><span class="fs">${esc(val.small || x.sub || '')}${x.est ? ' · ' + esc(t('estimated')) : ''}</span></button>`; }).join('')}</div>`
-    : `<div class="empty"><b>${esc(t('allClear'))}</b>${esc(t('allClearWhy'))}</div>`}
-  ${missing.length ? `<h2>${esc(t('missingRecords'))}</h2><ul class="rows">${missing.map(reminderRow).join('')}</ul>` : ''}
-
-  <h2>${esc(t('next12'))}</h2>
-  <div class="strip" role="list">${byMonth.map((m, i) => `<a role="listitem" class="strip-m ${m.items.length ? 'has' : ''}" href="#m-${m.key}" aria-label="${esc(t('stripLabel', m.long, m.items.length))}"><span class="strip-n">${m.items.length || ''}</span><span class="strip-dots">${m.items.slice(0, 3).map(x => `<i class="${x.cat}"></i>`).join('')}</span><span class="strip-l">${esc(m.label)}</span></a>`).join('')}</div>
-  <div class="legend"><span><i class="doc"></i>${esc(t('catRenewal'))}</span><span><i class="service"></i>${esc(t('catService'))}</span><span><i class="warranty"></i>${esc(t('catWarrantyEnds'))}</span></div>
-  <div class="road">
-    ${overdue.length ? `<div class="road-m"><h3 class="bad">${esc(t('overdue'))}</h3><ul>${overdue.map(roadItem).join('')}</ul></div>` : ''}
-    ${byMonth.filter(m => m.items.length).map(m => `<div class="road-m" id="m-${m.key}"><h3>${esc(m.long)}</h3><ul>${m.items.map(roadItem).join('')}</ul></div>`).join('') || `<div class="empty">${esc(t('roadEmpty'))}</div>`}
-  </div>
-  <p class="small mut" style="margin:10px 4px 0">${esc(t('roadNote'))}</p>
-
-  <h2>${esc(t('docsAndDeadlines'))}</h2>
-  <ul class="rows">${R.filter(x => x.cat !== 'service' && x.s !== 'none').map(reminderRow).join('') || `<li class="row"><span class="l d">${esc(t('noDocsYet'))}</span></li>`}</ul>
-  <div class="actions"><button class="btn quiet wide" data-act="addDoc">${esc(t('addADocument'))}</button></div>
-`;
-}
-
-// Change vs the previous period, as a small pill. goodWhenUp: is a rise good news?
+// Change vs the previous period, as a small note. goodWhenUp: is a rise good news?
 function delta(cur, prev, goodWhenUp, per) {
   if (cur == null || !prev) return `<span class="cmp">${esc(t('noPrevious'))}</span>`;
   const pct = (cur - prev) / prev * 100, r = Math.round(pct);
   if (Math.abs(pct) < 1) return `<span class="cmp">${esc(t('sameAsBefore', t('prev_' + per)))}</span>`;
   const good = (pct > 0) === goodWhenUp;
-  return `<span class="cmp"><span class="pill ${good ? 'ok' : 'warn'}">${pct > 0 ? '↑' : '↓'} ${Math.abs(r)}%</span> ${esc(t('vsPrev', t('prev_' + per)))}</span>`;
+  return `<span class="cmp"><span class="chg ${good ? 'up' : 'down'}">${pct > 0 ? '↑' : '↓'} ${Math.abs(r)}%</span> ${esc(t('vsPrev', t('prev_' + per)))}</span>`;
 }
 
-function viewFuel(v) {
+function viewMoney(v) {
   const rows = fuelRows(v).reverse();
-  if (!rows.length) return `${header(v)}<div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div><div class="empty" style="margin-top:16px"><b>${esc(t('noFuelTitle'))}</b>${esc(t('noFuelText'))}</div>`;
+  const yearAgo = addDaysISO(todayISO(), -365), svcSpent = mine(db.service, v).filter(s => s.date >= yearAgo).reduce((s, x) => s + (x.cost || 0), 0);
+  if (!rows.length) return `${header(v)}<div class="empty"><b>${esc(t('noFuelTitle'))}</b>${esc(t('noFuelText'))}</div><div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div>`;
   const d = periodData(v, period), c = d.cur, p = d.prev;
   return `${header(v)}
   <div class="seg" role="group" aria-label="${esc(t('periodLabel'))}">${PERIODS.map(k => `<button data-act="period" data-p="${k}" ${k === period ? 'aria-pressed="true"' : ''}>${esc(t('p_' + k))}</button>`).join('')}</div>
-  <div class="tiles">
-    ${tile(t('rs', n0(c.spent)), '', t('spentIn', t('per_' + period)), delta(c.spent, p.spent, false, period))}
-    ${tile(c.price ? t('rs', n0(c.price)) : '–', '', t('avgPriceL'), delta(c.price, p.price, false, period))}
-    ${tile(c.kpl ? n1(c.kpl) : '–', c.kpl ? t('kplUnit') : '', t('kplAvg'), delta(c.kpl, p.kpl, true, period))}
-    ${tile(n0(c.litres), t('litreUnit'), t('litresIn', c.fills), delta(c.litres, p.litres, false, period))}
+  <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period)))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}</section>
+  <div class="stats three">
+    <div class="stat"><span class="n">${c.price ? esc(t('rs', n0(c.price))) : '–'}</span><span class="l">${esc(t('perLitre'))}</span></div>
+    <div class="stat"><span class="n">${c.kpl ? n1(c.kpl) : '–'}</span><span class="l">${esc(t('kplUnit'))}</span></div>
+    <div class="stat"><span class="n">${n0(c.litres)}</span><span class="l">${esc(t('litresWord'))}</span></div>
   </div>
-  <div class="chart-card">
+  <section class="chart-card">
     <div class="readout" id="readout" aria-live="polite"></div>
-    <div class="chart-h">${esc(t('chartSpent'))}</div><div class="chart" id="ch-spent"></div>
-    <div class="chart-h">${esc(t('chartPrice'))}</div><div class="chart" id="ch-price"></div>
+    <p class="chart-h">${esc(t('chartSpent'))}</p><div class="chart" id="ch-spent"></div>
+    <p class="chart-h">${esc(t('chartPrice'))}</p><div class="chart" id="ch-price"></div>
     <details class="tbl"><summary>${esc(t('seeNumbers'))}</summary><div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('colPrice'))}</th><th>${esc(t('colFills'))}</th></tr></thead>
       <tbody>${d.bs.slice().reverse().map(b => `<tr><td>${esc(b.label)}</td><td>${b.fills ? esc(t('rs', n0(b.spent))) : '–'}</td><td>${b.price ? esc(t('rs', n1(b.price))) : '–'}</td><td>${b.fills}</td></tr>`).join('')}</tbody></table></div></details>
-  </div>
-  <div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div>
-  <h2>${esc(t('history'))}</h2>
-  <ul class="rows">${rows.slice(0, 30).map(x => `<li><button class="row" data-act="fuel" data-id="${x.id}"><span class="l"><span class="t">${esc(t('litresShort', x.litres))} · ${esc(t('rs', n0(x.total)))}</span><br><span class="d">${fmtD(x.date)} · ${n0(x.odo)} ${esc(t('km'))}${x.photo ? ' · ' + esc(t('photo')) : ''}</span></span><span class="r ${x.kpl ? 'ok' : 'none'}">${esc(x.kpl ? t('kpl', n1(x.kpl)) : t('firstEntry'))}</span></button></li>`).join('')}</ul>
-  ${rows.length > 30 ? `<p class="small mut" style="margin:10px 4px 0">${esc(t('showingRecent', 30, rows.length))}</p>` : ''}
-  <p class="small mut" style="margin:10px 4px 0">${esc(t('fillAssumption'))}</p>`;
+  </section>
+  <div class="stats one"><div class="stat"><span class="n">${esc(t('rs', n0(svcSpent)))}</span><span class="l">${esc(t('svcSpent12'))}</span></div></div>
+  <h2>${esc(t('fillUps'))}</h2>
+  <ul class="list">${rows.slice(0, 20).map(x => `<li><button class="item" data-act="fuelDetail" data-id="${x.id}"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('rs', n0(x.total)))}</span><span class="s">${fmtD(x.date)}</span></span><span class="side">${x.kpl ? esc(t('kpl', n1(x.kpl))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
+  ${rows.length > 20 ? `<p class="hint">${esc(t('showingRecent', 20, rows.length))}</p>` : ''}
+  <p class="hint">${esc(t('fillAssumption'))}</p>`;
 }
 
 // ---------- charts (hand-drawn SVG, works offline) ----------
@@ -708,20 +724,18 @@ function drawFuelCharts(v) {
   const sp = $('#ch-spent'), pr = $('#ch-price'); if (!sp || !pr) return;
   const d = periodData(v, period), bs = d.bs, n = bs.length;
   if (fsel == null || fsel >= n) fsel = n - 1;
-  const W = Math.max(260, sp.clientWidth), H = 150, L = 44, Rr = 8, T = 10, B = 26, iw = W - L - Rr, ih = H - T - B, slot = iw / n;
+  const W = Math.max(260, sp.clientWidth), H = 140, L = 44, Rr = 8, T = 10, B = 26, iw = W - L - Rr, ih = H - T - B, slot = iw / n;
   const every = Math.ceil(n / Math.max(3, Math.floor(iw / 52)));
   const xLabels = bs.map((b, i) => (i % every === (n - 1) % every) ? `<text class="ax" x="${L + slot * i + slot / 2}" y="${H - 8}" text-anchor="middle">${esc(b.label)}</text>` : '').join('');
   const hits = bs.map((b, i) => `<rect class="hit" data-i="${i}" x="${L + slot * i}" y="${T}" width="${slot}" height="${ih}" tabindex="0" aria-label="${esc(b.label)}"></rect>`).join('');
-  // spent: columns
   const sMax = niceMax(Math.max(...bs.map(b => b.spent)));
   const yS = val => T + ih - val / sMax * ih, bw = Math.min(24, Math.max(3, slot - 2));
   const grid = (max, fmt) => [0, 0.5, 1].map(f => `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${T + ih - f * ih}" y2="${T + ih - f * ih}"></line><text class="ax" x="${L - 6}" y="${T + ih - f * ih + 4}" text-anchor="end">${esc(fmt(max * f))}</text>`).join('');
   const bars = bs.map((b, i) => { if (!b.spent) return ''; const x = L + slot * i + (slot - bw) / 2, y = yS(b.spent), h = T + ih - y, r = Math.min(4, bw / 2, h);
     return `<path class="bar ${i === fsel ? 'sel' : ''}" data-b="${i}" d="M${x} ${T + ih}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${T + ih}Z"></path>`; }).join('');
   sp.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chartSpent'))}">${grid(sMax, compact)}${bars}${xLabels}${hits}</svg>`;
-  // price per litre: line, broken where a bucket has no fill-ups
   const ps = bs.map(b => b.price).filter(Boolean);
-  if (!ps.length) { pr.innerHTML = `<div class="small mut">${esc(t('noFuelInPeriod'))}</div>`; }
+  if (!ps.length) pr.innerHTML = `<p class="hint">${esc(t('noFuelInPeriod'))}</p>`;
   else {
     let lo = Math.min(...ps), hi = Math.max(...ps); const pad = Math.max(5, (hi - lo) * 0.25); lo = Math.max(0, Math.floor((lo - pad) / 10) * 10); hi = Math.ceil((hi + pad) / 10) * 10;
     const yP = val => T + ih - (val - lo) / (hi - lo) * ih;
@@ -729,8 +743,7 @@ function drawFuelCharts(v) {
     bs.forEach((b, i) => { if (!b.price) { pen = false; return; } path += `${pen ? 'L' : 'M'}${L + slot * i + slot / 2} ${yP(b.price)}`; pen = true; });
     const pgrid = [0, 0.5, 1].map(f => { const val = lo + (hi - lo) * f; return `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${yP(val)}" y2="${yP(val)}"></line><text class="ax" x="${L - 6}" y="${yP(val) + 4}" text-anchor="end">${esc(n0(val))}</text>`; }).join('');
     const dots = bs.map((b, i) => b.price ? `<circle class="pt ${i === fsel ? 'sel' : ''}" data-b="${i}" cx="${L + slot * i + slot / 2}" cy="${yP(b.price)}" r="${i === fsel ? 5 : (n > 24 ? 0 : 3.5)}"></circle>` : '').join('');
-    const cross = `<line class="cross" id="cross" x1="0" x2="0" y1="${T}" y2="${T + ih}"></line>`;
-    pr.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chartPrice'))}">${pgrid}${cross}<path class="line" d="${path}"></path>${dots}${xLabels}${hits}</svg>`;
+    pr.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chartPrice'))}">${pgrid}<line class="cross" id="cross" x1="0" x2="0" y1="${T}" y2="${T + ih}"></line><path class="line" d="${path}"></path>${dots}${xLabels}${hits}</svg>`;
   }
   const select = i => {
     fsel = i; const b = bs[i];
@@ -742,25 +755,11 @@ function drawFuelCharts(v) {
   select(fsel);
 }
 
-function viewService(v) {
-  const h = health(v), rows = mine(db.service, v).sort((a, b) => b.odo - a.odo || b.date.localeCompare(a.date));
-  const yearAgo = addDaysISO(todayISO(), -365), spent = rows.filter(s => s.date >= yearAgo).reduce((s, x) => s + (x.cost || 0), 0);
-  return `${header(v)}
-  <div class="tiles" style="margin-top:14px">${tile(t('rs', n0(spent)), '', t('svcSpent12'))}${tile(String(rows.length), '', t('svcRecords'))}</div>
-  <h2>${esc(t('condition'))}</h2>
-  <ul class="rows">${h.map(x => `<li><button class="row" data-act="addService" data-kind="${esc(x.kind)}"><span class="l"><span class="t"><span class="dot ${x.s === 'none' ? '' : x.s}"></span>${esc(x.name)}</span><br><span class="d">${esc(x.text)}</span></span><span class="r ${x.s === 'none' ? 'none' : x.s}">${esc(x.s === 'none' ? t('add') : t({ ok: 'statusFine', warn: 'statusSoon', bad: 'statusDue' }[x.s]))}</span></button></li>`).join('')}</ul>
-  <p class="small mut" style="margin:10px 4px 0">${esc(t('defaultIntervals'))}</p>
-  <div class="actions"><button class="btn wide" data-act="addService">${esc(t('addServiceTitle'))}</button></div>
-  <h2>${esc(t('history'))}</h2>
-  ${rows.length ? `<ul class="rows">${rows.map(s => `<li><button class="row" data-act="service" data-id="${s.id}"><span class="l"><span class="t">${esc(label('svc_', s.kind))}${s.part ? `<span class="chip">${esc(label('part_', s.part))}</span>` : ''}</span><br><span class="d">${fmtD(s.date)} · ${n0(s.odo)} ${esc(t('km'))}${s.garage ? ' · ' + esc(s.garage) : ''}</span>${s.oil ? `<br><span class="d">${esc(s.oil)}${s.filter ? ' · ' + esc(t('filterState', label('filter_', s.filter))) : ''}</span>` : ''}</span><span class="r none">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span></button></li>`).join('')}</ul>` : `<div class="empty"><b>${esc(t('noServiceTitle'))}</b>${esc(t('noServiceText'))}</div>`}`;
-}
-
 function viewAsk(v) {
-  const sugg = ['sugSpend', 'sugNext', 'sugOil', 'sugPrice'];
+  const sugg = ['sugNext', 'sugSpend', 'sugOil', 'sugPrice'];
   return `${header(v)}
-  <h2 style="margin-top:22px">${esc(t('chatTitle'))}</h2>
-  <p class="mut" style="margin:0 4px">${esc(t(aiSample ? 'chatIntroAI' : 'chatIntroLocal'))}</p>
-  <div class="chat">
+  <section class="chat">
+    <p class="chat-intro">${esc(t(aiSample ? 'chatIntroAI' : 'chatIntroLocal'))}</p>
     <div class="chatlog" id="chatlog" aria-live="polite">
       ${chat.length ? chat.map((m, i) => `<div class="bubble ${m.role === 'user' ? 'me' : 'bot'}"><div data-bubble="${i}">${esc(m.pending ? t('thinking') : m.text)}</div>${m.role === 'assistant' && !m.pending ? `<div class="src">${esc(t(m.src === 'ai' ? 'srcAI' : 'srcLocal'))}</div>` : ''}</div>`).join('')
         : `<div class="chips">${sugg.map(k => `<button class="chipbtn" data-act="suggest" data-q="${esc(t(k))}">${esc(t(k))}</button>`).join('')}</div>`}
@@ -768,38 +767,99 @@ function viewAsk(v) {
     <form class="composer" id="composer"><label class="sr" for="chatin">${esc(t('chatPlaceholder'))}</label>
       <input id="chatin" name="q" autocomplete="off" placeholder="${esc(t('chatPlaceholder'))}" ${chatBusy ? 'disabled' : ''}>
       ${chatBusy && aiSample ? `<button type="button" class="btn quiet" data-act="stopchat">${esc(t('stop'))}</button>` : `<button class="btn" type="submit" ${chatBusy ? 'disabled' : ''}>${esc(t('send'))}</button>`}</form>
-    ${chat.length ? `<button class="link" data-act="clearchat" style="margin:8px 4px 0">${esc(t('newChat'))}</button>` : ''}
-  </div>
-  <p class="small mut" style="margin:10px 4px 0">${esc(t('chatNote'))}</p>
-
+    ${chat.length ? `<button class="link-btn" data-act="clearchat">${esc(t('newChat'))}</button>` : ''}
+  </section>
+  <p class="hint">${esc(t('chatNote'))}</p>
   <h2>${esc(t('askTitle'))}</h2>
-  <p class="mut" style="margin:0 4px">${esc(t('askIntro'))}</p>
+  <p class="hint">${esc(t('askIntro'))}</p>
   <div class="actions"><button class="btn quiet wide" data-act="ask">${esc(t('prepare'))}</button></div>
-  ${asked ? `<div class="${mech ? 'mech' : ''}" style="margin-top:12px">${asked.map(x => `<div class="q"><p>${esc(x[0])}</p><div class="basis">${esc(t('basedOn', x[1]))}</div></div>`).join('')}</div>
+  ${asked ? `<div class="${mech ? 'mech' : ''}">${asked.map(x => `<div class="q"><p>${esc(x[0])}</p><p class="basis">${esc(t('basedOn', x[1]))}</p></div>`).join('')}</div>
   <div class="actions"><button class="btn quiet" data-act="mech">${esc(t(mech ? 'normalSize' : 'showMechanic'))}</button></div>
-  <p class="small mut" style="margin:14px 4px 0">${esc(t('askDisclaimer'))}</p>` : ''}`;
+  <p class="hint">${esc(t('askDisclaimer'))}</p>` : ''}`;
+}
+
+// ---------- detail sheets ----------
+function infoSheet(title, body, actions = '') {
+  dlg.innerHTML = `<div class="sheet"><div class="sheet-h"><h3>${esc(title)}</h3><button type="button" class="x" aria-label="${esc(t('close'))}" data-close>&times;</button></div>${body}${actions ? `<div class="actions">${actions}</div>` : ''}</div>`;
+  dlg.querySelector('[data-close]').onclick = () => dlg.close();
+  if (!dlg.open) dlg.showModal();
+}
+const facts = rows => `<dl class="facts">${rows.filter(r => r && r[1] !== '' && r[1] != null).map(([k, val]) => `<div><dt>${esc(k)}</dt><dd>${esc(val)}</dd></div>`).join('')}</dl>`;
+
+// Everything about one item: status, plain explanation, facts, history, one clear next step.
+function itemDetail(key) {
+  const v = veh(), x = findItem(v, key); if (!x) return;
+  const info = KIND_INFO[x.kind] || x.kind, val = valueOf(x);
+  const head = `<div class="d-status ${x.s}">${tag(x.s)}<p class="d-big">${esc(x.s === 'none' ? t('noRecordYet') : val.big)}${val.unit && x.s !== 'none' ? `<small>${esc(val.unit)}</small>` : ''}</p>${x.s !== 'none' && val.small ? `<p class="d-small">${esc(val.small)}${x.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div>`;
+  const explain = `<div class="explain"><h4>${esc(t('whatIsIt'))}</h4><p>${esc(t('about_' + info))}</p><h4>${esc(t('whatToDo'))}</h4><p>${esc(t('todo_' + info))}</p></div>`;
+  let body = '', actions = '';
+  if (x.cat !== 'service') {
+    const d = db.docs.find(r => r.id === x.id);
+    if (d) {
+      body = facts([[t('expiresOn'), fmtD(d.expiry)], [t('noteLabel'), d.note], [t('earlierExpiryLabel'), (d.history || []).map(h => fmtD(h.expiry)).reverse().join(', ')]]);
+      const renewable = ['emission', 'insurance', 'revenue', 'driving'].includes(d.kind);
+      actions = `<button class="btn quiet" data-act="doc" data-id="${d.id}">${esc(t('edit'))}</button>${renewable ? `<button class="btn" data-act="renew" data-id="${d.id}">${esc(t('markRenewedShort'))}</button>` : ''}`;
+    } else actions = `<button class="btn wide" data-act="addDoc" data-kind="${esc(x.kind)}">${esc(t('addThis', x.title))}</button>`;
+  } else {
+    const hist = mine(db.service, v).filter(s => s.kind === x.kind).sort((a, b) => b.date.localeCompare(a.date)), last = hist[0];
+    if (last) body = `<h4 class="sub-h">${esc(t('lastTime'))}</h4>` + facts([[t('date'), fmtD(last.date)], [t('odometer'), n0(last.odo) + ' ' + t('km')], [t('costLabel'), last.cost ? t('rs', n0(last.cost)) : ''], [t('garage'), last.garage], [t('oilType'), last.oil], [t('oilFilter'), last.filter && label('filter_', last.filter)], [t('partsUsed'), last.part && label('part_', last.part)]]);
+    if (hist.length > 1) body += `<h4 class="sub-h">${esc(t('earlierTimes'))}</h4><ul class="list mini">${hist.slice(1).map(s => `<li><button class="item" data-act="svcDetail" data-id="${s.id}"><span class="it"><span class="t">${fmtD(s.date)}</span><span class="s">${n0(s.odo)} ${esc(t('km'))}</span></span><span class="side">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>`;
+    actions = `${last ? `<button class="btn quiet" data-act="service" data-id="${last.id}">${esc(t('editLast'))}</button>` : ''}<button class="btn" data-act="addService" data-kind="${esc(x.kind)}">${esc(t(last ? 'logDone' : 'addLast'))}</button>`;
+  }
+  infoSheet(x.title, head + explain + body, actions);
+}
+
+function serviceDetail(id) {
+  const s = db.service.find(r => r.id === id); if (!s) return;
+  infoSheet(label('svc_', s.kind), facts([[t('date'), fmtD(s.date)], [t('odometer'), n0(s.odo) + ' ' + t('km')], [t('costLabel'), s.cost ? t('rs', n0(s.cost)) : ''], [t('garage'), s.garage], [t('oilType'), s.oil], [t('oilFilter'), s.filter && label('filter_', s.filter)], [t('partsUsed'), s.part && label('part_', s.part)], [t('noteLabel'), s.note], [t('photo'), s.photo ? t('attached') : '']]),
+    `<button class="btn wide" data-act="service" data-id="${s.id}">${esc(t('edit'))}</button>`);
+}
+
+function fuelDetail(id) {
+  const v = veh(), r = fuelRows(v).find(x => x.id === id); if (!r) return;
+  infoSheet(t('fillUpOn', fmtD(r.date)), facts([[t('totalRs'), t('rs', n0(r.total))], [t('litres'), r.litres + ' ' + t('litreUnit')], [t('pricePerLitre'), t('rs', n1(r.total / r.litres))], [t('odometer'), n0(r.odo) + ' ' + t('km')], [t('kplUnit'), r.kpl ? n1(r.kpl) : t('firstEntry')], [t('photo'), r.photo ? t('attached') : '']]),
+    `<button class="btn wide" data-act="fuel" data-id="${r.id}">${esc(t('edit'))}</button>`);
+}
+
+function serviceList() {
+  const v = veh(), rows = mine(db.service, v).sort((a, b) => b.date.localeCompare(a.date));
+  infoSheet(t('serviceHistory'), rows.length ? `<ul class="list mini">${rows.map(s => `<li><button class="item" data-act="svcDetail" data-id="${s.id}"><span class="it"><span class="t">${esc(label('svc_', s.kind))}</span><span class="s">${fmtD(s.date)}</span></span><span class="side">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('noServiceText'))}</p>`,
+    `<button class="btn wide" data-act="addService">${esc(t('addServiceTitle'))}</button>`);
+}
+
+function addMenu() {
+  const opt = (act, icon, k, s) => `<li><button class="item" data-act="${act}"><span class="ic plain">${svg(ICONS[icon])}</span><span class="it"><span class="t">${esc(t(k))}</span><span class="s">${esc(t(s))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>`;
+  infoSheet(t('addWhat'), `<ul class="list">${opt('addFuel', 'fuel', 'addFuelTitle', 'addFuelSub')}${opt('addService', 'wrench', 'addServiceTitle', 'addServiceSub')}${opt('addDoc', 'doc', 'addADocument', 'addDocSub')}${opt('odo', 'gauge', 'updateOdoTitle', 'addOdoSub')}</ul>`);
 }
 
 function render() {
-  const v = veh(), main = $('#view'), tabs = $('#tabs');
+  const v = veh(), main = $('#view'), tabs = $('#tabs'), fab = $('#fab');
   tabs.setAttribute('aria-label', t('mainNav'));
-  if (!v) { main.innerHTML = viewOnboard(); tabs.innerHTML = ''; return; }
+  if (!v) { main.innerHTML = viewOnboard(); tabs.innerHTML = ''; fab.hidden = true; return; }
   const keep = $('#chatin')?.value || '';
-  main.innerHTML = { today: viewToday, reminders: viewReminders, fuel: viewFuel, service: viewService, ask: viewAsk }[tab](v);
-  tabs.innerHTML = `<div class="in">${TABS.map(([k, l]) => `<button data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}><svg viewBox="0 0 24 24" aria-hidden="true">${ICONS[k]}</svg>${esc(t(l))}</button>`).join('')}</div>`;
-  if (tab === 'fuel') drawFuelCharts(v);
+  main.innerHTML = { home: viewHome, car: viewCar, money: viewMoney, ask: viewAsk }[tab](v);
+  tabs.innerHTML = `<div class="in">${TABS.map(([k, l]) => `<button data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}>${svg(ICONS[k])}<span>${esc(t(l))}</span></button>`).join('')}</div>`;
+  fab.hidden = tab === 'ask'; fab.setAttribute('aria-label', t('addWhat')); fab.innerHTML = svg(ICONS.plus);
+  if (tab === 'money') drawFuelCharts(v);
   if (tab === 'ask') { const inp = $('#chatin'); if (inp && keep && !chatBusy) inp.value = keep; $('#composer').onsubmit = e => { e.preventDefault(); const q = $('#chatin').value; $('#chatin').value = ''; sendChat(q); }; scrollChat(); }
 }
 
 // ---------- events ----------
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-tab],[data-act]'); if (!el) return;
-  if (el.dataset.tab) { tab = el.dataset.tab; window.scrollTo(0, 0); return render(); }
+  if (el.dataset.tab) { if (dlg.open) dlg.close(); tab = el.dataset.tab; window.scrollTo(0, 0); return render(); }
   const id = el.dataset.id, v = veh();
   switch (el.dataset.act) {
     case 'addVehicle': return vehicleForm(null);
+    case 'editVehicle': return vehicleForm(v);
     case 'switch': return switchVehicle();
     case 'example': addExample(); return render();
+    case 'add': return addMenu();
+    case 'detail': return itemDetail(el.dataset.key);
+    case 'svcDetail': return serviceDetail(id);
+    case 'fuelDetail': return fuelDetail(id);
+    case 'serviceList': return serviceList();
+    case 'toggleYear': showYear = !showYear; return render();
     case 'odo': return odoForm();
     case 'addDoc': return docForm(null, el.dataset.kind);
     case 'doc': return docForm(db.docs.find(x => x.id === id));
@@ -823,7 +883,7 @@ document.addEventListener('click', e => {
   }
 });
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
-let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => tab === 'fuel' && drawFuelCharts(veh()), 150); });
+let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => tab === 'money' && drawFuelCharts(veh()), 150); });
 
 render();
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
