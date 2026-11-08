@@ -39,6 +39,7 @@ The app is for owners who are not vehicle experts and want to know they are doin
 1. Sinhala and Tamil translations. Text is now in `strings.js`; fill in the `si` and `ta` blocks and have a native speaker check them. A language shows in the picker once it has a `langName`.
 2. Local reminders: notifications before deadlines (cascading lead times).
 3. Dashboard lights guide: done. Next, add more lights once real users say which ones they search for.
+   - Bring the website's two guides into the app: "Mechanic talk, explained" (common phrases, what they usually mean, what to ask back) and "Who fixes what" (service centre, tyre shop, battery shop, auto electrician, AC specialist, body shop, emission test centre, insurer, eRL). Link each maintenance item's detail page to the right place. The website already promises these, so keep the two in step.
 4. Photo reading (pump display, odometer, documents, and later a photo of a dashboard light): needs a small backend that calls a vision model. Do not put API keys in the browser.
 5. Accounts and cloud backup (needed before Phase 2 sharing). Check Sri Lanka data protection rules first.
 6. Real AI for the Ask feature, on that backend: answers questions, and reviews the owner's history to recommend checks and questions for the mechanic, each with its basis. Still driven by the rules engine for due dates.
