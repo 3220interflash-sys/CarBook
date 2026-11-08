@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light only">
+<title>CarBook: your vehicle, sorted</title>
+<meta name="description" content="CarBook is a free app for Sri Lankan vehicle owners. Never miss your emission test, insurance or revenue licence, keep every service record, understand dashboard lights and know what to ask your mechanic.">
+<meta property="og:title" content="CarBook: your vehicle, sorted">
+<meta property="og:description" content="Never miss a renewal. Never get lost at the garage. A free, private app made for Sri Lankan drivers.">
+<meta property="og:image" content="img/home.jpg">
+<meta name="theme-color" content="#FFFFFF">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
+<style>
+/* CarBook website. Same brand as the app: white, CarBook green, goldfish yellow, Plus Jakarta Sans.
+   Layout: one column of full-width bands; each band has a centred inner wrapper. */
+:root {
+  --bg: #FFFFFF; --soft: #F6F8F7; --ink: #111A16; --mut: #56645D; --line: #E4E9E6;
+  --green: #0A7F55; --green-ink: #0A6E4A; --green-tint: #E2F4EB; --deep: #0B3B2B;
+  --yellow: #FFC425; --yellow-tint: #FFF5D1; --on-yellow: #2A2000;
+  --red: #B42318; --red-tint: #FEECEB; --amber: #A85400; --amber-tint: #FFF1DC;
+  --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Sinhala", "Noto Sans Tamil", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; -webkit-text-size-adjust: 100%; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.6 var(--font); }
+img { max-width: 100%; display: block; }
+a { color: var(--green-ink); }
+h1, h2, h3 { margin: 0; letter-spacing: -0.025em; line-height: 1.12; text-wrap: balance; }
+p { margin: 0; }
+svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:focus-visible { outline: 3px solid var(--green); outline-offset: 3px; border-radius: 8px; }
+.wrap { max-width: 1120px; margin: 0 auto; padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+.band { padding-block: 88px; }
+.band.soft { background: var(--soft); }
+.eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--green-ink); }
+.eyebrow::before { content: ""; width: 18px; height: 3px; border-radius: 2px; background: var(--yellow); }
+.h2 { font-size: clamp(30px, 4.4vw, 46px); font-weight: 800; margin-top: 10px; }
+.lead { font-size: clamp(17px, 1.6vw, 19px); color: var(--mut); margin-top: 14px; max-width: 60ch; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: 54px; padding: 0 24px; border-radius: 14px; font-weight: 800; font-size: 16px; text-decoration: none; }
+.btn.primary { background: var(--green); color: #fff; }
+.btn.primary:hover { background: var(--green-ink); }
+.btn.ghost { border: 1.5px solid var(--line); color: var(--ink); background: #fff; }
+.btn.ghost:hover { border-color: var(--green); }
+.btn.yellow { background: var(--yellow); color: var(--on-yellow); }
+
+/* top bar */
+.nav { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 10; background: rgba(255, 255, 255, .96); border-bottom: 1px solid var(--line); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); background: #fff; z-index: 11; }
+.nav .wrap { display: flex; align-items: center; gap: 24px; min-height: 68px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); text-decoration: none; font-weight: 800; font-size: 20px; letter-spacing: -0.02em; }
+.logo .mark { width: 38px; height: 38px; border-radius: 11px; background: var(--yellow); color: var(--on-yellow); display: grid; place-items: center; }
+.logo .mark svg { width: 24px; height: 24px; }
+.links { display: flex; gap: 22px; margin-left: auto; }
+.links a { color: var(--mut); text-decoration: none; font-weight: 600; font-size: 15px; }
+.links a:hover { color: var(--ink); }
+.nav .btn { min-height: 44px; padding: 0 18px; font-size: 15px; }
+@media (max-width: 880px) { .links { display: none; } .nav .btn { margin-left: auto; } }
+
+/* hero */
+.hero { padding-block: 64px 72px; overflow: hidden; }
+.hero .wrap { display: grid; grid-template-columns: 1.1fr .9fr; gap: 48px; align-items: center; }
+.hello { display: flex; flex-wrap: wrap; gap: 8px; }
+.hello span { padding: 6px 14px; border-radius: 999px; background: var(--yellow-tint); color: var(--on-yellow); font-weight: 700; font-size: 15px; }
+.hero h1 { font-size: clamp(40px, 6.2vw, 68px); font-weight: 800; margin-top: 22px; }
+.hero h1 em { font-style: normal; color: var(--green); }
+.hero .lead { font-size: clamp(18px, 1.8vw, 21px); margin-top: 18px; }
+.cta-row { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+.ticks { display: flex; flex-wrap: wrap; gap: 10px 22px; margin-top: 26px; padding: 0; list-style: none; color: var(--mut); font-weight: 600; font-size: 15px; }
+.ticks li { display: inline-flex; align-items: center; gap: 8px; }
+.ticks svg { width: 20px; height: 20px; color: var(--green); stroke-width: 2.6; }
+.phones { position: relative; display: flex; justify-content: center; min-height: 560px; }
+.phone { width: 270px; border-radius: 40px; padding: 9px; background: #0F1512; box-shadow: 0 30px 60px -20px rgba(17, 26, 22, .35); }
+.phone img { border-radius: 32px; width: 100%; height: auto; }
+.phones .back { position: absolute; top: 40px; left: 50%; transform: translateX(-2%) rotate(6deg); width: 236px; opacity: .97; }
+.phones .front { position: relative; transform: translateX(-30%) rotate(-3deg); }
+.badge-float { position: absolute; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: #fff; border: 1px solid var(--line); font-weight: 700; font-size: 14px; box-shadow: 0 10px 24px -12px rgba(17, 26, 22, .3); }
+.badge-float .dot { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; }
+.badge-float.one { left: 0; bottom: 90px; } .badge-float.one .dot { background: var(--red-tint); color: var(--red); }
+.badge-float.two { right: 0; top: 10px; } .badge-float.two .dot { background: var(--green-tint); color: var(--green-ink); }
+@media (max-width: 900px) {
+  .hero .wrap { grid-template-columns: 1fr; }
+  .phones { min-height: 500px; }
+  .phone { width: 230px; } .phones .back { width: 200px; }
+  .badge-float.one { left: 4px; } .badge-float.two { right: 4px; }
+}
+
+/* the chain */
+.chain { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; gap: 16px; align-items: stretch; margin-top: 40px; }
+.step { padding: 26px; border-radius: 22px; background: #fff; border: 1px solid var(--line); }
+.step .num { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--yellow); color: var(--on-yellow); font-weight: 800; font-size: 20px; }
+.step h3 { font-size: 22px; font-weight: 800; margin-top: 18px; }
+.step p { color: var(--mut); margin-top: 6px; }
+.step.last { background: var(--deep); border-color: var(--deep); color: #fff; }
+.step.last p { color: #CBE3D9; }
+.arrow { align-self: center; color: var(--green); }
+.arrow svg { width: 32px; height: 32px; stroke-width: 2.2; }
+.chain-note { margin-top: 26px; padding: 18px 22px; border-radius: 16px; background: var(--red-tint); color: #7A1810; font-weight: 600; }
+@media (max-width: 860px) { .chain { grid-template-columns: 1fr; } .arrow { justify-self: center; transform: rotate(90deg); } }
+
+/* problems we solve */
+.pains { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; }
+.pain { padding: 24px; border-radius: 22px; border: 1px solid var(--line); background: #fff; }
+.pain .ic { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; background: var(--soft); color: var(--ink); }
+.pain h3 { font-size: 19px; font-weight: 800; margin-top: 16px; }
+.pain p { color: var(--mut); margin-top: 6px; font-size: 16px; }
+.pain .fix { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); color: var(--green-ink); font-weight: 700; font-size: 15px; }
+@media (max-width: 980px) { .pains { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 560px) { .pains { grid-template-columns: 1fr; } }
+
+/* feature rows */
+.feature { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; align-items: center; margin-top: 72px; }
+.feature:first-of-type { margin-top: 48px; }
+.feature.flip .shot { order: 2; }
+.feature .shot { display: flex; justify-content: center; padding: 34px 20px; border-radius: 28px; background: var(--soft); }
+.feature .shot .phone { width: 260px; }
+.feature h3 { font-size: clamp(26px, 3vw, 34px); font-weight: 800; margin-top: 10px; }
+.feature .lead { margin-top: 12px; }
+.points { list-style: none; padding: 0; margin: 20px 0 0; display: grid; gap: 12px; }
+.points li { display: flex; gap: 12px; align-items: flex-start; }
+.points .pi { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--green-tint); color: var(--green-ink); }
+.points .pi svg { width: 18px; height: 18px; stroke-width: 2.4; }
+@media (max-width: 860px) { .feature { grid-template-columns: 1fr; gap: 28px; } .feature.flip .shot { order: 0; } }
+
+/* dashboard lights band */
+.dark { background: var(--deep); color: #fff; }
+.dark .eyebrow { color: var(--yellow); }
+.dark .lead { color: #CBE3D9; }
+.dash-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-top: 40px; }
+.dl { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #0E1915; border: 1px solid #1F3A2F; text-align: center; font-size: 13px; font-weight: 600; color: #CBE3D9; }
+.dl svg { width: 38px; height: 38px; }
+.dl.red svg { color: #FF5A47; filter: drop-shadow(0 0 6px #FF5A47); }
+.dl.amber svg { color: #FFB21E; filter: drop-shadow(0 0 6px #FFB21E); }
+.dl.info svg { color: #4DA8FF; filter: drop-shadow(0 0 6px #4DA8FF); }
+.legend { display: flex; flex-wrap: wrap; gap: 12px 28px; margin-top: 28px; color: #CBE3D9; font-weight: 600; }
+.legend span { display: inline-flex; align-items: center; gap: 10px; }
+.legend i { width: 12px; height: 12px; border-radius: 50%; }
+.dark-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; margin-top: 56px; }
+.dark-cols .shot { display: flex; justify-content: center; gap: 18px; }
+.dark-cols .phone { width: 230px; background: #000; }
+.steps-list { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 18px; }
+.steps-list li { counter-increment: s; display: flex; gap: 16px; }
+.steps-list li::before { content: counter(s); flex: none; width: 36px; height: 36px; border-radius: 50%; background: var(--yellow); color: var(--on-yellow); display: grid; place-items: center; font-weight: 800; }
+.steps-list b { display: block; font-size: 19px; }
+.steps-list span { color: #CBE3D9; }
+@media (max-width: 980px) { .dash-grid { grid-template-columns: repeat(4, 1fr); } }
+@media (max-width: 860px) { .dark-cols { grid-template-columns: 1fr; } .dark-cols .phone:last-child { display: none; } }
+
+/* safety */
+.safety { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.promise { padding: 26px; border-radius: 22px; background: #fff; border: 1px solid var(--line); }
+.promise .ic { width: 50px; height: 50px; border-radius: 14px; display: grid; place-items: center; background: var(--yellow-tint); color: var(--on-yellow); }
+.promise h3 { font-size: 20px; font-weight: 800; margin-top: 16px; }
+.promise p { color: var(--mut); margin-top: 6px; }
+@media (max-width: 860px) { .safety { grid-template-columns: 1fr; } }
+
+/* who it is for */
+.people { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.person { display: flex; gap: 16px; padding: 22px; border-radius: 20px; border: 1px solid var(--line); }
+.person .ic { width: 52px; height: 52px; border-radius: 16px; display: grid; place-items: center; background: var(--green-tint); color: var(--green-ink); }
+.person .ic svg { width: 28px; height: 28px; }
+.person h3 { font-size: 18px; font-weight: 800; }
+.person p { color: var(--mut); font-size: 15.5px; margin-top: 4px; }
+@media (max-width: 980px) { .people { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 600px) { .people { grid-template-columns: 1fr; } }
+
+/* how to start */
+.start { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.how { padding: 28px; border-radius: 22px; background: #fff; border: 1px solid var(--line); }
+.how .n { font-size: 44px; font-weight: 800; color: var(--green); line-height: 1; }
+.how h3 { font-size: 20px; font-weight: 800; margin-top: 14px; }
+.how p { color: var(--mut); margin-top: 6px; }
+@media (max-width: 860px) { .start { grid-template-columns: 1fr; } }
+
+/* about */
+.about { display: grid; grid-template-columns: 1.1fr .9fr; gap: 56px; align-items: start; }
+.about .lead + .lead { margin-top: 14px; }
+.values { display: grid; gap: 12px; }
+.value { display: flex; gap: 14px; padding: 18px; border-radius: 18px; background: var(--soft); }
+.value .ic { width: 42px; height: 42px; border-radius: 12px; display: grid; place-items: center; background: #fff; color: var(--green-ink); }
+.value b { display: block; }
+.value span { color: var(--mut); font-size: 15.5px; }
+@media (max-width: 860px) { .about { grid-template-columns: 1fr; gap: 32px; } }
+
+/* faq */
+.faq { max-width: 820px; margin-top: 36px; }
+.faq details { border-bottom: 1px solid var(--line); }
+.faq summary { display: flex; justify-content: space-between; align-items: center; gap: 16px; min-height: 64px; padding: 14px 0; cursor: pointer; list-style: none; font-weight: 700; font-size: 18px; }
+.faq summary::-webkit-details-marker { display: none; }
+.faq summary::after { content: "+"; flex: none; width: 32px; height: 32px; border-radius: 50%; background: var(--soft); display: grid; place-items: center; font-size: 20px; color: var(--green-ink); }
+.faq details[open] summary::after { content: "–"; }
+.faq details p { padding: 0 0 20px; color: var(--mut); max-width: 68ch; }
+
+/* final call */
+.final { padding-block: 40px 88px; }
+.final-card { display: grid; grid-template-columns: 1.2fr .8fr; gap: 32px; align-items: center; padding: clamp(28px, 5vw, 56px); border-radius: 32px; background: var(--yellow); color: var(--on-yellow); overflow: hidden; }
+.final-card h2 { font-size: clamp(30px, 4.4vw, 48px); font-weight: 800; }
+.final-card p { margin-top: 12px; font-size: 18px; max-width: 46ch; }
+.final-card .btn.primary { background: var(--ink); }
+.final-card .phone { width: 220px; justify-self: center; transform: rotate(4deg); margin-bottom: -120px; }
+@media (max-width: 760px) { .final-card { grid-template-columns: 1fr; } .final-card .phone { display: none; } }
+
+footer { border-top: 1px solid var(--line); padding-block: 36px calc(36px + env(safe-area-inset-bottom, 0px)); color: var(--mut); font-size: 15px; }
+footer .wrap { display: flex; flex-wrap: wrap; gap: 16px 32px; align-items: center; justify-content: space-between; }
+footer nav { display: flex; flex-wrap: wrap; gap: 18px; }
+footer a { color: var(--mut); text-decoration: none; font-weight: 600; }
+footer a:hover { color: var(--ink); }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="#top" aria-label="CarBook home"><span class="mark"><svg viewBox="0 0 24 24"><path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/></svg></span>CarBook</a>
+    <nav class="links" aria-label="Sections">
+      <a href="#why">Why CarBook</a><a href="#features">What it does</a><a href="#lights">Dashboard lights</a><a href="#safety">Safety</a><a href="#about">About us</a><a href="#faq">Questions</a>
+    </nav>
+    <a class="btn primary" href="../">Open the app</a>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- hero -->
+<section class="hero">
+  <div class="wrap">
+    <div>
+      <div class="hello" lang="si"><span>ආයුබෝවන්</span><span lang="ta">வணக்கம்</span><span lang="en">Welcome</span></div>
+      <h1>Love your vehicle? <em>CarBook</em> remembers everything it needs.</h1>
+      <p class="lead">Your emission test, insurance and revenue licence. Every service, every fill-up, every warning light. CarBook keeps it all in one place, tells you what's next, and helps you know what to ask your mechanic.</p>
+      <div class="cta-row"><a class="btn primary" href="../">Open CarBook free
+        <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a><a class="btn ghost" href="#features">See what it does</a></div>
+      <ul class="ticks">
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Free</li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>No sign-up</li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Works offline</li>
+        <li><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg>Your records stay on your phone</li>
+      </ul>
+    </div>
+    <div class="phones" aria-hidden="true">
+      <div class="phone back"><img src="img/lights.jpg" alt="" width="585" height="1266"></div>
+      <div class="phone front"><img src="img/home.jpg" alt="" width="585" height="1266"></div>
+      <div class="badge-float one"><span class="dot"><svg viewBox="0 0 24 24"><path d="M7 18.5h10a4 4 0 0 0 .6-8 6 6 0 0 0-11.4-1A4.5 4.5 0 0 0 7 18.5z"/><path d="M9.5 13.5l2 2 3.5-3.5"/></svg></span>Emission test in 12 days</div>
+      <div class="badge-float two"><span class="dot"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Insurance on track</div>
+    </div>
+  </div>
+</section>
+
+<!-- why: the Sri Lankan renewal chain -->
+<section class="band soft" id="why">
+  <div class="wrap">
+    <span class="eyebrow">The Sri Lankan driver's year</span>
+    <h2 class="h2">Three dates. One chain. Miss one, and it all stalls.</h2>
+    <p class="lead">Your revenue licence can only be renewed with a valid emission test and insurance. Most of us keep these dates in our heads, on a calendar, or on the windscreen. CarBook keeps them for you, in the right order.</p>
+    <div class="chain">
+      <div class="step"><span class="num">1</span><h3>Emission test</h3><p>Book it first. Electric and hybrid vehicles don't need it.</p></div>
+      <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      <div class="step"><span class="num">2</span><h3>Insurance</h3><p>Must be valid on the day you renew your licence.</p></div>
+      <span class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>
+      <div class="step last"><span class="num">3</span><h3>Revenue licence</h3><p>Renewed every year, online or at your Divisional Secretariat.</p></div>
+    </div>
+    <p class="chain-note">CarBook shows what to book next and counts down every date, so the chain never catches you out.</p>
+
+    <div class="pains">
+      <div class="pain"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span><h3>Dates that sneak up</h3><p>Renewals come once a year, so they're easy to forget.</p><p class="fix">CarBook reminds you in time.</p></div>
+      <div class="pain"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5"/></svg></span><h3>Lost service history</h3><p>Records sit in a glovebox book or the garage's memory.</p><p class="fix">CarBook keeps every record and receipt.</p></div>
+      <div class="pain"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></svg></span><h3>Unsure at the garage</h3><p>It's hard to judge what really needs doing.</p><p class="fix">CarBook gives you the right questions.</p></div>
+      <div class="pain"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/></svg></span><h3>A light comes on</h3><p>Is it serious? Can you keep driving?</p><p class="fix">CarBook explains it in plain words.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- features -->
+<section class="band" id="features">
+  <div class="wrap">
+    <span class="eyebrow">What CarBook does</span>
+    <h2 class="h2">Everything your vehicle needs, in one calm place.</h2>
+    <p class="lead">You don't need to be a vehicle expert. CarBook tells you what's next, why it matters and what to do, in plain words.</p>
+
+    <div class="feature">
+      <div class="shot"><div class="phone"><img src="img/home.jpg" alt="CarBook home screen with a red banner: emission test in 12 days, and cards for oil change and wheel alignment" width="585" height="1266" loading="lazy"></div></div>
+      <div>
+        <span class="eyebrow">Reminders</span>
+        <h3>See what's next the moment you open it.</h3>
+        <p class="lead">One big banner shows the most important thing right now. Red means it needs attention now, amber means it's coming up soon, and green means you're on track.</p>
+        <ul class="points">
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Emission test, insurance, revenue licence, driving licence and warranties</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Oil changes, tyres, wheel alignment, battery, brakes and spark plugs</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Your year ahead, month by month, so nothing surprises you</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feature flip">
+      <div class="shot"><div class="phone"><img src="img/oil.jpg" alt="CarBook oil change page: 720 km to go, what engine oil does, what to do, and the last service details" width="585" height="1266" loading="lazy"></div></div>
+      <div>
+        <span class="eyebrow">Your vehicle, explained</span>
+        <h3>Tap anything to learn what it is and what to do.</h3>
+        <p class="lead">Every part and every document has its own page: what it is, why it matters, what to do next, and your history for it. Then one clear button: log it as done, or mark it renewed.</p>
+        <ul class="points">
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Every service record with date, mileage, cost, garage and parts</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Receipt photos kept with each record</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>A complete history that adds value when you sell</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="shot"><div class="phone"><img src="img/money.jpg" alt="CarBook money screen: fuel spent in the last 6 months with charts of spending and price per litre" width="585" height="1266" loading="lazy"></div></div>
+      <div>
+        <span class="eyebrow">Fuel and money</span>
+        <h3>Know where your money goes.</h3>
+        <p class="lead">Log a fill-up in seconds. CarBook works out your km per litre and price per litre, and shows what you've spent from the last month to the last five years, compared with the period before.</p>
+        <ul class="points">
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Simple charts of spending and fuel prices</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Spot when your fuel economy drops</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Service spending for the year in one number</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="feature flip">
+      <div class="shot"><div class="phone"><img src="img/ask.jpg" alt="CarBook assistant chat answering what's coming up in the next few months" width="585" height="1266" loading="lazy"></div></div>
+      <div>
+        <span class="eyebrow">Ask CarBook</span>
+        <h3>A friendly assistant that knows your vehicle's history.</h3>
+        <p class="lead">Ask "How much did I spend on fuel this year?" or "When is my next oil change?". Before a garage visit, tap <b>Questions for my mechanic</b> and CarBook prepares questions from your own records, ready to show at the counter.</p>
+        <ul class="points">
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Every suggestion shows the record it's based on</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Large-text mode to hand your phone to the mechanic</li>
+          <li><span class="pi"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></span>Suggests what to ask. Never pretends to be your mechanic</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- dashboard lights -->
+<section class="band dark" id="lights">
+  <div class="wrap">
+    <span class="eyebrow">Dashboard lights</span>
+    <h2 class="h2">A light just came on. Now what?</h2>
+    <p class="lead">Find the light you see, and CarBook tells you what it usually means, how urgent it is, what to do right now and what to ask your mechanic. Record it with one tap, and CarBook looks at your history to suggest what to check.</p>
+    <div class="dash-grid" aria-label="Some of the lights in the CarBook guide">
+      <div class="dl red"><svg viewBox="0 0 24 24"><path d="M3 10.5h8.5l2.5 2.5h3.5l3-3v6.5a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3z"/><path d="M7 10.5V8h4M8 8V6.5h2M20.5 5.5c0 1.2.9 1.7.9 2.6a.9.9 0 0 1-1.8 0c0-.9.9-1.4.9-2.6z"/></svg>Oil pressure</div>
+      <div class="dl red"><svg viewBox="0 0 24 24"><path d="M12 3v9.5"/><circle cx="12" cy="15" r="2.4"/><path d="M12 5.5h3M12 8.5h3"/><path d="M3 20c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/></svg>Engine temperature</div>
+      <div class="dl red"><svg viewBox="0 0 24 24"><rect x="3" y="7.5" width="18" height="11" rx="1.5"/><path d="M6.5 7.5V5.5h2.5v2M15 7.5V5.5h2.5v2M6.5 13h3.5M14 13h3.5M15.75 11.25v3.5"/></svg>Battery charging</div>
+      <div class="dl red"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6"/><path d="M12 8.8v3.8M12 15.2v.1"/><path d="M4.2 7.2a9.5 9.5 0 0 0 0 9.6M19.8 7.2a9.5 9.5 0 0 1 0 9.6"/></svg>Brake system</div>
+      <div class="dl amber"><svg viewBox="0 0 24 24"><path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M2.5 10.5v4.5M5 12.5H2.5"/></svg>Check engine</div>
+      <div class="dl amber"><svg viewBox="0 0 24 24"><path d="M6.5 5.5c-2.6 3.6-2.6 9.4 0 13h11c2.6-3.6 2.6-9.4 0-13"/><path d="M12 8.5v4.5M12 15.6v.1"/><path d="M5 21h2.5M9.5 21H12M14 21h2.5M18.5 21H20"/></svg>Tyre pressure</div>
+      <div class="dl amber"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="6.5"/><text x="12" y="14.3" text-anchor="middle" font-size="6" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">ABS</text><path d="M3.8 7.2a9.5 9.5 0 0 0 0 9.6M20.2 7.2a9.5 9.5 0 0 1 0 9.6"/></svg>ABS</div>
+      <div class="dl info"><svg viewBox="0 0 24 24"><path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8.5h6M3 12h6M3 15.5h6"/></svg>High beam</div>
+    </div>
+    <div class="legend"><span><i style="background:#FF5A47"></i>Red: stop safely</span><span><i style="background:#FFB21E"></i>Amber: get it checked soon</span><span><i style="background:#4DA8FF"></i>Blue or green: information</span></div>
+    <div class="dark-cols">
+      <ol class="steps-list">
+        <li><div><b>Find the light</b><span>Search by name or browse by colour.</span></div></li>
+        <li><div><b>Know what to do</b><span>What it usually means, how urgent it is and what to do right now.</span></div></li>
+        <li><div><b>Record it</b><span>One tap adds it to your vehicle's history, with the date and mileage.</span></div></li>
+        <li><div><b>Get advice</b><span>CarBook checks your records and suggests what to ask, such as when your last oil change was.</span></div></li>
+      </ol>
+      <div class="shot"><div class="phone"><img src="img/light-detail.jpg" alt="CarBook check engine light page: what it usually means, what to do now and what to ask your mechanic" width="585" height="1266"></div><div class="phone"><img src="img/lights.jpg" alt="CarBook dashboard lights guide with glowing red and amber symbols" width="585" height="1266"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- safety -->
+<section class="band soft" id="safety">
+  <div class="wrap">
+    <span class="eyebrow">Built for your safety</span>
+    <h2 class="h2">Helpful, honest, and never a replacement for your mechanic.</h2>
+    <p class="lead">A vehicle that's looked after is a safer vehicle, for you, your family and everyone on the road. CarBook helps you stay on top of it, and is careful about what it says.</p>
+    <div class="safety">
+      <div class="promise"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/></svg></span><h3>Red means stop</h3><p>For serious warning lights like oil pressure, overheating or brakes, CarBook always says: stop safely and get professional help.</p></div>
+      <div class="promise"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/><path d="M12 4v3M12 17v3"/></svg></span><h3>Brakes and tyres first</h3><p>Anything to do with brakes or tyres always points you to a professional check. Some things shouldn't wait.</p></div>
+      <div class="promise"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M9 9.5h6M9 12.5h4"/></svg></span><h3>Suggests, never diagnoses</h3><p>CarBook helps you ask the right questions. Your mechanic and your owner's manual always come first.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- who it is for -->
+<section class="band" id="who">
+  <div class="wrap">
+    <span class="eyebrow">Made for every Sri Lankan driver</span>
+    <h2 class="h2">Car, bike, three-wheeler or van: if you drive it, CarBook helps.</h2>
+    <div class="people">
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l2.2 5.2L19.5 9l-4 3.6 1.2 5.4L12 15.2 7.3 18l1.2-5.4-4-3.6 5.3-.8z"/></svg></span><div><h3>New owners</h3><p>Just got your first vehicle? Set it up in two minutes and never miss a date.</p></div></div>
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/></svg></span><div><h3>Daily commuters</h3><p>Keep fuel costs and services in check without the paperwork.</p></div></div>
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-7h5l4 7M9.5 9L8 6H6M14.5 9l1.5-3h2"/></svg></span><div><h3>Motorbike riders</h3><p>Licence and insurance reminders, and fuel use per kilometre.</p></div></div>
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 16V9a3 3 0 0 1 3-3h7l4 5h2a2 2 0 0 1 2 2v3"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M9 17h6M13 6v5h4"/></svg></span><div><h3>Three-wheeler drivers</h3><p>Your vehicle is your income. Stay on the road with every paper valid.</p></div></div>
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3 2.2-5 5-5s5 2 5 5M13.5 20c.2-2.4 1.6-4 3.5-4s3.3 1.6 3.5 4"/></svg></span><div><h3>Families</h3><p>More than one vehicle? Keep them all in one app.</p></div></div>
+      <div class="person"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg></span><div><h3>Working abroad</h3><p>Keep track of a vehicle back home, and share the record with family.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- how to start -->
+<section class="band soft">
+  <div class="wrap">
+    <span class="eyebrow">Getting started</span>
+    <h2 class="h2">Up and running in about two minutes.</h2>
+    <div class="start">
+      <div class="how"><span class="n">1</span><h3>Add your vehicle</h3><p>Name, plate number, fuel type and odometer reading. That's it.</p></div>
+      <div class="how"><span class="n">2</span><h3>Add your dates</h3><p>Emission test, insurance and revenue licence expiry, and your last oil change if you know it.</p></div>
+      <div class="how"><span class="n">3</span><h3>Relax</h3><p>CarBook shows what's next and keeps your history. Not ready yet? Try it with an example vehicle first.</p></div>
+    </div>
+    <div class="cta-row"><a class="btn primary" href="../">Open CarBook now
+      <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+  </div>
+</section>
+
+<!-- about -->
+<section class="band" id="about">
+  <div class="wrap about">
+    <div>
+      <span class="eyebrow">About us</span>
+      <h2 class="h2">Made in Sri Lanka, for Sri Lankan roads.</h2>
+      <p class="lead">We know the emission test queue, the insurance renewal call, the trip to the Divisional Secretariat, and the moment a strange light appears on the dashboard. CarBook started with a simple idea: looking after your vehicle shouldn't depend on remembering everything yourself.</p>
+      <p class="lead">So we built a calm, honest companion that keeps your dates, your records and your questions in one place. It works for every make and model, in a way that makes sense here.</p>
+    </div>
+    <div class="values">
+      <div class="value"><span class="ic"><svg viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg></span><div><b>Your data is yours</b><span>No account needed. Your records stay on your phone. We don't sell or share them.</span></div></div>
+      <div class="value"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9.5h8M8 12.5h5"/></svg></span><div><b>Sinhala, Tamil and English</b><span>English today. Sinhala and Tamil are being written by native speakers.</span></div></div>
+      <div class="value"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 12.5a7 7 0 0 1 14 0"/><path d="M2 12.5h3M19 12.5h3M8.5 19h7"/><path d="M12 12.5l3-4"/></svg></span><div><b>Works anywhere</b><span>Works offline and on everyday phones, even with patchy data.</span></div></div>
+      <div class="value"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z"/></svg></span><div><b>Free for owners</b><span>Everything you see here costs nothing to use.</span></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- faq -->
+<section class="band soft" id="faq">
+  <div class="wrap">
+    <span class="eyebrow">Questions</span>
+    <h2 class="h2">Good questions, straight answers.</h2>
+    <div class="faq">
+      <details><summary>Is CarBook really free?</summary><p>Yes. Reminders, records, fuel tracking, the dashboard lights guide and the assistant are free for vehicle owners.</p></details>
+      <details><summary>Do I need to create an account?</summary><p>No. Open the app and add your vehicle. Your records are saved on your phone. Use Export in the app to keep a backup copy.</p></details>
+      <details><summary>Which phones does it work on?</summary><p>Any smartphone with a web browser. On Android, open it in Chrome and choose "Install app" or "Add to Home screen" to use it like a normal app. A Google Play version is on the way.</p></details>
+      <details><summary>Is it in Sinhala and Tamil?</summary><p>CarBook is in English today. Sinhala and Tamil versions are being written and checked by native speakers.</p></details>
+      <details><summary>Does CarBook replace my mechanic?</summary><p>No. CarBook explains things in plain words and suggests what to ask, but it never diagnoses. For anything that feels unsafe, especially brakes, tyres or a red warning light, see a professional.</p></details>
+      <details><summary>Where do the service intervals come from?</summary><p>CarBook uses common default intervals, such as an oil change every 5,000 km or 6 months, and always labels them as defaults. Your owner's manual comes first.</p></details>
+      <details><summary>Can I renew my licence through CarBook?</summary><p>Not directly. CarBook reminds you, shows what needs to be valid first, and keeps your renewal history. You renew through the official eRL service or your Divisional Secretariat as usual.</p></details>
+      <details><summary>Is my information safe?</summary><p>Your records stay on your phone and are never sent to us. Read our <a href="../privacy.html">privacy policy</a> for the details.</p></details>
+    </div>
+  </div>
+</section>
+
+<!-- final call -->
+<section class="final">
+  <div class="wrap">
+    <div class="final-card">
+      <div>
+        <h2>If you love your vehicle, it deserves CarBook.</h2>
+        <p>Never miss a renewal. Always know what that light means. Walk into every garage with the right questions.</p>
+        <div class="cta-row"><a class="btn primary" href="../">Open CarBook free
+          <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a></div>
+      </div>
+      <div class="phone"><img src="img/home.jpg" alt="" width="585" height="1266" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <a class="logo" href="#top"><span class="mark"><svg viewBox="0 0 24 24"><path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/></svg></span>CarBook</a>
+    <nav aria-label="Footer"><a href="../">Open the app</a><a href="#features">What it does</a><a href="#lights">Dashboard lights</a><a href="#faq">Questions</a><a href="../privacy.html">Privacy policy</a></nav>
+    <p>© 2026 CarBook · Made in Sri Lanka · Contact: [contact email]</p>
+  </div>
+</footer>
+
+</body>
+</html>

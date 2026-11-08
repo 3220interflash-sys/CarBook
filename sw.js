@@ -2,7 +2,7 @@
 /* CarBook offline support.
    Keeps a copy of the app's files on the phone so it opens without internet.
    When you change any app file, bump VERSION so phones fetch the new copy. */
-const VERSION = 'carbook-v11';
+const VERSION = 'carbook-v12';
 const FILES = ['./', 'index.html', 'styles.css', 'strings.js', 'app.js', 'manifest.webmanifest', 'icon.svg', 'privacy.html', 'icon-192.png', 'icon-512.png', 'icon-maskable-512.png'];
 const FONT_CACHE = 'carbook-fonts';
 
@@ -28,6 +28,8 @@ self.addEventListener('fetch', e => {
     return;
   }
   if (url.origin !== location.origin) return;
+  // The website in /website/ is a normal web page: leave it to the browser.
+  if (url.pathname.includes('/website/')) return;
 
   // App files: get the newest copy when online (and save it), use the saved copy when offline.
   e.respondWith(fetch(req).then(res => { if (res.ok) caches.open(VERSION).then(c => c.put(req, res.clone())); return res; })

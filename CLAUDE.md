@@ -10,6 +10,7 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 - `styles.css`: all styling (design tokens at the top)
 - `strings.js`: every word the app shows, in English, Sinhala and Tamil. Missing translations fall back to English
 - `app.js`: data, rules, forms and views. Text comes from `strings.js` through `t('key')`, never typed straight into the code
+- `website/`: the public website (one page, `website/index.html`, with app screenshots in `website/img/`). Same brand as the app. It links to the app with `../`. The app's offline helper ignores this folder. When the app's look changes, retake the screenshots
 - `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-*.png`: make it installable and work offline. After changing any app file, bump `VERSION` in `sw.js` so phones pick up the new copy. A new file must also be added to `FILES` there
 
 ## Product rules
