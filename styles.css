@@ -49,7 +49,7 @@ p { margin: 0; }
 .list + .hint, .actions + .hint, section + .hint { margin-top: 10px; }
 
 /* header */
-.top { padding-top: 16px; }
+.top { padding-top: 12px; }
 .vehicle-btn { display: flex; flex-direction: column; align-items: flex-start; background: none; border: 0; padding: 4px 2px; min-height: var(--tap); text-align: left; }
 .hello { color: var(--mut); font-size: 14px; font-weight: 500; }
 .vname { display: inline-flex; align-items: center; gap: 6px; font-size: 26px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; }
@@ -340,3 +340,72 @@ button.stat:active { background: var(--surface-2); }
 .ic svg { width: 24px; height: 24px; }
 @media (prefers-reduced-motion: reduce) { .typing i { animation: none; opacity: .6; } }
 @media (max-width: 360px) { .hero-art { width: 72px; height: 72px; } .hero-art svg { width: 44px; height: 44px; } .hero-val { font-size: 38px; } }
+
+/* header with the menu button */
+.top { display: flex; align-items: center; gap: 6px; }
+.menu-btn { flex: none; width: 46px; height: 46px; margin-left: -6px; border: 0; border-radius: 14px; background: none; color: var(--fg); display: grid; place-items: center; }
+.menu-btn:active { background: var(--surface-2); }
+.menu-btn svg { width: 26px; height: 26px; stroke-width: 2; }
+.chat-head .menu-btn { margin-left: -8px; }
+
+/* side menu: slides in from the left */
+.drawer { position: fixed; inset: 0 auto 0 0; width: min(330px, 86vw); height: 100%; max-height: 100%; margin: 0; padding: 0; border: 0; border-radius: 0 22px 22px 0; background: var(--bg); color: var(--fg); overflow-y: auto; }
+.drawer[open] { animation: slidein .22s ease-out; }
+@keyframes slidein { from { transform: translateX(-100%); } to { transform: none; } }
+.drawer::backdrop { background: rgba(8, 14, 11, .45); }
+.m-in { padding: calc(14px + env(safe-area-inset-top, 0px)) 14px calc(24px + env(safe-area-inset-bottom, 0px)) max(14px, env(safe-area-inset-left, 0px)); }
+.m-top { display: flex; align-items: center; gap: 8px; }
+.m-car { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 12px; border: 0; border-radius: 18px; background: var(--yellow-tint); text-align: left; color: var(--fg); }
+.m-car .car-ic { width: 42px; height: 42px; border-radius: 12px; }
+.m-car .car-ic svg { width: 24px; height: 24px; }
+.m-h { margin: 22px 8px 6px; font-size: 13px; font-weight: 700; color: var(--mut); }
+.m-list { list-style: none; margin: 0; padding: 0; }
+.m-item { display: flex; align-items: center; gap: 14px; width: 100%; min-height: 50px; padding: 0 10px; border: 0; border-radius: 12px; background: none; color: var(--fg); text-align: left; text-decoration: none; font-weight: 600; }
+.m-item:active { background: var(--surface-2); }
+.m-item svg { color: var(--green-ink); }
+.m-item span:first-of-type { flex: 1; }
+.m-new { flex: none !important; padding: 2px 8px; border-radius: 999px; background: var(--yellow); color: var(--on-yellow); font-size: 11.5px; font-weight: 800; }
+.m-count { flex: none !important; min-width: 24px; padding: 2px 8px; border-radius: 999px; background: var(--surface-2); color: var(--mut); font-size: 12px; font-weight: 700; text-align: center; }
+
+/* dashboard lights: coloured symbols on a dark panel, like the real dashboard */
+.dash { flex: none; width: 48px; height: 48px; border-radius: 14px; background: #121815; display: grid; place-items: center; }
+.dash svg { width: 30px; height: 30px; stroke-width: 1.8; }
+.dash.red { color: #FF5A47; } .dash.amber { color: #FFB21E; } .dash.info { color: #4DA8FF; }
+.dash.red svg, .dash.amber svg, .dash.info svg { filter: drop-shadow(0 0 4px currentColor); }
+.dash.big { width: 76px; height: 76px; border-radius: 20px; }
+.dash.big svg { width: 48px; height: 48px; }
+.lights-head { margin-top: 10px; }
+.lights-head h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; }
+.lights-head p { color: var(--mut); margin-top: 2px; }
+.search { display: flex; align-items: center; gap: 8px; margin-top: 14px; padding: 0 14px; min-height: 52px; border: 1.5px solid var(--line); border-radius: 14px; background: var(--surface-2); color: var(--mut); }
+.search:focus-within { border-color: var(--green); background: var(--bg); }
+.search input { flex: 1; min-width: 0; min-height: 48px; border: 0; background: none; color: var(--fg); outline: none; }
+.seg.small button { min-height: 40px; font-size: 13.5px; }
+.light-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+.light-tile { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 18px; background: var(--surface); color: var(--fg); text-align: left; }
+.light-tile:active { background: var(--surface-2); }
+.lt-name { font-weight: 700; line-height: 1.25; min-height: 40px; overflow-wrap: anywhere; }
+.d-urgent { margin-top: 6px; font-weight: 700; }
+.asks { margin: 0; padding-left: 20px; }
+.asks li { margin: 4px 0; line-height: 1.5; }
+.rec-head { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: var(--surface-2); font-weight: 700; }
+.choice { display: flex; flex-wrap: wrap; gap: 8px; }
+#dlg .choice label.opt { margin: 0; }
+.opt input { position: absolute; opacity: 0; pointer-events: none; }
+.opt span { display: inline-flex; align-items: center; min-height: 46px; padding: 0 16px; border: 1.5px solid var(--line); border-radius: 999px; font-weight: 600; cursor: pointer; }
+.opt input:checked + span { border-color: var(--green); background: var(--green-tint); color: var(--green-ink); }
+.opt input:focus-visible + span { outline: 2px solid var(--green); outline-offset: 2px; }
+.done-art { display: flex; justify-content: center; margin: 8px 0 14px; }
+.done-t { text-align: center; font-size: 17px; line-height: 1.5; }
+
+/* home: open dashboard lights and the way into the guide */
+.alert-card, .light-cta { display: flex; align-items: center; gap: 12px; width: 100%; margin-top: 12px; padding: 12px; border-radius: 18px; text-align: left; color: var(--fg); }
+.alert-card { border: 1.5px solid var(--line); background: var(--surface); }
+.alert-card.red { border-color: var(--red); background: var(--red-tint); }
+.alert-card.amber { border-color: #F0B860; background: var(--amber-tint); }
+.light-cta { border: 1px solid var(--line); background: var(--surface); }
+.light-cta .dash { width: 44px; height: 44px; }
+@media (prefers-reduced-motion: reduce) { .drawer[open] { animation: none; } }
+
+.hero .dash.big { width: 88px; height: 88px; border-radius: 24px; position: relative; z-index: 1; }
+.hero-urgent { margin-top: 6px; font-weight: 700; }

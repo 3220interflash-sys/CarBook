@@ -35,11 +35,11 @@ const KEY = 'carbook.v1';
 let db = load();
 function load() {
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1) return upgrade(d); } catch (e) {}
-  return { v: 1, active: null, vehicles: [], docs: [], fuel: [], service: [] };
+  return { v: 1, active: null, vehicles: [], docs: [], fuel: [], service: [], alerts: [] };
 }
 // Fill in fields added after a record was first saved. Never removes anything.
 function upgrade(d) {
-  ['docs', 'fuel', 'service'].forEach(k => (d[k] || (d[k] = [])).forEach(r => { if (!r.visibility) r.visibility = 'private'; }));
+  ['docs', 'fuel', 'service', 'alerts'].forEach(k => (d[k] || (d[k] = [])).forEach(r => { if (!r.visibility) r.visibility = 'private'; }));
   return d;
 }
 function save() {
@@ -157,6 +157,7 @@ function questions(v) {
   const k = fuelRows(v).map(x => x.kpl).filter(Boolean);
   if (k.length >= 4) { const rec = avg(k.slice(-2)), old = avg(k.slice(0, -2)); if (rec < old * 0.92) q.push([t('qFuel', n1(rec), n1(old)), t('bFuel')]); }
   mine(db.docs, v).filter(d => d.kind === 'emission').forEach(d => { const n = daysTo(d.expiry); if (n >= 0 && n <= 30) q.push([t('qEmission', n), t('bEmission', fmtD(d.expiry))]); });
+  (typeof openAlerts === 'function' ? openAlerts(v) : []).forEach(a => { const l = lightOf(a.code), asks = l && t('light_' + a.code + '_ask'); if (Array.isArray(asks) && asks[0]) q.unshift([asks[0], t('bLight', lightName(l), fmtD(a.date))]); });
   if (mine(db.service, v).length === 0) q.push([t('qEmpty'), t('bEmpty')]);
   return q;
 }
@@ -353,6 +354,7 @@ function aiContext(v) {
     vehicle: { name: v.name, plate: v.plate, year: v.year, type: v.type, fuel: v.fuel, odometerKm: v.odo, averageKmPerDay: rate ? Math.round(rate) : null },
     documents: mine(db.docs, v).map(d => ({ type: kindName(d.kind), name: d.title || undefined, expires: d.expiry, daysLeft: daysTo(d.expiry), earlierExpiries: (d.history || []).map(h => h.expiry) })),
     upcoming: reminders(v).map(x => ({ item: x.title, due: x.date, daysLeft: x.days, kmLeft: x.kmLeft, estimated: !!x.est, status: { bad: 'due', warn: 'soon', ok: 'fine', none: 'no record' }[x.s] })),
+    dashboardLights: alertsOf(v).slice(0, 20).map(a => ({ light: lightName(lightOf(a.code) || { code: a.code }), urgency: lightOf(a.code)?.level, date: a.date, odometerKm: a.odo || undefined, stillOn: a.still, note: a.note || undefined, fixed: a.resolvedAt || undefined })),
     services: mine(db.service, v).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40).map(s => ({ date: s.date, work: s.kind, odometerKm: s.odo, costRs: s.cost, garage: s.garage || undefined, oil: s.oil || undefined, parts: s.part || undefined, note: s.note || undefined })),
     fuelByMonth: months,
     defaultIntervals: INTERVALS
@@ -463,7 +465,7 @@ function vehicleForm(v) {
     },
     { save: isNew ? t('addVehicleBtn') : t('save'), del: !isNew && db.vehicles.length > 1 ? () => {
       db.vehicles = db.vehicles.filter(x => x.id !== v.id);
-      ['docs', 'fuel', 'service'].forEach(k => { db[k].filter(x => x.vid === v.id && x.photo).forEach(x => delPhoto(x.id)); db[k] = db[k].filter(x => x.vid !== v.id); });
+      ['docs', 'fuel', 'service', 'alerts'].forEach(k => { db[k].filter(x => x.vid === v.id && x.photo).forEach(x => delPhoto(x.id)); db[k] = db[k].filter(x => x.vid !== v.id); });
       db.active = db.vehicles[0].id; save();
     } : null });
 }
@@ -579,6 +581,8 @@ function addExample() {
   svc('Tyres', -640, 35100, 76000);
   svc('Spark plugs', -980, 24800, 6400);
   svc('Wheel alignment', -300, 43700, 3500, { part: '' });
+  db.alerts.push({ ...newRecord(v), code: 'engine', date: day(-2), odo: 52410, still: 'on', note: '' });
+  db.alerts.push({ ...newRecord(v), code: 'tpms', date: day(-210), odo: 46300, still: 'off', note: '', resolvedAt: day(-209) });
   save();
 }
 
@@ -619,7 +623,7 @@ function itemRow(x, extra = '') {
 // ---------- views ----------
 function header(v) {
   const h = new Date().getHours(), hi = t(h < 12 ? 'hiMorning' : h < 17 ? 'hiAfternoon' : 'hiEvening');
-  return `<header class="top"><button class="vehicle-btn" data-act="switch" aria-label="${esc(t('switchVehicle'))}"><span class="hello">${esc(hi)}</span><span class="vname">${esc(v.name)}<span class="vchev">${svg('<path d="M7 10l5 5 5-5"/>')}</span></span></button></header>`;
+  return `<header class="top"><button class="menu-btn" data-act="menu" aria-label="${esc(t('menu'))}">${svg('<path d="M4 7h16M4 12h16M4 17h10"/>')}</button><button class="vehicle-btn" data-act="switch" aria-label="${esc(t('switchVehicle'))}"><span class="hello">${esc(hi)}</span><span class="vname">${esc(v.name)}<span class="vchev">${svg('<path d="M7 10l5 5 5-5"/>')}</span></span></button></header>`;
 }
 
 // Shown only once a second language has a translation started in strings.js.
@@ -645,7 +649,13 @@ function viewHome(v) {
   const worst = list => list.some(x => x.s === 'bad') ? 'bad' : list.some(x => x.s === 'warn') ? 'warn' : 'ok';
   const papers = active.filter(x => x.cat !== 'service'), maint = active.filter(x => x.cat === 'service');
   let heroHtml;
-  if (!hero) heroHtml = `<section class="hero setup"><div class="hero-art">${svg(ICONS.car)}</div><div class="hero-txt"><p class="hero-label">${esc(t('heroSetupLabel'))}</p><p class="hero-title">${esc(t('heroSetupTitle'))}</p></div><button class="hero-btn" data-act="add">${esc(t('heroSetupBtn'))}</button></section>`;
+  const redLight = openAlerts(v).find(a => lightOf(a.code).level === 'red');
+  if (redLight) {
+    const l = lightOf(redLight.code);
+    heroHtml = `<section class="hero bad"><p class="hero-label">${esc(t('heroNow'))}</p>
+      <div class="hero-row">${lightArt(l, true)}<div class="hero-txt"><p class="hero-title">${esc(lightName(l))}</p><p class="hero-when">${esc(t('recordedAgo', ago(redLight.date)))} · ${esc(t('still_' + (redLight.still || 'on')))}</p><p class="hero-urgent">${esc(t('lvlLong_red'))}</p></div></div>
+      <button class="hero-btn" data-act="alertDetail" data-id="${redLight.id}">${esc(t('heroWhatToDo'))}</button></section>`;
+  } else if (!hero) heroHtml = `<section class="hero setup"><div class="hero-art">${svg(ICONS.car)}</div><div class="hero-txt"><p class="hero-label">${esc(t('heroSetupLabel'))}</p><p class="hero-title">${esc(t('heroSetupTitle'))}</p></div><button class="hero-btn" data-act="add">${esc(t('heroSetupBtn'))}</button></section>`;
   else {
     const val = valueOf(hero);
     heroHtml = `<section class="hero ${hero.s}">
@@ -658,8 +668,10 @@ function viewHome(v) {
   const tile = (icon, label, value, extra, attrs) => `<button class="glance" ${attrs}><span class="g-ic">${svg(ICONS[icon])}</span><span class="g-v">${value}</span><span class="g-l">${esc(label)}</span>${extra || ''}</button>`;
   return `${header(v)}
   ${heroHtml}
+  ${openAlerts(v).filter(a => a !== redLight).map(a => { const l = lightOf(a.code); return `<button class="alert-card ${l.level}" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(t('recordedAgo', ago(a.date)))} · ${esc(t('still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>`; }).join('')}
   ${next.length ? `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div><div class="cards" role="list">${next.map(card).join('')}</div>` : ''}
   ${missing.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missing.slice(0, 4).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('finishSetupCount', missing.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}
+  <button class="light-cta" data-tab="lights"><span class="dash amber">${svg(LIGHTS.find(l => l.code === 'engine').icon)}</span><span class="it"><span class="t">${esc(t('lightCtaTitle'))}</span><span class="s">${esc(t('lightCtaSub'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>
   <h2>${esc(t('atAGlance'))}</h2>
   <div class="glances">
     ${tile('doc', t('papers'), esc(String(papers.length)), tag(worst(papers)), 'data-tab="car"')}
@@ -678,14 +690,15 @@ function viewCar(v) {
     <div class="car-main"><p class="car-name">${esc(v.name)}</p><p class="car-sub">${esc([v.plate, v.year, v.fuel && label('fuel_', v.fuel)].filter(Boolean).join(' · '))}</p></div>
     <button class="link-btn" data-act="editVehicle">${esc(t('edit'))}</button>
   </section>
-  <h2>${esc(t('papers'))}</h2>
+  <h2 id="sec-papers">${esc(t('papers'))}</h2>
   <ul class="list">${papers.map(x => itemRow(x)).join('')}</ul>
   <button class="link-btn" data-act="addDoc">${svg(ICONS.plus)}${esc(t('addADocument'))}</button>
-  <h2>${esc(t('maintenance'))}</h2>
+  <h2 id="sec-maint">${esc(t('maintenance'))}</h2>
   <ul class="list">${maint.map(x => itemRow(x)).join('')}</ul>
   <h2>${esc(t('records'))}</h2>
   <ul class="list">
     <li><button class="item" data-act="serviceList"><span class="ic plain">${svg(ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('serviceHistory'))}</span><span class="s">${esc(t('nRecords', nSvc))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+    <li><button class="item" data-act="alertList"><span class="ic plain">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}</span><span class="it"><span class="t">${esc(t('lightHistory'))}</span><span class="s">${esc(t('nRecords', alertsOf(v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
     <li><button class="item" data-tab="money"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('fuelHistory'))}</span><span class="s">${esc(t('nFillups', nFuel))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
     <li><button class="item" data-act="odo"><span class="ic plain">${svg(ICONS.gauge)}</span><span class="it"><span class="t">${esc(t('odometerShort'))}</span><span class="s">${n0(v.odo)} ${esc(t('km'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
   </ul>
@@ -695,8 +708,7 @@ function viewCar(v) {
     <li><button class="item" data-act="import"><span class="ic plain">${svg('<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>')}</span><span class="it"><span class="t">${esc(t('import'))}</span></span></button></li>
     <li><a class="item" href="privacy.html"><span class="ic plain">${svg(ICONS.shield)}</span><span class="it"><span class="t">${esc(t('privacyPolicy'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></a></li>
   </ul>
-  ${langPicker()}
-  <input type="file" id="imp" accept="application/json" hidden>`;
+  ${langPicker()}`;
 }
 
 // Change vs the previous period, as a small note. goodWhenUp: is a rise good news?
@@ -782,7 +794,7 @@ function viewAsk(v) {
         : `<span data-bubble="${i}">${m.pending ? `<span class="typing"><i></i><i></i><i></i></span>` : esc(m.text)}</span>`}
       ${!m.pending ? `<span class="src">${esc(t(m.src === 'ai' ? 'srcAI' : 'srcLocal'))}</span>` : ''}</div></div>`;
   return `<section class="chat-screen">
-    <header class="chat-head"><span class="avatar big">${svg(ICONS.bot)}</span><div><p class="chat-name">${esc(t('assistantName'))}</p><p class="chat-sub"><i class="dot-on"></i>${esc(t(aiSample ? 'assistantSubAI' : 'assistantSubLocal'))}</p></div>
+    <header class="chat-head"><button class="menu-btn" data-act="menu" aria-label="${esc(t('menu'))}">${svg('<path d="M4 7h16M4 12h16M4 17h10"/>')}</button><span class="avatar big">${svg(ICONS.bot)}</span><div><p class="chat-name">${esc(t('assistantName'))}</p><p class="chat-sub"><i class="dot-on"></i>${esc(t(aiSample ? 'assistantSubAI' : 'assistantSubLocal'))}</p></div>
       ${chat.length ? `<button class="link-btn" data-act="clearchat">${esc(t('newChat'))}</button>` : ''}</header>
     <div class="chatlog" id="chatlog" aria-live="polite">
       ${chat.length ? '' : `<div class="ask-hero"><span class="avatar huge">${svg(ICONS.bot)}</span><p class="ask-hero-t">${esc(t('askHeroTitle'))}</p><p class="ask-hero-s">${esc(t('askHeroSub'))}</p></div>`}
@@ -790,7 +802,7 @@ function viewAsk(v) {
       ${chat.map(bubble).join('')}
     </div>
     <div class="composer-wrap">
-      <div class="chips" role="list">${chat.length ? '' : sugg.map(([k, ic]) => `<button class="chipbtn" data-act="suggest" data-q="${esc(t(k))}">${svg(ICONS[ic])}${esc(t(k))}</button>`).join('')}<button class="chipbtn" data-act="mechQs">${svg(ICONS.wrench)}${esc(t('sugMechanic'))}</button></div>
+      <div class="chips" role="list">${chat.length ? '' : sugg.map(([k, ic]) => `<button class="chipbtn" data-act="suggest" data-q="${esc(t(k))}">${svg(ICONS[ic])}${esc(t(k))}</button>`).join('')}<button class="chipbtn" data-act="mechQs">${svg(ICONS.wrench)}${esc(t('sugMechanic'))}</button><button class="chipbtn" data-tab="lights">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}${esc(t('sugLight'))}</button></div>
       <form class="composer" id="composer"><label class="sr" for="chatin">${esc(t('chatPlaceholder'))}</label>
         <input id="chatin" name="q" autocomplete="off" placeholder="${esc(t('chatPlaceholder'))}" ${chatBusy ? 'disabled' : ''}>
         ${chatBusy && aiSample ? `<button type="button" class="send stop" data-act="stopchat" aria-label="${esc(t('stop'))}"><span class="sq"></span></button>` : `<button class="send" type="submit" aria-label="${esc(t('send'))}" ${chatBusy ? 'disabled' : ''}>${svg(ICONS.send)}</button>`}</form>
@@ -854,9 +866,169 @@ function serviceList() {
     `<button class="btn wide" data-act="addService">${esc(t('addServiceTitle'))}</button>`);
 }
 
+// ---------- dashboard warning lights ----------
+// The common lights. Wording lives in strings.js as light_<code>_name, _means, _do, _ask (a list).
+// level: red = stop safely, amber = get it checked soon, info = information only.
+// related: the service whose history matters when this light comes on.
+const LIGHTS = [
+  { code: 'oil', level: 'red', related: 'Oil change', icon: '<path d="M3 10.5h8.5l2.5 2.5h3.5l3-3v6.5a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3z"/><path d="M7 10.5V8h4M8 8V6.5h2M20.5 5.5c0 1.2.9 1.7.9 2.6a.9.9 0 0 1-1.8 0c0-.9.9-1.4.9-2.6z"/>' },
+  { code: 'temp', level: 'red', related: null, icon: '<path d="M12 3v9.5"/><circle cx="12" cy="15" r="2.4"/><path d="M12 5.5h3M12 8.5h3"/><path d="M3 20c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/>' },
+  { code: 'battery', level: 'red', related: 'Battery', icon: '<rect x="3" y="7.5" width="18" height="11" rx="1.5"/><path d="M6.5 7.5V5.5h2.5v2M15 7.5V5.5h2.5v2M6.5 13h3.5M14 13h3.5M15.75 11.25v3.5"/>' },
+  { code: 'brake', level: 'red', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="6"/><path d="M12 8.8v3.8M12 15.2v.1"/><path d="M4.2 7.2a9.5 9.5 0 0 0 0 9.6M19.8 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
+  { code: 'seatbelt', level: 'red', related: null, icon: '<circle cx="12" cy="4.8" r="2"/><path d="M8 21v-6.5a4 4 0 0 1 8 0V21"/><path d="M8.5 9.5l7.5 9"/>' },
+  { code: 'engine', level: 'amber', related: 'Spark plugs', icon: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M2.5 10.5v4.5M5 12.5H2.5"/>' },
+  { code: 'abs', level: 'amber', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="6.5"/><text x="12" y="14.3" text-anchor="middle" font-size="6" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">ABS</text><path d="M3.8 7.2a9.5 9.5 0 0 0 0 9.6M20.2 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
+  { code: 'airbag', level: 'amber', related: null, icon: '<circle cx="7.5" cy="5" r="1.8"/><path d="M5 21v-5.5l2.5-4 2 3.5h2.5"/><circle cx="16.5" cy="11" r="4.2"/>' },
+  { code: 'tpms', level: 'amber', related: 'Tyres', icon: '<path d="M6.5 5.5c-2.6 3.6-2.6 9.4 0 13h11c2.6-3.6 2.6-9.4 0-13"/><path d="M12 8.5v4.5M12 15.6v.1"/><path d="M5 21h2.5M9.5 21H12M14 21h2.5M18.5 21H20"/>' },
+  { code: 'steering', level: 'amber', related: null, icon: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M5 12h5M14 12h5M12 14v5"/>' },
+  { code: 'traction', level: 'amber', related: 'Tyres', icon: '<path d="M6 11.5l1.6-4h8.8l1.6 4v3.5H6z"/><path d="M8.5 15v1.5M15.5 15v1.5"/><path d="M4.5 21c1-1.6 2-1.6 3 0M10.5 21c1-1.6 2-1.6 3 0M16.5 21c1-1.6 2-1.6 3 0"/>' },
+  { code: 'glow', level: 'amber', related: null, diesel: true, icon: '<path d="M3 12c1.4-3.5 2.8-3.5 4.2 0s2.8 3.5 4.2 0 2.8-3.5 4.2 0 2.8 3.5 4.2 0"/><path d="M3 7h18M3 17h18"/>' },
+  { code: 'fuel', level: 'amber', related: null, icon: '<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M5 21h10M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M8 8h4"/>' },
+  { code: 'service', level: 'amber', related: 'Oil change', icon: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>' },
+  { code: 'washer', level: 'info', related: null, icon: '<path d="M3 16.5c4.5-6.5 13.5-6.5 18 0z"/><path d="M12 10V6M8.5 7.5L12 4l3.5 3.5"/>' },
+  { code: 'highbeam', level: 'info', related: null, icon: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8.5h6M3 12h6M3 15.5h6"/>' }
+];
+const lightOf = code => LIGHTS.find(l => l.code === code);
+const lightName = l => t('light_' + l.code + '_name');
+const LEVEL_TAG = { red: 'bad', amber: 'warn', info: 'ok' };
+const lightArt = (l, big) => `<span class="dash ${l.level} ${big ? 'big' : ''}">${svg(l.icon)}</span>`;
+let lightFilter = 'all', lightQuery = '';
+
+const STILL = ['on', 'onoff', 'off'];
+const alertsOf = v => mine(db.alerts || [], v).sort((a, b) => b.date.localeCompare(a.date) || b.createdAt - a.createdAt);
+const openAlerts = v => alertsOf(v).filter(a => !a.resolvedAt && daysTo(a.date) >= -60 && lightOf(a.code)?.level !== 'info');
+const ago = iso => { const d = -daysTo(iso); return d <= 0 ? t('todayLower') : t('daysAgo', d); };
+
+function viewLights(v) {
+  const q = lightQuery.trim().toLowerCase();
+  const list = LIGHTS.filter(l => (lightFilter === 'all' || l.level === lightFilter) && (!l.diesel || v.fuel === 'Diesel' || lightFilter !== 'all' || q) && (!q || lightName(l).toLowerCase().includes(q) || t('light_' + l.code + '_means').toLowerCase().includes(q)));
+  const recent = alertsOf(v).slice(0, 3);
+  return `${header(v)}
+  <section class="lights-head"><h1>${esc(t('lightsTitle'))}</h1><p>${esc(t('lightsSub'))}</p></section>
+  <label class="search"><span class="sr">${esc(t('lightsSearch'))}</span>${svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}<input id="lightq" type="search" value="${esc(lightQuery)}" placeholder="${esc(t('lightsSearch'))}" autocomplete="off"></label>
+  <div class="seg small" role="group" aria-label="${esc(t('lightsFilter'))}">${['all', 'red', 'amber', 'info'].map(k => `<button data-act="lightFilter" data-f="${k}" ${k === lightFilter ? 'aria-pressed="true"' : ''}>${esc(t('lf_' + k))}</button>`).join('')}</div>
+  ${list.length ? `<div class="light-grid">${list.map(l => `<button class="light-tile" data-act="light" data-code="${l.code}">${lightArt(l)}<span class="lt-name">${esc(lightName(l))}</span><span class="tag ${LEVEL_TAG[l.level]}">${esc(t('lvl_' + l.level))}</span></button>`).join('')}</div>`
+    : `<div class="empty"><b>${esc(t('lightsNone'))}</b>${esc(t('lightsNoneSub'))}</div>`}
+  ${recent.length ? `<h2>${esc(t('lightsRecorded'))}</h2><ul class="list">${recent.map(alertRow).join('')}</ul>` : ''}
+  <p class="hint" style="margin-top:14px">${esc(t('lightsManual'))}</p>`;
+}
+
+function alertRow(a) {
+  const l = lightOf(a.code); if (!l) return '';
+  return `<li><button class="item" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(fmtD(a.date))} · ${esc(t(a.resolvedAt ? 'alertFixed' : 'still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>`;
+}
+
+function lightDetail(code) {
+  const l = lightOf(code); if (!l) return;
+  const asks = t('light_' + code + '_ask'), past = alertsOf(veh()).filter(a => a.code === code);
+  infoSheet(lightName(l), `<div class="d-status ${LEVEL_TAG[l.level]}">${lightArt(l, true)}<div class="d-txt"><span class="tag ${LEVEL_TAG[l.level]}">${esc(t('lvl_' + l.level))}</span><p class="d-urgent">${esc(t('lvlLong_' + l.level))}</p></div></div>
+    <div class="explain"><h4>${esc(t('whatItMeans'))}</h4><p>${esc(t('light_' + code + '_means'))}</p><h4>${esc(t('whatToDoNow'))}</h4><p>${esc(t('light_' + code + '_do'))}</p>
+    ${Array.isArray(asks) && asks.length ? `<h4>${esc(t('askYourMechanic'))}</h4><ul class="asks">${asks.map(q => `<li>${esc(q)}</li>`).join('')}</ul>` : ''}</div>
+    ${past.length ? `<p class="hint" style="margin-top:12px">${esc(t('lightPast', past.length, fmtD(past[0].date)))}</p>` : ''}
+    <p class="hint" style="margin-top:12px">${esc(t('lightsManual'))}</p>`,
+    `${l.level !== 'info' ? `<button class="btn wide" data-act="recordLight" data-code="${code}">${esc(t('recordIt'))}</button>` : ''}`);
+}
+
+// Record "this light came on" straight from the guide.
+function alertForm(a, code) {
+  const v = veh(), isNew = !a; code = a?.code || code; const l = lightOf(code);
+  sheet(isNew ? t('recordTitle', lightName(l)) : t('editRecord'),
+    `<div class="rec-head">${lightArt(l)}<span>${esc(lightName(l))}</span></div>` +
+    `<div class="two"><div>${field(t('date'), 'date', { type: 'date', value: a?.date || todayISO(), req: true })}</div><div>${field(t('odometer'), 'odo', { type: 'number', mode: 'numeric', value: a?.odo ?? v.odo })}</div></div>` +
+    `<label for="f_still">${esc(t('isItStillOn'))}</label><div class="choice" id="f_still">${STILL.map(k => `<label class="opt"><input type="radio" name="still" value="${k}" ${(a?.still || 'on') === k ? 'checked' : ''}><span>${esc(t('still_' + k))}</span></label>`).join('')}</div>` +
+    field(t('whatHappened'), 'note', { value: a?.note, ph: t('whatHappenedPh') }),
+    fd => {
+      const rec = a || { ...newRecord(v), code };
+      Object.assign(rec, { date: fd.get('date'), odo: +fd.get('odo') || null, still: fd.get('still') || 'on', note: fd.get('note').trim() });
+      if (!isNew) rec.updatedAt = Date.now();
+      if (isNew) { db.alerts.push(rec); if (rec.odo) v.odo = Math.max(v.odo, rec.odo); }
+      save();
+      if (isNew) setTimeout(() => alertFollowUp(rec.id), 60);
+    },
+    { save: isNew ? t('saveRecord') : t('save'), del: !isNew && (() => { db.alerts = db.alerts.filter(x => x.id !== a.id); save(); }) });
+}
+
+function alertFollowUp(id) {
+  const a = db.alerts.find(x => x.id === id), l = a && lightOf(a.code); if (!l) return;
+  infoSheet(t('recordedTitle'), `<div class="done-art">${lightArt(l, true)}</div><p class="done-t">${esc(t('recordedText', lightName(l)))}</p>`,
+    `<button class="btn quiet" data-close-sheet>${esc(t('notNow'))}</button><button class="btn" data-act="askAlert" data-id="${id}">${esc(t('getAdvice'))}</button>`);
+  dlg.querySelector('[data-close-sheet]').onclick = () => dlg.close();
+}
+
+function alertDetail(id) {
+  const a = db.alerts.find(x => x.id === id), l = a && lightOf(a.code); if (!l) return;
+  infoSheet(lightName(l), `<div class="d-status ${a.resolvedAt ? 'ok' : LEVEL_TAG[l.level]}">${lightArt(l, true)}<div class="d-txt"><span class="tag ${a.resolvedAt ? 'ok' : LEVEL_TAG[l.level]}">${esc(t(a.resolvedAt ? 'alertFixed' : 'lvl_' + l.level))}</span><p class="d-urgent">${esc(t('recordedOn', fmtD(a.date)))}</p></div></div>` +
+    facts([[t('date'), fmtD(a.date)], [t('odometer'), a.odo ? n0(a.odo) + ' ' + t('km') : ''], [t('isItStillOn'), t('still_' + (a.still || 'on'))], [t('whatHappened'), a.note], [t('fixedOn'), a.resolvedAt ? fmtD(a.resolvedAt) : '']]),
+    `<button class="btn quiet" data-act="light" data-code="${a.code}">${esc(t('aboutThisLight'))}</button><button class="btn quiet" data-act="editAlert" data-id="${a.id}">${esc(t('edit'))}</button>
+     ${a.resolvedAt ? '' : `<button class="btn quiet" data-act="fixAlert" data-id="${a.id}">${esc(t('markFixed'))}</button>`}<button class="btn wide" data-act="askAlert" data-id="${a.id}">${esc(t('getAdvice'))}</button>`);
+}
+
+function alertList() {
+  const v = veh(), rows = alertsOf(v);
+  infoSheet(t('lightHistory'), rows.length ? `<ul class="list">${rows.map(alertRow).join('')}</ul>` : `<p class="hint">${esc(t('lightHistoryNone'))}</p>`,
+    `<button class="btn wide" data-tab="lights">${esc(t('openLightsGuide'))}</button>`);
+}
+
+// Advice worked out from the records, for when AI is not available.
+function alertAdvice(v, a) {
+  const l = lightOf(a.code), lines = [t('adviceHead', lightName(l), fmtD(a.date)), '', t('whatToDoNow') + ': ' + t('light_' + a.code + '_do')];
+  const asks = [...(t('light_' + a.code + '_ask') || [])];
+  const prior = alertsOf(v).filter(x => x.code === a.code && x.id !== a.id);
+  if (prior.length) asks.push(t('adviceRepeatQ', prior.length + 1));
+  if (l.related) { const r = lastService(v, l.related); asks.push(r ? t('adviceRelatedQ', label('svc_', l.related).toLowerCase(), fmtD(r.date), n0(r.odo)) : t('adviceNoRecordQ', label('svc_', l.related).toLowerCase())); }
+  if (a.still === 'onoff') asks.push(t('adviceOnOffQ'));
+  if (asks.length) lines.push('', t('askYourMechanic') + ':', ...asks.map(q => '• ' + q));
+  if (l.level === 'red') lines.push('', t('adviceRed'));
+  return { text: lines.join('\n'), list: null };
+}
+
+function askAboutAlert(id) {
+  const v = veh(), a = db.alerts.find(x => x.id === id), l = a && lightOf(a.code); if (!l) return;
+  if (dlg.open) dlg.close();
+  tab = 'ask'; window.scrollTo(0, 0);
+  const prompt = t('alertAskPrompt', lightName(l), fmtD(a.date));
+  if (aiSample) return sendChat(prompt);
+  chat.push({ role: 'user', text: prompt }, { role: 'assistant', text: alertAdvice(v, a).text, src: 'local' });
+  render(); scrollChat();
+}
+
+// ---------- side menu ----------
+function openMenu() {
+  const v = veh(), m = $('#menu'), n = alertsOf(v).length;
+  const link = (attrs, icon, k, extra = '') => `<li><button class="m-item" ${attrs}>${svg(ICONS[icon] || icon)}<span>${esc(t(k))}</span>${extra}</button></li>`;
+  m.innerHTML = `<div class="m-in">
+    <div class="m-top"><button class="m-car" data-act="switch"><span class="car-ic">${svg(ICONS.car)}</span><span class="it"><span class="t">${esc(v.name)}</span><span class="s">${esc(t('switchOrEdit'))}</span></span></button><button class="x" data-act="closeMenu" aria-label="${esc(t('close'))}">&times;</button></div>
+    <p class="m-h">${esc(t('menuGo'))}</p>
+    <ul class="m-list">
+      ${link('data-tab="home"', 'home', 'tabHome')}
+      ${link('data-act="goto" data-go="car" data-anchor="sec-papers"', 'doc', 'papers')}
+      ${link('data-act="goto" data-go="car" data-anchor="sec-maint"', 'wrench', 'maintenance')}
+      ${link('data-act="serviceList"', 'oil', 'serviceHistory')}
+      ${link('data-tab="money"', 'money', 'menuFuelMoney')}
+      ${link('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'lightsTitle', `<span class="m-new">${esc(t('newWord'))}</span>`)}
+      ${link('data-act="alertList"', 'gauge', 'lightHistory', n ? `<span class="m-count">${n}</span>` : '')}
+      ${link('data-tab="ask"', 'ask', 'menuAsk')}
+    </ul>
+    <p class="m-h">${esc(t('menuAdd'))}</p>
+    <ul class="m-list">
+      ${link('data-act="addFuel"', 'fuel', 'addFuelTitle')}
+      ${link('data-act="addService"', 'wrench', 'addServiceTitle')}
+      ${link('data-act="addDoc"', 'doc', 'addADocument')}
+      ${link('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'recordALight')}
+      ${link('data-act="odo"', 'gauge', 'updateOdoTitle')}
+    </ul>
+    <p class="m-h">${esc(t('settings'))}</p>
+    <ul class="m-list">
+      ${link('data-act="export"', '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>', 'export')}
+      ${link('data-act="import"', '<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>', 'import')}
+      <li><a class="m-item" href="privacy.html">${svg(ICONS.shield)}<span>${esc(t('privacyPolicy'))}</span></a></li>
+    </ul></div>`;
+  if (!m.open) m.showModal();
+}
+
 function addMenu() {
   const opt = (act, icon, k, s) => `<li><button class="item" data-act="${act}"><span class="ic plain">${svg(ICONS[icon])}</span><span class="it"><span class="t">${esc(t(k))}</span><span class="s">${esc(t(s))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>`;
-  infoSheet(t('addWhat'), `<ul class="list">${opt('addFuel', 'fuel', 'addFuelTitle', 'addFuelSub')}${opt('addService', 'wrench', 'addServiceTitle', 'addServiceSub')}${opt('addDoc', 'doc', 'addADocument', 'addDocSub')}${opt('odo', 'gauge', 'updateOdoTitle', 'addOdoSub')}</ul>`);
+  infoSheet(t('addWhat'), `<ul class="list">${opt('addFuel', 'fuel', 'addFuelTitle', 'addFuelSub')}${opt('addService', 'wrench', 'addServiceTitle', 'addServiceSub')}${opt('addDoc', 'doc', 'addADocument', 'addDocSub')}${opt('odo', 'gauge', 'updateOdoTitle', 'addOdoSub')}<li><button class="item" data-tab="lights"><span class="ic plain">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}</span><span class="it"><span class="t">${esc(t('recordALight'))}</span><span class="s">${esc(t('recordALightSub'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li></ul>`);
 }
 
 function render() {
@@ -864,16 +1036,18 @@ function render() {
   tabs.setAttribute('aria-label', t('mainNav'));
   if (!v) { main.innerHTML = viewOnboard(); tabs.innerHTML = ''; fab.hidden = true; return; }
   const keep = $('#chatin')?.value || '';
-  main.innerHTML = { home: viewHome, car: viewCar, money: viewMoney, ask: viewAsk }[tab](v);
+  main.innerHTML = { home: viewHome, car: viewCar, money: viewMoney, ask: viewAsk, lights: viewLights }[tab](v);
   tabs.innerHTML = `<div class="in">${TABS.map(([k, l]) => `<button data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}>${svg(ICONS[k])}<span>${esc(t(l))}</span></button>`).join('')}</div>`;
   fab.hidden = tab === 'ask'; fab.setAttribute('aria-label', t('addWhat')); fab.innerHTML = svg(ICONS.plus);
   if (tab === 'money') drawFuelCharts(v);
+  if (tab === 'lights') { const q = $('#lightq'); q.oninput = () => { lightQuery = q.value; const pos = q.selectionStart; render(); const n = $('#lightq'); n.focus(); n.setSelectionRange(pos, pos); }; }
   if (tab === 'ask') { const inp = $('#chatin'); if (inp && keep && !chatBusy) inp.value = keep; $('#composer').onsubmit = e => { e.preventDefault(); const q = $('#chatin').value; $('#chatin').value = ''; sendChat(q); }; scrollChat(); }
 }
 
 // ---------- events ----------
 document.addEventListener('click', e => {
   const el = e.target.closest('[data-tab],[data-act]'); if (!el) return;
+  const menu = $('#menu'); if (menu.open && el.dataset.act !== 'menu') menu.close();
   if (el.dataset.tab) { if (dlg.open) dlg.close(); tab = el.dataset.tab; window.scrollTo(0, 0); return render(); }
   const id = el.dataset.id, v = veh();
   switch (el.dataset.act) {
@@ -882,6 +1056,17 @@ document.addEventListener('click', e => {
     case 'switch': return switchVehicle();
     case 'example': addExample(); return render();
     case 'add': return addMenu();
+    case 'menu': return openMenu();
+    case 'closeMenu': return;
+    case 'goto': { tab = el.dataset.go; render(); const target = document.getElementById(el.dataset.anchor); if (target) target.scrollIntoView({ block: 'start' }); return; }
+    case 'light': return lightDetail(el.dataset.code);
+    case 'recordLight': return alertForm(null, el.dataset.code);
+    case 'lightFilter': lightFilter = el.dataset.f; return render();
+    case 'alertDetail': return alertDetail(id);
+    case 'alertList': return alertList();
+    case 'editAlert': return alertForm(db.alerts.find(x => x.id === id));
+    case 'fixAlert': { const a = db.alerts.find(x => x.id === id); if (a) { a.resolvedAt = todayISO(); a.updatedAt = Date.now(); save(); } dlg.close(); render(); return toast(t('markedFixed')); }
+    case 'askAlert': return askAboutAlert(id);
     case 'detail': return itemDetail(el.dataset.key);
     case 'svcDetail': return serviceDetail(id);
     case 'fuelDetail': return fuelDetail(id);
@@ -912,6 +1097,7 @@ document.addEventListener('click', e => {
   }
 });
 dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });
+$('#menu').addEventListener('click', e => { if (e.target.id === 'menu') e.target.close(); });
 let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => tab === 'money' && drawFuelCharts(veh()), 150); });
 
 render();
