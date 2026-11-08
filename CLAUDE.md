@@ -20,6 +20,8 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 - Deadlines cascade: emission test, then insurance, then revenue licence. Electric and hybrid vehicles are exempt from the emission test.
 - Intervals in `INTERVALS` are defaults only. The owner's manual comes first. Never state invented specs as fact.
 - The Ask feature suggests questions and never diagnoses. Brakes and tyres always push toward a professional check.
+- **Dashboard warning lights guide (planned):** a visual library of common dashboard lights and alerts. For each: its icon, what it usually means in plain words, how urgent it is (red: stop safely; amber: get it checked soon; green or blue: information only), what to do now, and what to ask the mechanic. It explains and suggests; it never diagnoses. Red lights such as oil pressure, engine temperature, brakes and charging always say to stop safely and get professional help. Always add "check your owner's manual", because symbols differ between makes.
+- **AI review of the owner's history (planned):** the Ask assistant reads the owner's records (services, fuel, deadlines, warning lights they have looked up) and proactively recommends what to check and which questions to ask the mechanic, each one showing the record it is based on. Due dates still come from the rules engine, not the AI.
 
 ## Phase 2 groundwork already in the data
 Every record has `id`, `vid` (vehicle id, separate from any owner), `createdAt`, `source` ("owner" for now; later "receipt" and "garage"), and an optional photo. Keep it that way. Never silently overwrite history: add `updatedAt` and, when sharing arrives, an audit trail. Docs, fuel and service records carry `visibility: 'private'`. Renewing a document keeps the old expiry in `history`.
@@ -35,10 +37,11 @@ The app is for owners who are not vehicle experts and want to know they are doin
 ## Next steps, in order
 1. Sinhala and Tamil translations. Text is now in `strings.js`; fill in the `si` and `ta` blocks and have a native speaker check them. A language shows in the picker once it has a `langName`.
 2. Local reminders: notifications before deadlines (cascading lead times).
-3. Photo reading (pump display, odometer, documents): needs a small backend that calls a vision model. Do not put API keys in the browser.
-4. Accounts and cloud backup (needed before Phase 2 sharing). Check Sri Lanka data protection rules first.
-5. Real AI wording for the Ask feature, still driven by the rules engine for due dates.
-6. Package for the Play Store (Capacitor or a trusted web activity) once real users have tested it.
+3. Dashboard warning lights guide: a searchable, icon-first library on the Ask tab (and from the + button), with plain meaning, urgency, what to do now and questions for the mechanic. Owners can log "this light came on" so it joins their history.
+4. Photo reading (pump display, odometer, documents, and later a photo of a dashboard light): needs a small backend that calls a vision model. Do not put API keys in the browser.
+5. Accounts and cloud backup (needed before Phase 2 sharing). Check Sri Lanka data protection rules first.
+6. Real AI for the Ask feature, on that backend: answers questions, and reviews the owner's history to recommend checks and questions for the mechanic, each with its basis. Still driven by the rules engine for due dates.
+7. Package for the Play Store (Capacitor or a trusted web activity) once real users have tested it.
 
 ## Known limits
 - Data is stored only on this device. Clearing browser data erases it. Export regularly until cloud backup exists.
