@@ -18,6 +18,10 @@ const WORDS = {
     dash: 'ඩෑෂ්බෝඩ් ලයිට්', dashT: 'මේවා ට්‍රැෆික් ලයිට් වගේමයි.', red: 'රතු', redS: 'ආරක්ෂිතව නවත්තන්න, දැන්ම.', amber: 'කහ', amberS: 'ඉක්මනින් චෙක් කරගන්න.', blue: 'නිල් හෝ කොළ', blueS: 'තොරතුරක් විතරයි. කලබල වෙන්න එපා.',
     order: 'පිළිවෙළ වැදගත්', em: 'එමිෂන් ටෙස්ට් එක', emS: 'ඉලෙක්ට්‍රික්, හයිබ්‍රිඩ් වාහනවලට අවශ්‍ය නෑ', ins: 'රක්ෂණය', insS: 'වලංගු වෙන්න ඕනේ', rev: 'ආදායම් බලපත්‍රය', revS: 'උඩ දෙකම ඕනේ', miss: 'එකක් මඟ ඇරුණොත්, මුළු දාමයම නවතිනවා.' }
 };
+WORDS.ta = { swipe: 'ஸ்வைப் செய்யுங்க', meanwhile: 'இதற்கிடையில்', quiz: 'சின்னக் கேள்வி', turn: 'இப்போ உங்க முறை', comment: 'கமெண்ட்', save: 'சேவ்', share: 'ஷேர்', mythvs: 'கட்டுக்கதை vs உண்மை', myth: 'கட்டுக்கதை', fact: 'உண்மை',
+  findCode: 'குறியீட்டைக் கண்டுபிடிங்க', week: 'வருடத்தின் வாரம்', year: 'வருடம்: 2019', look4: 'டயரின் பக்கத்தில், பெரும்பாலும் ஒரு நீள்வட்டத்துக்குள் இருக்கும் 4 இலக்கங்களைப் பாருங்க.',
+  dash: 'டாஷ்போர்ட் லைட்டுகள்', dashT: 'இவை டிராஃபிக் லைட் மாதிரித்தான்.', red: 'சிவப்பு', redS: 'பாதுகாப்பா நிறுத்துங்க, இப்பவே.', amber: 'மஞ்சள்', amberS: 'சீக்கிரம் செக் பண்ணுங்க.', blue: 'நீலம் அல்லது பச்சை', blueS: 'தகவல் மட்டும்தான். பதற வேண்டாம்.',
+  order: 'வரிசை முக்கியம்', em: 'புகைப் பரிசோதனை', emS: 'எலக்ட்ரிக், ஹைப்ரிட் வாகனங்களுக்குத் தேவையில்லை', ins: 'காப்புறுதி', insS: 'செல்லுபடியாக இருக்க வேண்டும்', rev: 'வருமான அனுமதிப்பத்திரம்', revS: 'மேலே உள்ள இரண்டும் தேவை', miss: 'ஒன்றைத் தவறவிட்டால், முழுச் சங்கிலியும் நின்றுவிடும்.' };
 const W = WORDS[LANG] || WORDS.en;
 
 const I = {
@@ -51,6 +55,7 @@ const I = {
   key: '<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16 7l2.5 2.5M13.5 9.5L16 12"/>',
   ball: '<circle cx="12" cy="12" r="8.5"/><path d="M7.5 5.2c2.2 3.6 2.2 10 0 13.6M16.5 5.2c-2.2 3.6-2.2 10 0 13.6"/><path d="M8.4 8.5l1.1.3M8.9 12h1.1M8.4 15.5l1.1-.3M15.6 8.5l-1.1.3M15.1 12H14M15.6 15.5l-1.1-.3"/>',
   rust: '<path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><circle cx="8" cy="14.5" r="1.2"/><circle cx="15.5" cy="13" r=".9"/><circle cx="12" cy="15.5" r=".7"/>',
+  clap: '<path d="M3 10h18v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M3 10l1-5 17.5 3.5-.5 1.5"/><path d="M8 5.8l2.6 3.7M13.5 6.9l2.6 3.4"/>',
   vote: '<path d="M4 12h16v8H4zM8 12V5h8v7"/><path d="M10 8.5l1.5 1.5 3-3"/>'
 };
 const ic = (k, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
@@ -210,7 +215,7 @@ const POSTS = LANG === 'en' ? POSTS_EN : require('./posts-' + LANG + '.js');
 
 const CSS = `
 *{box-sizing:border-box;margin:0}
-body{width:1080px;height:1350px;font-family:"Plus Jakarta Sans","Noto Sans Sinhala",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{width:1080px;height:1350px;font-family:"Plus Jakarta Sans","Noto Sans Sinhala","Noto Sans Tamil",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .slide{position:relative;width:1080px;height:1350px;overflow:hidden;padding:110px 90px 150px;display:flex;flex-direction:column}
 .dark{background:linear-gradient(150deg,#0B3B2B,#0E5A43 70%,#0F6A4E);color:#fff}
@@ -285,6 +290,13 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 .si .kick{font-size:28px}.si .vs p{font-size:42px;line-height:1.4}.si .opt,.si .li{font-size:38px;line-height:1.4}
 .si .mf p{font-size:33px;line-height:1.5}.si .qf{font-size:32px;line-height:1.5}.si .step b{font-size:44px}.si .step span{font-size:30px}
 .si .lrow b{font-size:46px}.si .lrow span{font-size:36px}.si .decode span{font-size:32px}.si .acts span{font-size:28px}.si .tag{font-size:26px}.si .swipe{font-size:30px}
+.ta *{letter-spacing:0 !important}
+.ta h1{font-size:72px;line-height:1.3}.ta .lt{font-size:60px}.ta .eh{font-size:64px;line-height:1.32}
+.ta h2{font-size:48px;line-height:1.38}.ta .qh{font-size:54px}.ta .lh{font-size:52px}
+.ta .sub,.ta .esub{font-size:35px;line-height:1.5}.ta .card p{font-size:33px;line-height:1.55}.ta .card .note{font-size:30px}
+.ta .kick{font-size:26px}.ta .vs p{font-size:38px;line-height:1.4}.ta .opt,.ta .li{font-size:35px;line-height:1.4}
+.ta .mf p{font-size:30px;line-height:1.5}.ta .qf{font-size:30px;line-height:1.5}.ta .step b{font-size:40px}.ta .step span{font-size:28px}
+.ta .lrow b{font-size:42px}.ta .lrow span{font-size:33px}.ta .decode span{font-size:30px}.ta .acts span{font-size:26px}.ta .tag{font-size:24px}.ta .swipe{font-size:28px}
 .foot{position:absolute;left:90px;right:90px;bottom:64px;display:flex;justify-content:space-between;align-items:center;font-size:30px;font-weight:700}
 .mark{display:inline-flex;align-items:center;gap:14px}.mark i{width:46px;height:46px;border-radius:14px;background:#FFC425;display:grid;place-items:center;color:#2A2000}.mark i svg{width:30px;height:30px}
 .dark .foot{color:rgba(255,255,255,.7)}.grey .foot{color:#8A968F}.yellow .foot{color:#5C4A10}.yellow .mark i{background:#2A2000;color:#FFC425}
@@ -293,7 +305,7 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 
 const car = '<svg viewBox="0 0 24 24"><path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/></svg>';
 const page = (html, i, n) => `<!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Sinhala:wght@500;600;700;800&display=block"><style>${CSS}</style></head>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Sinhala:wght@500;600;700;800&family=Noto+Sans+Tamil:wght@500;600;700;800&display=block"><style>${CSS}</style></head>
 <body class="${LANG}">${html.replace(/<\/div>$/, `<div class="foot"><span class="mark"><i>${car}</i>CarBook</span>${n > 1 ? `<span class="dots">${Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>` : ''}</div></div>`)}</body></html>`;
 
 (async () => {
