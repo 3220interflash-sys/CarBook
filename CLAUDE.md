@@ -10,7 +10,7 @@ Open a terminal in this folder and run `python3 -m http.server 8080`, then visit
 - `styles.css`: all styling (design tokens at the top)
 - `strings.js`: every word the app shows, in English, Sinhala and Tamil. Missing translations fall back to English
 - `app.js`: data, rules, forms and views. Text comes from `strings.js` through `t('key')`, never typed straight into the code
-- `website/`: the public website (one page, `website/index.html`, with app screenshots in `website/img/`). Premium look inspired by airline sites (never copying any brand): deep forest green, champagne gold, ivory; Cormorant Garamond headlines with Plus Jakarta Sans text; a car drives across the top of the hero; a working planner panel (Plan my year, A light came on, At the garage) overlaps the hero. It links to the app with `../`. The app's offline helper ignores this folder. When the app's look changes, retake the screenshots
+- `website/`: the public website (one page, `website/index.html`, with app screenshots in `website/img/`). Same friendly fintech look as the app (Plus Jakarta Sans, green and goldfish yellow, soft grey with white cards, a dark green wallet card). A car drives across under the menu bar. The owner tried a formal airline-style version and preferred this one. It links to the app with `../`. The app's offline helper ignores this folder. When the app's look changes, retake the screenshots
 - `sw.js`, `manifest.webmanifest`, `icon.svg`, `icon-*.png`: make it installable and work offline. After changing any app file, bump `VERSION` in `sw.js` so phones pick up the new copy. A new file must also be added to `FILES` there
 
 ## Product rules
@@ -29,11 +29,12 @@ Every record has `id`, `vid` (vehicle id, separate from any owner), `createdAt`,
 
 ## Design rules
 The app is for owners who are not vehicle experts and want to know they are doing everything right. Plain words, one clear next step, details only when asked.
-- White background. Green (`--green`) for the brand and main actions; goldfish yellow (`--yellow`) as the highlight (add button, dates, the car card). Red means needs attention now, amber means coming up soon, green means on track, always with a word next to the colour.
+- Fintech look and feel (like a modern money app): soft grey page with white floating cards, a dark green wallet card at the top of Home (fuel spent this month, like a balance), round quick-action buttons, and Recent activity listed like transactions with amounts on the right. Earlier versions said "white background"; the owner later chose this finish.
+- Green (`--green`) for the brand and main actions; goldfish yellow (`--yellow`) as the highlight (add button, dates, the car card). Red means needs attention now, amber means coming up soon, green means on track, always with a word next to the colour.
 - A side menu (the button at the top left) lists every area, quick adds and settings. Four tabs: Home (a big coloured banner for the single most urgent item with its own icon, swipeable cards for what's coming up, at-a-glance tiles), My car (papers, maintenance, records, settings), Money (fuel and spending), Ask (a chat screen with an assistant avatar, bubbles, quick-question chips and a send bar; the mechanic questions are a chip). One yellow + button adds anything.
 - Show, don't write: every item has its own icon (`KIND_ICON` in `app.js`), and screens lead with icons and numbers rather than sentences.
 - Lists show only a name and a status. Everything else (mileage, cost, garage, oil grade) lives in the detail sheet that opens on tap. Every item's detail explains what it is and what to do in plain language (`about_*` and `todo_*` in `strings.js`).
-- Plus Jakarta Sans for everything (system fonts are the offline fallback). Flat bordered lists, no gradients or decorative shadows. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Always light (white): the owner chose this, so there is no dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
+- Plus Jakarta Sans for everything (system fonts are the offline fallback). White cards with a soft lift instead of borders; gradients only on the wallet cards. Sentence case, no all-caps labels, no emoji. Tap targets of 48px or more. Always light (white): the owner chose this, so there is no dark mode. Must work offline and on small phones. Keep Sinhala and Tamil in mind: no fixed-width text, leave room for longer words.
 
 ## Next steps, in order
 1. Sinhala and Tamil translations. Text is now in `strings.js`; fill in the `si` and `ta` blocks and have a native speaker check them. A language shows in the picker once it has a `langName`.

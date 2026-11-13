@@ -646,8 +646,6 @@ function viewHome(v) {
   const hero = active[0], next = active.slice(1, 8);
   const now = new Date(todayISO() + 'T00:00'), mStart = isoOf(new Date(now.getFullYear(), now.getMonth(), 1));
   const month = fuelStats(v, mStart, addDaysISO(todayISO(), 1));
-  const worst = list => list.some(x => x.s === 'bad') ? 'bad' : list.some(x => x.s === 'warn') ? 'warn' : 'ok';
-  const papers = active.filter(x => x.cat !== 'service'), maint = active.filter(x => x.cat === 'service');
   let heroHtml;
   const redLight = openAlerts(v).find(a => lightOf(a.code).level === 'red');
   if (redLight) {
@@ -665,20 +663,39 @@ function viewHome(v) {
       <button class="hero-btn" data-act="detail" data-key="${esc(hero.key)}">${esc(t('heroWhatToDo'))}</button></section>`;
   }
   const card = x => { const val = valueOf(x); return `<button class="mini ${x.s}" data-act="detail" data-key="${esc(x.key)}"><span class="mini-ic">${iconOf(x)}</span><span class="mini-t">${esc(x.title)}</span><span class="mini-v">${esc(val.big)}${val.unit ? ` <small>${esc(val.unit)}</small>` : ''}</span>${tag(x.s)}</button>`; };
-  const tile = (icon, label, value, extra, attrs) => `<button class="glance" ${attrs}><span class="g-ic">${svg(ICONS[icon])}</span><span class="g-v">${value}</span><span class="g-l">${esc(label)}</span>${extra || ''}</button>`;
+  // wallet card: this month's fuel spend, like a balance
+  const lastM = fuelStats(v, isoOf(new Date(now.getFullYear(), now.getMonth() - 1, 1)), mStart);
+  const recent = fuelRows(v).map(x => x.kpl).filter(Boolean).slice(-3);
+  // compare like with like: this month so far vs the same number of days last month
+  const lastSoFar = fuelStats(v, isoOf(new Date(now.getFullYear(), now.getMonth() - 1, 1)), isoOf(new Date(now.getFullYear(), now.getMonth() - 1, now.getDate() + 1)));
+  const chg = lastSoFar.spent ? Math.round((month.spent - lastSoFar.spent) / lastSoFar.spent * 100) : null;
+  const wallet = `<button class="wallet" data-tab="money">
+    <span class="w-top"><span class="w-label">${esc(t('walletLabel'))}</span><span class="w-car">${esc([v.name, v.plate].filter(Boolean).join(' · '))}</span></span>
+    <span class="w-big">${esc(t('rs', n0(month.spent)))}</span>
+    ${chg != null ? `<span class="w-chip">${chg <= 0 ? '↓' : '↑'} ${Math.abs(chg)}% ${esc(t('vsLastMonthShort'))}</span>` : `<span class="w-chip">${esc(t('walletFirst'))}</span>`}
+    <span class="w-row"><span><b>${n0(v.odo)}</b> ${esc(t('km'))}<small>${esc(t('odometerShort'))}</small></span><span><b>${recent.length ? n1(avg(recent)) : '–'}</b> ${esc(t('kplUnit'))}<small>${esc(t('recentEconomy'))}</small></span><span><b>${esc(t('rs', n0(lastM.spent)))}</b><small>${esc(t('lastMonthWord'))}</small></span></span>
+  </button>`;
+  // quick actions, like Send / Top up in a banking app
+  const qa = (act, icon, k, extra = '') => `<button class="qa" ${act}><span class="c">${svg(ICONS[icon] || icon)}</span><span>${esc(t(k))}</span>${extra}</button>`;
+  const quick = `<div class="quick">${qa('data-act="addFuel"', 'fuel', 'qaFuel')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
+  // recent activity, like transactions
+  const acts = [
+    ...mine(db.fuel, v).map(f => ({ date: f.date, ic: 'fuel', t: t('actFuel'), s: t('actFuelSub', f.litres), amt: f.total, act: `data-act="fuelDetail" data-id="${f.id}"` })),
+    ...mine(db.service, v).map(x => ({ date: x.date, ic: KIND_ICON[x.kind] || 'wrench', t: label('svc_', x.kind), s: x.garage || t('actService'), amt: x.cost || null, act: `data-act="svcDetail" data-id="${x.id}"` })),
+    ...alertsOf(v).map(a => ({ date: a.date, ic: null, light: lightOf(a.code), t: lightName(lightOf(a.code)), s: t(a.resolvedAt ? 'alertFixed' : 'still_' + (a.still || 'on')), amt: null, act: `data-act="alertDetail" data-id="${a.id}"` })),
+    ...mine(db.docs, v).flatMap(d => (d.history || []).map(h => ({ date: new Date(h.renewedAt - new Date(h.renewedAt).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), ic: KIND_ICON[d.kind] || 'doc', t: t('actRenewed', docTitle(d)), s: t('actNewExpiry', fmtD(d.expiry)), amt: null, act: `data-act="detail" data-key="doc-${d.id}"` })))
+  ].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 6);
+  const dayLabel = iso => { const d = -daysTo(iso); return d === 0 ? t('today') : d === 1 ? t('yesterday') : fmtD(iso); };
+  const activity = acts.length ? `<div class="sec-h"><h2>${esc(t('recentActivity'))}</h2><button class="link-btn" data-tab="money">${esc(t('seeAll'))}</button></div>
+    <ul class="list activity">${acts.map(x => `<li><button class="item" ${x.act}>${x.light ? lightArt(x.light) : `<span class="ic plain">${svg(ICONS[x.ic] || ICONS.doc)}</span>`}<span class="it"><span class="t">${esc(x.t)}</span><span class="s">${esc(dayLabel(x.date))} · ${esc(x.s)}</span></span>${x.amt ? `<span class="amt">− ${esc(t('rs', n0(x.amt)))}</span>` : ''}</button></li>`).join('')}</ul>` : '';
   return `${header(v)}
+  ${wallet}
+  ${quick}
   ${heroHtml}
   ${openAlerts(v).filter(a => a !== redLight).map(a => { const l = lightOf(a.code); return `<button class="alert-card ${l.level}" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(t('recordedAgo', ago(a.date)))} · ${esc(t('still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>`; }).join('')}
   ${next.length ? `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div><div class="cards" role="list">${next.map(card).join('')}</div>` : ''}
   ${missing.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missing.slice(0, 4).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('finishSetupCount', missing.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}
-  <button class="light-cta" data-tab="lights"><span class="dash amber">${svg(LIGHTS.find(l => l.code === 'engine').icon)}</span><span class="it"><span class="t">${esc(t('lightCtaTitle'))}</span><span class="s">${esc(t('lightCtaSub'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>
-  <h2>${esc(t('atAGlance'))}</h2>
-  <div class="glances">
-    ${tile('doc', t('papers'), esc(String(papers.length)), tag(worst(papers)), 'data-tab="car"')}
-    ${tile('wrench', t('maintenance'), esc(String(maint.length)), tag(worst(maint)), 'data-tab="car"')}
-    ${tile('fuel', t('fuelThisMonth'), esc(t('rs', n0(month.spent))), '', 'data-tab="money"')}
-    ${tile('gauge', t('odometerShort'), `${n0(v.odo)}<small> ${esc(t('km'))}</small>`, '', 'data-act="odo"')}
-  </div>`;
+  ${activity}`;
 }
 
 function viewCar(v) {

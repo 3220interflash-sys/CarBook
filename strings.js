@@ -610,6 +610,25 @@ const STRINGS = {
     light_highbeam_do: 'Dip them when there is traffic ahead so you do not dazzle other drivers.',
     light_highbeam_ask: [],
 
+    // home: wallet card, quick actions, activity
+    walletLabel: 'Spent on fuel this month',
+    walletFirst: 'Your first month',
+    vsLastMonthShort: 'vs this time last month',
+    recentEconomy: 'recent economy',
+    lastMonthWord: 'last month',
+    qaFuel: 'Fill-up',
+    qaService: 'Service',
+    qaDoc: 'Document',
+    qaLight: 'Light',
+    qaOdo: 'Odometer',
+    recentActivity: 'Recent activity',
+    actFuel: 'Fuel',
+    actFuelSub: l => `${l} L`,
+    actService: 'Service',
+    actRenewed: name => `${name} renewed`,
+    actNewExpiry: date => `now valid to ${date}`,
+    yesterday: 'Yesterday',
+
     // example data
     exampleBatteryWarranty: 'Battery warranty',
     exampleTyreWarranty: 'Tyre warranty'
