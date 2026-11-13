@@ -23,3 +23,6 @@ Images: `marketing/instagram/posts-ta/`. Text: `marketing/instagram/posts-ta.js`
 | 10 | BGM இல்ல | That brake squeal is not BGM |
 
 Captions: short Tamil line + the scene hashtag, e.g. #CarBookCinema #SriLanka #Tamil #CarCare. Write final captions with the native-speaker reviewer.
+
+## To do later
+- Every Tamil post should carry a clear Tamil movie reference (a scene, trope or parody line), not just the cinema theme in the label. Rework the posts that lean on it lightly (for example 3, 7 and 9) when we come back to this.
