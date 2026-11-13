@@ -152,3 +152,33 @@ Ask your mechanic which coolant your vehicle uses.
 - Reply to every comment, especially "I didn't know that".
 - Use the same look on every post: white or soft grey background, CarBook green, goldfish yellow highlights, bold numbers.
 - Don't use F1 team logos, car brand logos or real drivers' photos. Talk about F1 in general.
+
+---
+
+# Posts 11 to 16 (practical, funny, very Sri Lankan)
+
+## 11. Washed is not serviced
+**Caption:** Shiny tyres, 2016 date code. Plot twist. 😅 A car wash makes it look new. Only a service keeps it running well. Tag the friend whose car is always washed but never serviced.
+#CarWash #SriLanka #CarCare #CarMyths
+
+## 12. What does waxing actually do?
+**Caption:** Wax = sunscreen for your paint. In our sun, salt air and bird-droppings-from-the-mango-tree conditions, roughly every 3 months is a good habit. Water stops beading? Time to wax. 🧽
+#CarWax #SriLanka #CarCare #CarDetailing
+
+## 13. Your car went swimming. Now what?
+**Caption:** If flood water got inside, don't try to start it. Photos, insurer, mechanic, tow. And check your policy covers floods BEFORE the rains (ask about natural perils cover). Your car is not a boat. 🌊
+#Floods #Monsoon #SriLanka #CarInsurance #DrivingSafety
+
+## 14. Sea view parking comes with a price
+**Caption:** Galle Face sunsets: 10/10. Salt on your car: 0/10. Rinse it, wax it, check underneath. Tag a friend whose car lives by the beach. 🏖️
+#IslandLife #SriLanka #CarCare #Rust
+
+## 15. You don't need to call Aiya
+**Caption:** Knowing your car isn't a man thing or a woman thing. It's an owner thing. Five facts, a few good questions, and you're the expert in the family. Tag her. 💪
+(Respectful note for whoever posts it: the joke is on the "family expert", never on women.)
+#WomenWhoDrive #SriLanka #CarConfidence #CarCare
+
+## 16. Cricket, politics and your car
+**Caption:** Don't leave it to the last over. Keep your batting average steady. And unlike promises, your revenue licence date never changes. 🏏 Which is harder to follow?
+(Keep it party-neutral: no names, no parties, no logos.)
+#SriLankaCricket #SriLanka #CarCare #FunFacts

@@ -29,7 +29,15 @@ const I = {
   engine: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M2.5 10.5v4.5M5 12.5H2.5"/>',
   beam: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8.5h6M3 12h6M3 15.5h6"/>',
   sound: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/>',
-  drop: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>'
+  drop: '<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  wash: '<path d="M4 18l1.4-3.8A2 2 0 0 1 7.3 13h9.4a2 2 0 0 1 1.9 1.2L20 18v2a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1v-.5H7v.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M8 3.5s1.5 1.8 1.5 2.8a1.5 1.5 0 0 1-3 0C6.5 5.3 8 3.5 8 3.5zM16 2.5s1.5 1.8 1.5 2.8a1.5 1.5 0 0 1-3 0c0-1 1.5-2.8 1.5-2.8zM12 6s1.5 1.8 1.5 2.8a1.5 1.5 0 0 1-3 0C10.5 7.8 12 6 12 6z"/>',
+  sparkle: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 15l.7 1.8 1.8.7-1.8.7L19 20l-.7-1.8-1.8-.7 1.8-.7z"/>',
+  flood: '<path d="M5 12l1.3-3.5A2 2 0 0 1 8.2 7h7.6a2 2 0 0 1 1.9 1.5L19 12v2H5z"/><path d="M2 17c2.5 0 2.5-1.6 5-1.6s2.5 1.6 5 1.6 2.5-1.6 5-1.6 2.5 1.6 5 1.6M2 21c2.5 0 2.5-1.6 5-1.6s2.5 1.6 5 1.6 2.5-1.6 5-1.6 2.5 1.6 5 1.6"/>',
+  beach: '<circle cx="17" cy="6.5" r="3"/><path d="M2 15c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2M2 19.5c2.5 0 2.5-2 5-2s2.5 2 5 2 2.5-2 5-2 2.5 2 5 2"/><path d="M6 11V5M3.5 6.5C4.5 4.5 7.5 4.5 8.5 6.5"/>',
+  key: '<circle cx="8" cy="15" r="4.5"/><path d="M11.2 11.8L20 3M16 7l2.5 2.5M13.5 9.5L16 12"/>',
+  ball: '<circle cx="12" cy="12" r="8.5"/><path d="M7.5 5.2c2.2 3.6 2.2 10 0 13.6M16.5 5.2c-2.2 3.6-2.2 10 0 13.6"/><path d="M8.4 8.5l1.1.3M8.9 12h1.1M8.4 15.5l1.1-.3M15.6 8.5l-1.1.3M15.1 12H14M15.6 15.5l-1.1-.3"/>',
+  rust: '<path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><circle cx="8" cy="14.5" r="1.2"/><circle cx="15.5" cy="13" r=".9"/><circle cx="12" cy="15.5" r=".7"/>',
+  vote: '<path d="M4 12h16v8H4zM8 12V5h8v7"/><path d="M10 8.5l1.5 1.5 3-3"/>'
 };
 const ic = (k, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden="true">${I[k]}</svg>`;
 
@@ -69,7 +77,9 @@ const chainArt = () => `<div class="slide grey"><div class="kick g">The order ma
    <div class="step last"><span class="n">3</span>${ic('disc')}<div><b>Revenue licence</b><span>Needs the two above</span></div></div>
   </div><p class="qf c">Miss one, and the whole chain stalls.</p></div>`;
 
-const T = { cover, vs, card, quiz, list, end, tyreArt, lightsArt, chainArt };
+const myth = s => `<div class="slide grey"><div class="kick g">${s.kick || 'Myth vs fact'}</div>
+  ${s.pairs.map(([m, f]) => `<div class="mf"><div class="m"><span class="tag bad">${ic('cross')}Myth</span><p>${m}</p></div><div class="f"><span class="tag ok">${ic('check')}Fact</span><p>${f}</p></div></div>`).join('')}</div>`;
+const T = { cover, vs, card, quiz, list, end, tyreArt, lightsArt, chainArt, myth };
 
 // ---- the 10 posts ----
 const POSTS = [
@@ -138,6 +148,48 @@ const POSTS = [
     { t: 'card', kick: 'The honest rule', icon: 'drop', title: 'Water in an emergency? OK.', body: 'Leaving it there forever? Not OK. Ask your mechanic which coolant your vehicle uses.', note: 'And never open a hot radiator cap. Ever.' },
     { t: 'end', title: 'In 32°C traffic, your engine works harder than you do.', sub: 'Give it the right drink.' }
   ]}
+  ,{ name: '11-washed-not-serviced', slides: [
+    { t: 'cover', kick: 'Weekend car wash', title: 'Washed is not <em>serviced.</em>', sub: 'Sorry to be the one to tell you.', icon: 'wash' },
+    { t: 'myth', pairs: [['“The car wash is done, so the oil is also fine.”', 'A wash cleans the outside. Engine oil gets changed on its own schedule, at a garage.'], ['“Tyres are shining, so they must be new.”', 'Tyre polish only makes the sides look good. The tread, the part that grips the road, is still the same age.']] },
+    { t: 'list', kick: 'What a car wash actually does', title: 'Lovely, but only:', items: ['Cleans the outside', 'Vacuums the inside', 'Makes the tyres shiny', 'Makes you feel good (valid)'] },
+    { t: 'card', kick: 'Free tip', icon: 'oil', title: 'While it’s shining, check the oil.', body: 'Ask the attendant to open the bonnet and check the oil level with the dipstick. Takes one minute.' },
+    { t: 'end', title: 'Shiny tyres. 2016 date code. Plot twist.', sub: 'Tag the friend whose car is always washed but never serviced.' }
+  ]},
+  { name: '12-what-wax-does', slides: [
+    { t: 'cover', kick: 'The Sri Lankan sun is not joking', title: 'What does <em>waxing</em> your car actually do?', icon: 'sparkle' },
+    { t: 'card', kick: 'In one line', icon: 'sparkle', title: 'Wax is sunscreen for your paint.', body: 'It adds a thin protective layer against strong sun, rain, bird droppings, tree sap and sea salt.' },
+    { t: 'list', kick: 'How often?', title: 'A simple rule:', items: ['Roughly every 3 months', 'More often if you park outside or near the sea', 'Water stops forming little beads? Time to wax'] },
+    { t: 'myth', pairs: [['“Wax will fix my scratches.”', 'It can hide very fine marks a little. Deeper scratches need a body and paint shop.'], ['“I’ll wax it once and forget.”', 'Wax wears off with washing and sun. It’s a regular job, like sunscreen.']] },
+    { t: 'end', title: 'Park under a mango tree? Wax is not optional.', sub: 'Tag the friend whose car is the crows’ favourite.' }
+  ]},
+  { name: '13-car-went-swimming', slides: [
+    { t: 'cover', kick: 'Monsoon season, round two', title: 'Your car went <em>swimming.</em> Now what?', sub: 'What to do, and what not to do, after a flood.', icon: 'flood' },
+    { t: 'list', kick: 'If water got inside', title: 'Please don’t:', cross: true, items: ['Try to start the engine', '“Just check if it works”', 'Drive through water when you can’t see the road'], note: 'Starting a flooded engine can turn a repair into a replacement.' },
+    { t: 'list', kick: 'Instead, do this', title: 'The calm plan:', items: ['Take photos for insurance', 'Call your insurer and a mechanic', 'Get it towed to the garage', 'Let them check oil, fuel and electrics'] },
+    { t: 'card', kick: 'Before the rains', icon: 'shield', title: 'Check your insurance covers floods.', body: 'Flood damage often needs extra cover, sometimes called natural perils cover. Ask your insurer what your policy includes.' },
+    { t: 'end', title: 'Your car is not a boat. No matter how confident you feel.', sub: 'Send this to someone who parks in a low spot.' }
+  ]},
+  { name: '14-sea-view-parking', slides: [
+    { t: 'cover', kick: 'Island life', title: 'Sea view parking comes with a <em>price.</em>', sub: 'Salt air loves metal. A bit too much.', icon: 'beach' },
+    { t: 'vs', kick: 'Same view, different feelings', a: ['Galle Face sunset', 'Beautiful. 10 out of 10. Would park again.'], b: ['Your car, a year later', 'Quietly collecting salt. And rust.'], ai: 'beach', bi: 'rust' },
+    { t: 'card', kick: 'What’s happening', icon: 'rust', title: 'Salt speeds up rust.', body: 'Sea breeze carries salt that settles on your vehicle, especially underneath, where nobody ever looks.' },
+    { t: 'list', kick: 'Near the sea? Do this', title: 'Easy habits:', items: ['Rinse with fresh water, underneath too', 'Wax regularly to protect the paint', 'Look for rust bubbles on edges and under doors', 'Ask your mechanic to check underneath at services'] },
+    { t: 'end', title: 'Negombo, Galle, Mount Lavinia, Jaffna, Trinco?', sub: 'Tag a friend whose car lives by the beach.' }
+  ]},
+  { name: '15-you-dont-need-aiya', slides: [
+    { t: 'cover', kick: 'For every woman who drives', title: 'You don’t need to call <em>Aiya.</em>', sub: '(Or Thaththa. Or your husband. They can relax.)', icon: 'key' },
+    { t: 'vs', kick: 'Meet the family “car expert”', a: ['Aiya', 'Kicks the tyre. Says “it’s fine”. Goes back to the cricket.'], b: ['You, with the facts', 'Know the dates, the last service and what to ask. Actually fine.'], ai: 'tyre', bi: 'key' },
+    { t: 'list', kick: 'Be the expert in 5 steps', title: 'Know these 5 things:', items: ['Your 3 expiry dates', 'When the last oil change was', 'Your tyre pressure (it’s on the door)', 'What red and amber lights mean', 'Always ask to see the old parts'] },
+    { t: 'card', kick: 'At the garage', icon: 'q', title: '“What exactly will you change, and what will it cost?”', body: 'Ask it calmly, every time. Confidence at the garage is just good questions.', note: 'Knowing your car isn’t a man thing or a woman thing. It’s an owner thing.' },
+    { t: 'end', title: 'Tag the woman who’s the real car expert in your family.', sub: 'Aiya can stay. As the passenger.' }
+  ]},
+  { name: '16-cricket-politics-car', slides: [
+    { t: 'cover', kick: 'Our two national sports', title: 'Cricket, politics and your <em>car.</em>', sub: 'More in common than you think.', icon: 'ball' },
+    { t: 'card', kick: 'Cricket lesson', icon: 'ball', title: 'Don’t leave it to the last over.', body: 'Renewals, oil, tyres. Chasing everything at the very end only works in the highlights.' },
+    { t: 'card', kick: 'Cricket lesson, part 2', icon: 'clock', title: 'Your service record is a batting average.', body: 'One big innings doesn’t count. Steady, regular services do.' },
+    { t: 'card', kick: 'Politics lesson', icon: 'vote', title: 'Promises come and go. Your revenue licence comes every year.', body: 'Only one of them reliably turns up on time. Make sure it’s yours.' },
+    { t: 'end', title: 'Harder to follow: the score, the news, or your service dates?', sub: 'Comment below. Be honest.' }
+  ]}
 ];
 
 const CSS = `
@@ -176,8 +228,8 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 .opt b{flex:none;width:90px;height:90px;border-radius:50%;background:#0B3B2B;color:#FFC425;display:grid;place-items:center;font-size:44px}
 .qf{margin-top:auto;font-size:38px;color:#56645D;font-weight:600}.qf.c{text-align:center}
 .lh{margin-top:56px;font-size:76px}
-.lst{margin-top:50px;display:flex;flex-direction:column;gap:26px}
-.li{display:flex;align-items:center;gap:30px;padding:30px 36px;border-radius:36px;background:#fff;font-size:46px;font-weight:700;box-shadow:0 20px 40px -26px rgba(17,26,22,.3)}
+.lst{margin-top:44px;display:flex;flex-direction:column;gap:22px}
+.li{display:flex;align-items:center;gap:30px;padding:26px 34px;border-radius:36px;background:#fff;font-size:46px;font-weight:700;box-shadow:0 20px 40px -26px rgba(17,26,22,.3)}
 .tick{flex:none;width:76px;height:76px;border-radius:50%;background:#0A7F55;color:#fff;display:grid;place-items:center}.tick svg{width:44px;height:44px;stroke-width:3}
 .tick.x{background:#B42318}
 .eh{margin-top:70px;font-size:104px;color:#2A2000}
@@ -205,6 +257,11 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 .step .n{flex:none;width:76px;height:76px;border-radius:50%;background:#FFC425;color:#2A2000;display:grid;place-items:center;font-size:40px;font-weight:800}
 .step b{display:block;font-size:54px;font-weight:800}.step span{font-size:36px;color:#56645D}
 .arrow{align-self:center;font-size:64px;font-weight:800;color:#0A7F55;line-height:1.2}
+.mf{margin-top:36px;border-radius:48px;background:#fff;overflow:hidden;box-shadow:0 30px 60px -30px rgba(17,26,22,.25)}
+.mf .m,.mf .f{padding:30px 46px}.mf .m{background:#FEF3F2}
+.mf p{margin-top:14px;font-size:38px;line-height:1.28;font-weight:700;letter-spacing:-.01em}.mf .f p{font-weight:600;color:#33413A}
+.tag{display:inline-flex;align-items:center;gap:10px;padding:10px 22px 10px 16px;border-radius:999px;font-size:30px;font-weight:800}
+.tag svg{width:34px;height:34px;stroke-width:3}.tag.bad{background:#B42318;color:#fff}.tag.ok{background:#0A7F55;color:#fff}
 .foot{position:absolute;left:90px;right:90px;bottom:64px;display:flex;justify-content:space-between;align-items:center;font-size:30px;font-weight:700}
 .mark{display:inline-flex;align-items:center;gap:14px}.mark i{width:46px;height:46px;border-radius:14px;background:#FFC425;display:grid;place-items:center;color:#2A2000}.mark i svg{width:30px;height:30px}
 .dark .foot{color:rgba(255,255,255,.7)}.grey .foot{color:#8A968F}.yellow .foot{color:#5C4A10}.yellow .mark i{background:#2A2000;color:#FFC425}
