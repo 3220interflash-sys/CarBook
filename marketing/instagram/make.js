@@ -1,10 +1,24 @@
 // Draws the first 10 Instagram posts as 1080x1350 PNGs.
-// Run from the project folder: node marketing/instagram/make.js
+// Run from the project folder: node marketing/instagram/make.js       (English)
+//                              node marketing/instagram/make.js si    (Sinhala, text in posts-si.js)
 // Needs Playwright (pre-installed in Claude's cloud sessions) and internet for the font.
 const { chromium } = require('playwright');
 const fs = require('fs');
 const path = require('path');
-const OUT = path.join(__dirname, 'posts');
+const LANG = process.argv[2] || 'en';
+const OUT = path.join(__dirname, LANG === 'en' ? 'posts' : 'posts-' + LANG);
+// Words used inside the slide templates.
+const WORDS = {
+  en: { swipe: 'Swipe', meanwhile: 'Meanwhile', quiz: 'Quick quiz', turn: 'Your turn', comment: 'Comment', save: 'Save', share: 'Share', mythvs: 'Myth vs fact', myth: 'Myth', fact: 'Fact',
+    findCode: 'Find the code', week: 'week of the year', year: 'year: 2019', look4: 'Look for 4 digits, often in an oval, on the side of the tyre.',
+    dash: 'Dashboard lights', dashT: 'They work like traffic lights.', red: 'Red', redS: 'Stop safely, now.', amber: 'Amber', amberS: 'Get it checked soon.', blue: 'Blue or green', blueS: 'Just information. Relax.',
+    order: 'The order matters', em: 'Emission test', emS: 'Not needed for electric and hybrid', ins: 'Insurance', insS: 'Must be valid', rev: 'Revenue licence', revS: 'Needs the two above', miss: 'Miss one, and the whole chain stalls.' },
+  si: { swipe: 'ස්වයිප් කරන්න', meanwhile: 'ඒ අතරේ', quiz: 'පොඩි ප්‍රශ්නයක්', turn: 'දැන් ඔයාගේ වාරය', comment: 'කමෙන්ට්', save: 'සේව්', share: 'ෂෙයාර්', mythvs: 'මිථ්‍යාව සහ ඇත්ත', myth: 'මිථ්‍යාව', fact: 'ඇත්ත',
+    findCode: 'කේතය හොයාගන්න', week: 'අවුරුද්දේ සතිය', year: 'අවුරුද්ද: 2019', look4: 'ටයරයේ පැත්තේ, බොහෝ විට ඕවල් හැඩයක් ඇතුළේ තියෙන ඉලක්කම් 4 හොයන්න.',
+    dash: 'ඩෑෂ්බෝඩ් ලයිට්', dashT: 'මේවා ට්‍රැෆික් ලයිට් වගේමයි.', red: 'රතු', redS: 'ආරක්ෂිතව නවත්තන්න, දැන්ම.', amber: 'කහ', amberS: 'ඉක්මනින් චෙක් කරගන්න.', blue: 'නිල් හෝ කොළ', blueS: 'තොරතුරක් විතරයි. කලබල වෙන්න එපා.',
+    order: 'පිළිවෙළ වැදගත්', em: 'එමිෂන් ටෙස්ට් එක', emS: 'ඉලෙක්ට්‍රික්, හයිබ්‍රිඩ් වාහනවලට අවශ්‍ය නෑ', ins: 'රක්ෂණය', insS: 'වලංගු වෙන්න ඕනේ', rev: 'ආදායම් බලපත්‍රය', revS: 'උඩ දෙකම ඕනේ', miss: 'එකක් මඟ ඇරුණොත්, මුළු දාමයම නවතිනවා.' }
+};
+const W = WORDS[LANG] || WORDS.en;
 
 const I = {
   tyre: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.2"/><path d="M12 3v4.8M12 16.2V21M3 12h4.8M16.2 12H21M5.6 5.6l3.4 3.4M15 15l3.4 3.4M18.4 5.6L15 9M9 15l-3.4 3.4"/>',
@@ -44,45 +58,45 @@ const ic = (k, cls = '') => `<svg class="${cls}" viewBox="0 0 24 24" aria-hidden
 // ---- slide templates ----
 const cover = s => `<div class="slide dark"><div class="glow"></div>
   <div class="kick">${s.kick}</div><h1>${s.title}</h1>${s.sub ? `<p class="sub">${s.sub}</p>` : ''}
-  <div class="art">${ic(s.icon, 'big')}</div>${s.swipe !== false ? '<div class="swipe">Swipe <span>→</span></div>' : ''}</div>`;
-const vs = s => `<div class="slide grey"><div class="kick g">${s.kick || 'Meanwhile'}</div>
+  <div class="art">${ic(s.icon, 'big')}</div>${s.swipe !== false ? `<div class="swipe">${W.swipe} <span>→</span></div>` : ''}</div>`;
+const vs = s => `<div class="slide grey"><div class="kick g">${s.kick || W.meanwhile}</div>
   <div class="vs one"><div class="who">${s.a[0]}</div><p>${s.a[1]}</p>${ic(s.ai || 'flag', 'vi')}</div>
   <div class="vsx">vs</div>
   <div class="vs two"><div class="who">${s.b[0]}</div><p>${s.b[1]}</p>${ic(s.bi || 'q', 'vi')}</div></div>`;
 const card = s => `<div class="slide grey"><div class="kick g">${s.kick}</div>
   <div class="card">${s.icon ? `<div class="ci ${s.tone || ''}">${ic(s.icon)}</div>` : ''}<h2>${s.title}</h2>${s.body ? `<p>${s.body}</p>` : ''}${s.note ? `<p class="note">${s.note}</p>` : ''}</div></div>`;
-const quiz = s => `<div class="slide grey"><div class="kick g">Quick quiz</div><h2 class="qh">${s.q}</h2>
+const quiz = s => `<div class="slide grey"><div class="kick g">${W.quiz}</div><h2 class="qh">${s.q}</h2>
   <div class="opts">${s.opts.map((o, i) => `<div class="opt"><b>${'ABCD'[i]}</b><span>${o}</span></div>`).join('')}</div>${s.foot ? `<p class="qf">${s.foot}</p>` : ''}</div>`;
 const list = s => `<div class="slide grey"><div class="kick g">${s.kick}</div><h2 class="lh">${s.title}</h2>
   <div class="lst">${s.items.map(x => `<div class="li"><span class="tick ${s.cross ? 'x' : ''}">${ic(s.cross ? 'cross' : 'check')}</span><span>${x}</span></div>`).join('')}</div>${s.note ? `<p class="qf">${s.note}</p>` : ''}</div>`;
-const end = s => `<div class="slide yellow"><div class="kick y">${s.kick || 'Your turn'}</div><h1 class="eh">${s.title}</h1>${s.sub ? `<p class="esub">${s.sub}</p>` : ''}
-  <div class="acts"><span>${ic('q')}Comment</span><span><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>Save</span><span><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>Share</span></div></div>`;
-const tyreArt = () => `<div class="slide grey"><div class="kick g">Find the code</div>
+const end = s => `<div class="slide yellow"><div class="kick y">${s.kick || W.turn}</div><h1 class="eh">${s.title}</h1>${s.sub ? `<p class="esub">${s.sub}</p>` : ''}
+  <div class="acts"><span>${ic('q')}${W.comment}</span><span><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></svg>${W.save}</span><span><svg viewBox="0 0 24 24"><path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>${W.share}</span></div></div>`;
+const tyreArt = () => `<div class="slide grey"><div class="kick g">${W.findCode}</div>
   <div class="tyrebox"><svg viewBox="0 0 600 600" class="tyresvg"><circle cx="300" cy="300" r="280" fill="#1B2420"/><circle cx="300" cy="300" r="176" fill="#E9EEEB"/><circle cx="300" cy="300" r="120" fill="#C9D3CE"/><circle cx="300" cy="300" r="40" fill="#9AA79F"/>
   ${Array.from({ length: 36 }, (_, i) => `<rect x="296" y="22" width="8" height="26" rx="3" fill="#2E3A35" transform="rotate(${i * 10} 300 300)"/>`).join('')}
   <path id="arc" d="M120 300 A180 180 0 0 1 480 300" fill="none"/><text font-family="Plus Jakarta Sans" font-weight="700" font-size="26" fill="#6E7C75" letter-spacing="3"><textPath href="#arc" startOffset="12%">DOT  XX7  4LC</textPath></text>
   <rect x="352" y="102" width="150" height="74" rx="37" fill="#FFC425" transform="rotate(32 427 139)"/><text x="427" y="152" text-anchor="middle" font-family="Plus Jakarta Sans" font-weight="800" font-size="44" fill="#2A2000" transform="rotate(32 427 139)">2319</text></svg></div>
-  <div class="decode"><div><b>23</b><span>week of the year</span></div><div><b>19</b><span>year: 2019</span></div></div>
-  <p class="qf c">Look for 4 digits, often in an oval, on the side of the tyre.</p></div>`;
-const lightsArt = () => `<div class="slide dark"><div class="glow"></div><div class="kick">Dashboard lights</div><h1 class="lt">They work like traffic lights.</h1>
+  <div class="decode"><div><b>23</b><span>${W.week}</span></div><div><b>19</b><span>${W.year}</span></div></div>
+  <p class="qf c">${W.look4}</p></div>`;
+const lightsArt = () => `<div class="slide dark"><div class="glow"></div><div class="kick">${W.dash}</div><h1 class="lt">${W.dashT}</h1>
   <div class="lights">
-   <div class="lrow"><span class="dash r">${ic('oil')}</span><div><b>Red</b><span>Stop safely, now.</span></div></div>
-   <div class="lrow"><span class="dash a">${ic('engine')}</span><div><b>Amber</b><span>Get it checked soon.</span></div></div>
-   <div class="lrow"><span class="dash b">${ic('beam')}</span><div><b>Blue or green</b><span>Just information. Relax.</span></div></div>
+   <div class="lrow"><span class="dash r">${ic('oil')}</span><div><b>${W.red}</b><span>${W.redS}</span></div></div>
+   <div class="lrow"><span class="dash a">${ic('engine')}</span><div><b>${W.amber}</b><span>${W.amberS}</span></div></div>
+   <div class="lrow"><span class="dash b">${ic('beam')}</span><div><b>${W.blue}</b><span>${W.blueS}</span></div></div>
   </div></div>`;
-const chainArt = () => `<div class="slide grey"><div class="kick g">The order matters</div>
+const chainArt = () => `<div class="slide grey"><div class="kick g">${W.order}</div>
   <div class="chainv">
-   <div class="step"><span class="n">1</span>${ic('smoke')}<div><b>Emission test</b><span>Not needed for electric and hybrid</span></div></div><div class="arrow">↓</div>
-   <div class="step"><span class="n">2</span>${ic('shield')}<div><b>Insurance</b><span>Must be valid</span></div></div><div class="arrow">↓</div>
-   <div class="step last"><span class="n">3</span>${ic('disc')}<div><b>Revenue licence</b><span>Needs the two above</span></div></div>
-  </div><p class="qf c">Miss one, and the whole chain stalls.</p></div>`;
+   <div class="step"><span class="n">1</span>${ic('smoke')}<div><b>${W.em}</b><span>${W.emS}</span></div></div><div class="arrow">↓</div>
+   <div class="step"><span class="n">2</span>${ic('shield')}<div><b>${W.ins}</b><span>${W.insS}</span></div></div><div class="arrow">↓</div>
+   <div class="step last"><span class="n">3</span>${ic('disc')}<div><b>${W.rev}</b><span>${W.revS}</span></div></div>
+  </div><p class="qf c">${W.miss}</p></div>`;
 
-const myth = s => `<div class="slide grey"><div class="kick g">${s.kick || 'Myth vs fact'}</div>
-  ${s.pairs.map(([m, f]) => `<div class="mf"><div class="m"><span class="tag bad">${ic('cross')}Myth</span><p>${m}</p></div><div class="f"><span class="tag ok">${ic('check')}Fact</span><p>${f}</p></div></div>`).join('')}</div>`;
+const myth = s => `<div class="slide grey"><div class="kick g">${s.kick || W.mythvs}</div>
+  ${s.pairs.map(([m, f]) => `<div class="mf"><div class="m"><span class="tag bad">${ic('cross')}${W.myth}</span><p>${m}</p></div><div class="f"><span class="tag ok">${ic('check')}${W.fact}</span><p>${f}</p></div></div>`).join('')}</div>`;
 const T = { cover, vs, card, quiz, list, end, tyreArt, lightsArt, chainArt, myth };
 
 // ---- the 10 posts ----
-const POSTS = [
+const POSTS_EN = [
   { name: '01-pit-stop', slides: [
     { t: 'cover', kick: 'Box box, machan', title: 'An F1 crew changes 4 tyres in <em>under 2 seconds.</em>', sub: 'When did you last even look at yours?', icon: 'flag' },
     { t: 'vs', a: ['F1 team', 'Knows exactly when every part is due. Down to the lap.'], b: ['Us', '“Oil change? I think it was around Avurudu… which Avurudu, not sure.”'] },
@@ -192,9 +206,11 @@ const POSTS = [
   ]}
 ];
 
+const POSTS = LANG === 'en' ? POSTS_EN : require('./posts-' + LANG + '.js');
+
 const CSS = `
 *{box-sizing:border-box;margin:0}
-body{width:1080px;height:1350px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{width:1080px;height:1350px;font-family:"Plus Jakarta Sans","Noto Sans Sinhala",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 svg{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .slide{position:relative;width:1080px;height:1350px;overflow:hidden;padding:110px 90px 150px;display:flex;flex-direction:column}
 .dark{background:linear-gradient(150deg,#0B3B2B,#0E5A43 70%,#0F6A4E);color:#fff}
@@ -262,6 +278,13 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 .mf p{margin-top:14px;font-size:38px;line-height:1.28;font-weight:700;letter-spacing:-.01em}.mf .f p{font-weight:600;color:#33413A}
 .tag{display:inline-flex;align-items:center;gap:10px;padding:10px 22px 10px 16px;border-radius:999px;font-size:30px;font-weight:800}
 .tag svg{width:34px;height:34px;stroke-width:3}.tag.bad{background:#B42318;color:#fff}.tag.ok{background:#0A7F55;color:#fff}
+.si *{letter-spacing:0 !important}
+.si h1{font-size:80px;line-height:1.3}.si .lt{font-size:68px}.si .eh{font-size:72px;line-height:1.32}
+.si h2{font-size:54px;line-height:1.38}.si .qh{font-size:60px}.si .lh{font-size:58px}
+.si .sub,.si .esub{font-size:38px;line-height:1.5}.si .card p{font-size:36px;line-height:1.55}.si .card .note{font-size:32px}
+.si .kick{font-size:28px}.si .vs p{font-size:42px;line-height:1.4}.si .opt,.si .li{font-size:38px;line-height:1.4}
+.si .mf p{font-size:33px;line-height:1.5}.si .qf{font-size:32px;line-height:1.5}.si .step b{font-size:44px}.si .step span{font-size:30px}
+.si .lrow b{font-size:46px}.si .lrow span{font-size:36px}.si .decode span{font-size:32px}.si .acts span{font-size:28px}.si .tag{font-size:26px}.si .swipe{font-size:30px}
 .foot{position:absolute;left:90px;right:90px;bottom:64px;display:flex;justify-content:space-between;align-items:center;font-size:30px;font-weight:700}
 .mark{display:inline-flex;align-items:center;gap:14px}.mark i{width:46px;height:46px;border-radius:14px;background:#FFC425;display:grid;place-items:center;color:#2A2000}.mark i svg{width:30px;height:30px}
 .dark .foot{color:rgba(255,255,255,.7)}.grey .foot{color:#8A968F}.yellow .foot{color:#5C4A10}.yellow .mark i{background:#2A2000;color:#FFC425}
@@ -270,8 +293,8 @@ h2{font-size:70px;line-height:1.1;font-weight:800;letter-spacing:-.03em}
 
 const car = '<svg viewBox="0 0 24 24"><path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/></svg>';
 const page = (html, i, n) => `<!doctype html><html><head><meta charset="utf-8">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=block"><style>${CSS}</style></head>
-<body>${html.replace(/<\/div>$/, `<div class="foot"><span class="mark"><i>${car}</i>CarBook</span>${n > 1 ? `<span class="dots">${Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>` : ''}</div></div>`)}</body></html>`;
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Noto+Sans+Sinhala:wght@500;600;700;800&display=block"><style>${CSS}</style></head>
+<body class="${LANG}">${html.replace(/<\/div>$/, `<div class="foot"><span class="mark"><i>${car}</i>CarBook</span>${n > 1 ? `<span class="dots">${Array.from({ length: n }, (_, k) => `<i class="${k === i ? 'on' : ''}"></i>`).join('')}</span>` : ''}</div></div>`)}</body></html>`;
 
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
