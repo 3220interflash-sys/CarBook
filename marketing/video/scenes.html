@@ -1,0 +1,202 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- CarBook short videos. Open scenes.html?part=1 (or 2, 3). render.js turns each part into a 20 second MP4. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1080px;height:1920px;overflow:hidden;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+#stage{position:relative;width:1080px;height:1920px;overflow:hidden;background:#0D1411}
+.l{position:absolute;opacity:0;transform-origin:50% 50%}
+.bg{left:0;top:0;width:1080px;height:1920px;opacity:1}
+.cap{left:90px;width:900px;top:330px;font-weight:800;font-size:88px;line-height:1.06;letter-spacing:-.035em;color:#fff}
+.cap.dk{color:#0D1411}
+em{font-style:normal}
+em.y{color:#FFC425} em.g{color:#0A7F55} em.r{color:#E5484D} em.a{color:#F5A524}
+.tag{left:90px;top:250px;padding:12px 26px;border-radius:999px;background:rgba(255,255,255,.16);color:#fff;font-size:30px;font-weight:700}
+.tag.dk{background:rgba(13,20,17,.08);color:#0D1411}
+.phone{left:320px;top:700px;width:440px;padding:14px;background:#0D1411;border-radius:66px;box-shadow:0 50px 100px rgba(0,0,0,.35)}
+.phone img{display:block;width:412px;height:892px;object-fit:cover;border-radius:54px}
+.pill{padding:22px 36px;border-radius:999px;background:#fff;color:#0D1411;font-size:40px;font-weight:700;box-shadow:0 20px 40px rgba(0,0,0,.18);display:flex;align-items:center;gap:18px;white-space:nowrap}
+.dot{width:26px;height:26px;border-radius:50%;flex:none}
+.card{left:130px;width:820px;height:200px;background:#fff;border-radius:44px;box-shadow:0 20px 50px rgba(13,20,17,.10);display:flex;align-items:center;gap:36px;padding:0 44px;border:5px solid transparent}
+.num{width:104px;height:104px;border-radius:50%;background:#FFC425;color:#0D1411;font-size:54px;font-weight:800;display:grid;place-items:center;flex:none}
+.card b{font-size:56px;font-weight:800;letter-spacing:-.02em;color:#0D1411;flex:1}
+.st{padding:10px 24px;border-radius:999px;font-size:32px;font-weight:800;opacity:0}
+.bub{padding:34px 44px;border-radius:48px 48px 48px 14px;background:#fff;color:#0D1411;font-size:52px;font-weight:700;line-height:1.25;box-shadow:0 20px 44px rgba(0,0,0,.14)}
+.bub.me{border-radius:48px 48px 14px 48px;background:#0A7F55;color:#fff}
+.small{font-size:34px;font-weight:600;color:rgba(255,255,255,.78);line-height:1.3}
+</style></head>
+<body><div id="stage"></div>
+<script>
+const PART = +(new URLSearchParams(location.search).get('part') || 1);
+const S = document.getElementById('stage');
+const IMG = n => '../../website/img/' + n + '.jpg';
+function el(html){const d=document.createElement('div');d.innerHTML=html.trim();const n=d.firstChild;S.appendChild(n);return n}
+const cl=x=>Math.max(0,Math.min(1,x)), p=(t,a,b)=>cl((t-a)/(b-a));
+const eo=x=>1-Math.pow(1-x,3), eio=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const bk=x=>{const c=1.9;return 1+(c+1)*Math.pow(x-1,3)+c*Math.pow(x-1,2)};
+function put(n,o,x=0,y=0,s=1,r=0){n.style.opacity=o;n.style.transform=`translate(${x}px,${y}px) scale(${s}) rotate(${r}deg)`}
+// Pop in at a, leave at b.
+function pop(n,t,a,b,o={}){const k=p(t,a,a+.5),out=1-p(t,b-.3,b);
+  put(n,Math.min(cl(k*2.5),out),o.x||0,(o.y||0)+(1-eo(k))*(o.dy??70),(o.s||1)*(.6+.4*bk(k)),o.r||0)}
+// Slide-up text.
+function rise(n,t,a,b,o={}){const k=eo(p(t,a,a+.45)),out=1-p(t,b-.3,b);put(n,Math.min(k,out),o.x||0,(1-k)*60-(1-out)*40,1,0)}
+// Background layers revealed by a growing circle.
+const BGS=[];function bg(c,at,ox=540,oy=1100){const n=el(`<div class="l bg" style="background:${c}"></div>`);BGS.push({n,at,ox,oy});return n}
+function drawBgs(t){for(const b of BGS){const k=eio(p(t,b.at,b.at+.5));b.n.style.clipPath=b.at<=0?'none':`circle(${k*2300}px at ${b.ox}px ${b.oy}px)`;b.n.style.opacity=t>=b.at||b.at<=0?1:0}}
+function cap(html,dark){return el(`<div class="l cap${dark?' dk':''}">${html}</div>`)}
+function phone(img){return el(`<div class="l phone"><img src="${IMG(img)}" alt=""></div>`)}
+
+const CAR=`<svg viewBox="0 0 420 200" width="520" height="248"><path d="M30 135 Q30 104 64 98 L118 92 L160 50 Q172 38 194 38 L276 38 Q296 38 308 54 L340 94 L372 102 Q394 108 394 134 L394 150 Q394 160 382 160 L42 160 Q30 160 30 150 Z" fill="#0A7F55"/><path d="M172 56 L206 56 L206 92 L132 92 Z M220 56 L274 56 Q284 56 290 64 L310 92 L220 92 Z" fill="#CFEFE0"/><circle cx="380" cy="118" r="10" fill="#FFC425"/><g class="w" transform-origin="112 160"><circle cx="112" cy="160" r="36" fill="#0D1411"/><circle cx="112" cy="160" r="15" fill="#FFC425"/><rect x="108" y="128" width="8" height="64" fill="#0D1411"/></g><g class="w" transform-origin="306 160"><circle cx="306" cy="160" r="36" fill="#0D1411"/><circle cx="306" cy="160" r="15" fill="#FFC425"/><rect x="302" y="128" width="8" height="64" fill="#0D1411"/></g></svg>`;
+
+// End card, shared by all parts.
+function endCard(t0){
+  const L={};
+  L.bg=bg('#0D1411',t0);
+  L.c=el(`<div class="l" style="left:140px;top:560px;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#16B37B,#0A7F55 60%,#075C3E)"></div>`);
+  L.y=el(`<div class="l" style="left:720px;top:1220px;width:220px;height:220px;border-radius:50%;background:#FFC425"></div>`);
+  L.i=el(`<img class="l" src="../../icon.svg" style="left:420px;top:640px;width:240px;height:240px;border-radius:56px;box-shadow:0 30px 60px rgba(0,0,0,.3)">`);
+  L.n=el(`<div class="l" style="left:0;width:1080px;top:920px;text-align:center;font-size:128px;font-weight:800;letter-spacing:-.04em;color:#fff">CarBook</div>`);
+  L.s=el(`<div class="l" style="left:140px;width:800px;top:1080px;text-align:center;font-size:52px;font-weight:600;color:#E6F6EE;line-height:1.2">Your car, finally explained.</div>`);
+  L.p=el(`<div class="l" style="left:340px;width:400px;top:1500px;text-align:center;padding:22px 0;border-radius:999px;background:#FFC425;color:#0D1411;font-size:40px;font-weight:800">Coming soon</div>`);
+  L.f=el(`<div class="l small" style="left:90px;width:900px;top:1610px;text-align:center">${PART<3?'Follow for part '+(PART+1)+' of 3':'Follow for more car sense'}</div>`);
+  return t=>{const k=bk(p(t,t0+.1,t0+.8));put(L.c,cl(k*3),0,0,.3+.7*k);put(L.y,cl(p(t,t0+.5,t0+.8)),0,0,bk(p(t,t0+.5,t0+1.1)));
+    pop(L.i,t,t0+.35,99,{r:-8*(1-p(t,t0+.35,t0+.9))});pop(L.n,t,t0+.6,99);rise(L.s,t,t0+.85,99);pop(L.p,t,t0+1.1,99);rise(L.f,t,t0+1.3,99)}
+}
+
+let update;
+
+if (PART===1){
+  bg('#0D1411',0); bg('#F2F4F3',3); bg('#0D1411',10.5,540,1150); bg('#0A7F55',13.5,540,1700);
+  const tag=el(`<div class="l tag">Part 1 of 3 · The date chain</div>`);
+  const a1=el(`<div class="l cap" style="top:480px;font-size:140px"><em class="y">Quick test.</em></div>`);
+  const a2=el(`<div class="l cap" style="top:680px;font-size:60px;font-weight:600;color:rgba(255,255,255,.75)">No checking your wallet.</div>`);
+  const a3=el(`<div class="l cap" style="top:800px;font-size:96px">When does your revenue licence expire?</div>`);
+  const q=el(`<div class="l" style="left:620px;top:1120px;font-size:420px;font-weight:800;color:#FFC425;line-height:1">?</div>`);
+  const b1=cap('It’s not one date.<br>It’s a <em class="g">chain.</em>',1);
+  const b2=cap('Miss one, and your licence is <em class="r">stuck.</em>',1);
+  const cards=[['1','Emission test'],['2','Insurance'],['3','Revenue licence']].map((c,i)=>el(`<div class="l card" style="top:${720+i*270}px"><div class="num">${c[0]}</div><b>${c[1]}</b><span class="st"></span></div>`));
+  const arrows=[0,1].map(i=>el(`<div class="l" style="left:510px;top:${935+i*270}px;width:60px;height:40px"><svg viewBox="0 0 60 40" width="60" height="40"><path d="M6 6 L30 32 L54 6" fill="none" stroke="#0A7F55" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/></svg></div>`));
+  const setSt=(c,txt,bgc,fg,on)=>{const s=c.querySelector('.st');s.textContent=txt;s.style.background=bgc;s.style.color=fg;s.style.opacity=on}
+  const d1=cap('Usually found out at the <em class="y">worst possible time.</em>');
+  const road=el(`<div class="l" style="left:0;top:1330px;width:1080px;height:10px;background:repeating-linear-gradient(90deg,#3A4641 0 70px,transparent 70px 120px)"></div>`);
+  const car=el(`<div class="l" style="left:0;top:1090px">${CAR}</div>`);
+  const pole=el(`<div class="l" style="left:900px;top:1030px;width:26px;height:300px;border-radius:13px;background:#C9D3CF"></div>`);
+  const bar=el(`<div class="l" style="left:640px;top:1040px;width:286px;height:34px;border-radius:17px;background:repeating-linear-gradient(90deg,#E5484D 0 40px,#fff 40px 80px);transform-origin:270px 17px"></div>`);
+  const stamp=el(`<div class="l" style="left:150px;top:900px;padding:18px 36px;border-radius:24px;border:7px solid #E5484D;color:#E5484D;font-size:58px;font-weight:800;background:rgba(13,20,17,.6)">Licence expired</div>`);
+  const e1=cap('CarBook counts them down, <em class="y">in the right order.</em>');
+  const ph=phone('home');
+  const pills=[['#F5A524','Emission test · 12 days',40,860,-4],['#3FCF94','Insurance · 48 days',560,1120,3],['#3FCF94','Revenue licence · 61 days',60,1380,-2]]
+    .map(c=>el(`<div class="l pill" style="left:${c[2]}px;top:${c[3]}px"><span class="dot" style="background:${c[0]}"></span>${c[1]}</div>`));
+  const end=endCard(17.5);
+  update=t=>{
+    tag.className='l tag'+(t>=3&&t<10.5?' dk':''); put(tag,t<17.5?cl(t*3):0);
+    pop(a1,t,.15,3);rise(a2,t,.8,3);rise(a3,t,1.25,3);pop(q,t,1.9,3,{r:Math.sin(t*5)*8});
+    rise(b1,t,3.15,6.6);rise(b2,t,6.6,10.4);
+    cards.forEach((c,i)=>{const fall=eo(p(t,9.3+i*.18,10.3+i*.18));const sh=(i===0&&t>6.8&&t<7.4)?Math.sin(t*70)*14:0;
+      pop(c,t,3.5+i*.4,10.5,{x:sh+fall*120,dy:80});if(fall>0){c.style.transform+=` translate(0,${fall*900}px) rotate(${fall*(i%2?-24:24)}deg)`}
+      c.style.borderColor='transparent';c.style.background='#fff'});
+    arrows.forEach((a,i)=>{pop(a,t,3.75+i*.4,9.3)});
+    setSt(cards[0],'Expired','#FDE8E8','#B42318',cl(p(t,6.8,7)));if(t>6.8)cards[0].style.borderColor='#E5484D';
+    setSt(cards[1],'Valid','#E2F4EB','#0A6E4A',cl(p(t,7.3,7.5)));
+    setSt(cards[2],'Blocked','#FDE8E8','#B42318',cl(p(t,7.9,8.1)));if(t>7.9)cards[2].style.background='#FFF4F4';
+    rise(d1,t,10.6,13.5);
+    const vis=t>=10.5&&t<13.5?1:0;put(road,vis);put(pole,vis*cl(p(t,10.6,10.9)));
+    const cx=-620+720*eo(p(t,10.7,12.0));put(car,vis,cx,t<12?Math.sin(t*28)*3:0);
+    car.querySelectorAll('.w').forEach(w=>w.style.transform=`rotate(${eo(p(t,10.7,12))*900}deg)`);
+    bar.style.opacity=vis;bar.style.transform=`rotate(${-90+90*bk(p(t,11.6,12.2))}deg)`;
+    pop(stamp,t,12.4,13.5,{r:-8,s:1});
+    rise(e1,t,13.6,17.5);
+    const k=eo(p(t,13.8,14.5));put(ph,t>=13.5&&t<17.5?k:0,0,(1-k)*700,1,0);
+    pills.forEach((pl,i)=>pop(pl,t,14.6+i*.5,17.5,{r:[-4,3,-2][i]}));
+    end(t);
+  };
+}
+
+if (PART===2){
+  bg('#0D1411',0); bg('#F2F4F3',7,540,1050); bg('#0A7F55',11,540,1700);
+  const tag=el(`<div class="l tag">Part 2 of 3 · The orange light</div>`);
+  const a1=cap('That <em class="a">orange light</em> just came on.');
+  const dash=el(`<div class="l" style="left:90px;top:860px;width:900px;height:520px;border-radius:70px;background:#141E1A;border:5px solid #26322D;box-shadow:inset 0 0 80px rgba(0,0,0,.6)">
+    <svg viewBox="0 0 900 520" width="900" height="520"><g fill="none" stroke-linecap="round"><path d="M80 380 A170 170 0 1 1 400 380" stroke="#26322D" stroke-width="22"/><path d="M80 380 A170 170 0 0 1 300 150" stroke="#3FCF94" stroke-width="22"/><path d="M500 380 A170 170 0 1 1 820 380" stroke="#26322D" stroke-width="22"/><path d="M500 380 A170 170 0 0 1 600 190" stroke="#FFC425" stroke-width="22"/></g>
+    <text x="240" y="330" text-anchor="middle" fill="#fff" font-family="Plus Jakarta Sans" font-weight="800" font-size="72">60</text><text x="240" y="380" text-anchor="middle" fill="#7D8A84" font-family="Plus Jakarta Sans" font-weight="600" font-size="30">km/h</text>
+    <text x="660" y="330" text-anchor="middle" fill="#fff" font-family="Plus Jakarta Sans" font-weight="800" font-size="72">2.1</text><text x="660" y="380" text-anchor="middle" fill="#7D8A84" font-family="Plus Jakarta Sans" font-weight="600" font-size="30">rpm x1000</text></svg></div>`);
+  const eng=el(`<div class="l" style="left:390px;top:1210px;width:300px;height:160px;display:grid;place-items:center"><svg viewBox="0 0 120 64" width="230" height="123"><path d="M14 22h12v-8h22l6-6h24v8h10v-6h10v40h-10v-8h-8v12H50l-8-8H26v-8h-6v10H8V20h6z" fill="#F5A524"/></svg></div>`);
+  const qs=[['Ignore it?',90,560,-3],['Call Aiya?',430,740,3],['Google it at midnight?',90,920,-2],['Keep driving and pray?',260,1100,2]]
+    .map(c=>el(`<div class="l bub${c[0]==='Call Aiya?'?' me':''}" style="left:${c[1]}px;top:${c[2]}px">${c[0]}</div>`));
+  const a2=cap('So… <em class="y">now what?</em>');
+  const b1=cap('Dashboard lights work like <em class="g">traffic lights.</em>',1);
+  const box=el(`<div class="l" style="left:110px;top:760px;width:250px;height:740px;border-radius:125px;background:#0D1411"></div>`);
+  const L=[['#E5484D','Red','Stop safely. Get help.'],['#F5A524','Amber','Get it checked soon.'],['#3FCF94','Green or blue','Just information.']];
+  const lamps=L.map((c,i)=>el(`<div class="l" style="left:145px;top:${795+i*230}px;width:180px;height:180px;border-radius:50%;background:${c[0]};box-shadow:0 0 70px ${c[0]}"></div>`));
+  const labs=L.map((c,i)=>el(`<div class="l" style="left:420px;top:${815+i*230}px;width:620px"><div style="font-size:62px;font-weight:800;color:#0D1411;letter-spacing:-.02em">${c[1]}</div><div style="font-size:42px;font-weight:600;color:#45534C;margin-top:6px">${c[2]}</div></div>`));
+  const c1=cap('Tap the symbol <em class="y">you see.</em>');
+  const c2=cap('What it means. What to do. <em class="y">What to ask.</em>');
+  const note=el(`<div class="l small" style="left:90px;width:900px;top:1620px;text-align:center">Symbols differ between makes. Check your owner’s manual.</div>`);
+  const p1=phone('lights'), p2=phone('light-detail');
+  const d1=cap('Record it <em class="y">on the spot.</em>');
+  const btn=el(`<div class="l" style="left:330px;top:1230px;width:420px;padding:30px 0;text-align:center;border-radius:999px;background:#FFC425;color:#0D1411;font-size:50px;font-weight:800;box-shadow:0 20px 40px rgba(0,0,0,.25)">Record it</div>`);
+  const ok=el(`<div class="l pill" style="left:110px;top:1400px;font-size:38px"><span class="dot" style="background:#0A7F55"></span>Added to your mechanic questions</div>`);
+  const end=endCard(17.5);
+  update=t=>{
+    tag.className='l tag'+(t>=7&&t<11?' dk':''); put(tag,t<17.5?cl(t*3):0);
+    rise(a1,t,.15,3.5);
+    const dk=eo(p(t,3.4,4));put(dash,t<7?cl(p(t,0,.4))*(1-dk*.65):0,0,dk*260,1-dk*.12);
+    const blink=t<.7?0:(Math.floor((t-.7)*3)%2===0?1:.25);
+    eng.style.filter=`drop-shadow(0 0 ${blink*30}px #F5A524)`;put(eng,t<7?blink*(1-dk*.65):0,0,dk*230,1-dk*.12);
+    qs.forEach((b,i)=>pop(b,t,3.7+i*.75,7,{r:[-3,3,-2,2][i]}));
+    rise(a2,t,3.6,7);
+    rise(b1,t,7.1,11);put(box,t>=7&&t<11?cl(p(t,7.2,7.5)):0);
+    lamps.forEach((l,i)=>{const on=p(t,7.7+i*.8,7.9+i*.8);l.style.opacity=t>=7&&t<11?(.18+.82*on):0;l.style.boxShadow=on>.5?`0 0 70px ${L[i][0]}`:'none';l.style.transform=`scale(${.9+.1*bk(on)})`});
+    labs.forEach((l,i)=>rise(l,t,7.8+i*.8,11));
+    rise(c1,t,11.1,13);rise(c2,t,13,15);rise(note,t,11.6,15);
+    const k=eo(p(t,11.3,12));const sh=eo(p(t,15,15.6));
+    put(p1,t>=11&&t<17.5?k:0,-sh*0,(1-k)*700-sh*120,1-sh*.12);
+    put(p2,t>=11&&t<17.5?cl(p(t,13,13.4)):0,0,-sh*120,1-sh*.12);
+    rise(d1,t,15,17.5);
+    const press=t>15.8&&t<16.05?.92:1;pop(btn,t,15.2,17.5,{s:press});pop(ok,t,16.2,17.5);
+    end(t);
+  };
+}
+
+if (PART===3){
+  bg('#F2F4F3',0); bg('#0A7F55',7.5,540,1500); bg('#0D1411',16,540,960);
+  const tag=el(`<div class="l tag dk">Part 3 of 3 · Mechanic talk</div>`);
+  const a1=cap('Your mechanic:',1), a2=cap('You, understanding <em class="g">nothing:</em>',1);
+  const av=el(`<div class="l" style="left:90px;top:560px;width:120px;height:120px;border-radius:50%;background:#FFC425;display:grid;place-items:center"><svg viewBox="0 0 64 64" width="64" height="64"><path d="M44 8a14 14 0 0 0-13 19L10 48a5 5 0 0 0 7 7l21-21a14 14 0 0 0 19-13l-8 8-8-2-2-8z" fill="#0D1411"/></svg></div>`);
+  const line='Machan, bushes are finished. Rack end also gone. Full set change karanna one.';
+  const mb=el(`<div class="l bub" style="left:240px;top:560px;width:750px"><span></span></div>`);
+  const you=el(`<div class="l bub me" style="right:90px;top:1000px;font-size:56px"></div>`);
+  const bill=el(`<div class="l" style="left:200px;top:1240px;width:680px;padding:40px 48px;border-radius:44px;background:#0D1411;color:#fff"><div style="font-size:34px;font-weight:600;color:#A9B5B0">Bill so far</div><div class="v" style="font-size:96px;font-weight:800;letter-spacing:-.03em;color:#FFC425">Rs 0</div></div>`);
+  const b1=cap('What you could ask <em class="y">instead:</em>');
+  const asks=['Can you show me what’s worn?','Is it safe to drive for now?','What’s parts and what’s labour?']
+    .map((q,i)=>el(`<div class="l bub" style="left:90px;top:${640+i*230}px">${q}</div>`));
+  const c1=cap('CarBook gives you <em class="y">the right questions.</em>');
+  const ph=phone('ask');
+  const chips=[['Mechanic talk, explained',40,820,-3],['Who fixes what',600,1120,3],['Questions from your records',60,1400,-2]]
+    .map(c=>el(`<div class="l pill" style="left:${c[1]}px;top:${c[2]}px;background:#FFC425"><span>${c[0]}</span></div>`));
+  const d1=el(`<div class="l cap" style="top:740px;font-size:112px">Good mechanics love <em class="y">good questions.</em></div>`);
+  const end=endCard(17.5);
+  update=t=>{
+    tag.className='l tag'+(t<7.5?' dk':''); put(tag,t<16?cl(t*3):0);
+    rise(a1,t,.1,4);rise(a2,t,4,7.5);
+    pop(av,t,.25,7.5);pop(mb,t,.4,7.5,{dy:30});
+    mb.firstChild.textContent=line.slice(0,Math.floor(line.length*p(t,.6,3.4)));
+    you.textContent=t<5.2?'…':'Hmm. Yes. Of course.';
+    pop(you,t,4.2,7.5,{y:t>5.2?Math.abs(Math.sin((t-5.2)*7))*-18:0});
+    pop(bill,t,6,7.5);
+    const n=Math.floor(t*30);const v=t<6.3?0:10000+((n*7919)%89999);
+    bill.querySelector('.v').textContent=t<6.3?'Rs 0':'Rs '+v.toLocaleString('en-US').slice(0,2)+',???';
+    rise(b1,t,7.6,12.2);
+    asks.forEach((a,i)=>{const up=eo(p(t,12,12.5));pop(a,t,8.1+i*.8,12.5,{y:-up*200})});
+    rise(c1,t,12.3,16);
+    const k=eo(p(t,12.3,13));put(ph,t>=12.2&&t<16?k:0,0,(1-k)*700);
+    chips.forEach((c,i)=>pop(c,t,13.2+i*.5,16,{r:[-3,3,-2][i]}));
+    pop(d1,t,16.1,17.5,{dy:40});
+    end(t);
+  };
+}
+
+window.seek=t=>{drawBgs(t);update(t)};
+seek(0);
+</script></body></html>
