@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MotorPal logo, "Four pillars". The four dial segments stand for reminders, service records, fuel and costs, and warranties. Colours: navy #0F172A, lime #A3E635, darker green #65A30D, white #FFFFFF. Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+<!-- The mark without its tile, for dark backgrounds. -->
+  <g id="dial">
+    <path id="segment-1-reminders" d="M134.38 403.62 A172.0 172.0 0 0 1 90.76 234.26 L133.03 246.47 A128.0 128.0 0 0 0 165.49 372.51 Z" fill="#A3E635"/>
+    <path id="segment-2-service-records" d="M99.51 210.62 A172.0 172.0 0 0 1 242.91 110.50 L246.26 154.37 A128.0 128.0 0 0 0 139.54 228.88 Z" fill="#A3E635"/>
+    <path id="segment-3-fuel-and-costs" d="M268.11 110.43 A172.0 172.0 0 0 1 412.08 209.73 L372.15 228.22 A128.0 128.0 0 0 0 265.01 154.32 Z" fill="#A3E635"/>
+    <path id="segment-4-warranties" d="M420.97 233.31 A172.0 172.0 0 0 1 378.32 402.92 L347.03 371.99 A128.0 128.0 0 0 0 378.76 245.77 Z" fill="#A3E635"/>
+  </g>
+  <path id="needle" d="M256 282 L352 232" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <circle id="hub" cx="256" cy="282" r="30" fill="#FFFFFF"/>
+</svg>

@@ -1,0 +1,16 @@
+MotorPal logo ("Four pillars")
+
+The four segments of the dial stand for what MotorPal looks after:
+reminders, service records, fuel and costs, and warranties. The needle sits in the green.
+
+Files
+- motorpal-icon.svg / .png / .pdf        the app icon (navy tile)
+- motorpal-logo-light.svg, motorpal-logo-white.png / .pdf   icon and name on white
+- motorpal-logo-dark.svg / .png / .pdf    icon and name on navy
+- motorpal-mark-only.svg, motorpal-mark-on-dark.png / .pdf  the mark without its tile, for dark backgrounds
+
+SVG files stay sharp at any size and open in Figma, Illustrator, Inkscape and Canva (Uploads).
+To edit in Canva: Create a design > Import file, then pick a PDF.
+
+Colours: navy #0F172A, lime #A3E635, darker green for "Pal" on white #65A30D, white #FFFFFF.
+Name font: Plus Jakarta Sans Bold (free from Google Fonts). If a tool shows another font, select the text and pick Plus Jakarta Sans.
