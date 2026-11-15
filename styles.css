@@ -463,3 +463,30 @@ body { background: var(--bg); }
 .hero-num .cmp { color: rgba(255, 255, 255, .8); }
 .hero-num .chg.up { color: #7BE3B0; } .hero-num .chg.down { color: #FFD27A; }
 @media (prefers-reduced-motion: reduce) { .qa:active .c { transform: none; } }
+
+/* ---------- Dark finish (November 2026) ----------
+   The owner asked for the near-black background of the MotorPal logo.
+   Dark page, dark grey cards, light text, mint for actions. Status colours stay red and amber,
+   with lighter shades for text on dark so they stay easy to read (all checked at 4.5:1 or better). */
+:root {
+  --bg: #050505; --surface: #121715; --surface-2: #1A201D; --line: #252D29;
+  --fg: #F1F5F3; --mut: #9AA6A0;
+  --green: #00C47F; --green-ink: #3EE0A4; --green-tint: #0F2A20; --on-green: #050505;
+  --yellow: #00C47F; --yellow-tint: #10261E; --on-yellow: #050505;
+  --red: #C2332A; --red-tint: #3A1512; --amber: #B4520A; --amber-tint: #3A2510;
+  --red-text: #FF8A80; --amber-text: #FFB45C;
+  --lift: 0 0 0 1px #1C2420;
+  color-scheme: dark;
+}
+.ic.bad, .tag.bad, .err, .mini.bad .mini-ic, .btn.danger, .d-status.bad .d-art { color: var(--red-text); }
+.ic.warn, .tag.warn, .mini.warn .mini-ic, .chg.down, .d-status.warn .d-art { color: var(--amber-text); }
+.status.warn .status-ic, .status.bad .status-ic { color: #fff; }
+.hero.ok { color: #050505; }
+.hero-btn { color: #050505; }
+.hero.setup .hero-btn { background: #050505; color: #fff; }
+.d-art, .setup-icons span { background: var(--surface-2); }
+#dlg input:focus, #dlg select:focus { background: var(--surface-2); }
+.seg { background: var(--surface-2); }
+.seg button[aria-pressed="true"] { box-shadow: none; }
+#tabs { box-shadow: 0 -1px 0 var(--line); }
+.wallet, .hero-num { background: radial-gradient(260px 200px at 100% 0%, rgba(0, 196, 127, .30), transparent 70%), linear-gradient(135deg, #0E2A20 0%, #0A1411 100%); box-shadow: 0 0 0 1px #1F3A2F; }
