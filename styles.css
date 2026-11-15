@@ -1,7 +1,7 @@
 /* CarBook styles. Design tokens first; change colours and fonts here only.
-   Look: clean white screens, green for the brand and actions, golden (goldfish) yellow as the highlight.
+   Look: the "Dark finish" section at the end sets the current colours (near-black page, mint actions).
    Red means "needs attention now", amber means "coming up soon", always with a word, never colour alone.
-   Always light: the owner chose a white look, so the app does not switch to dark mode.
+   Always dark since November 2026: the owner chose the logo's near-black.
    Layout: one column, simple bordered lists, a white tab bar, one yellow add button. */
 :root {
   --bg: #FFFFFF;
