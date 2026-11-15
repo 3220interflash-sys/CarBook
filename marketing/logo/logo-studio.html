@@ -1,0 +1,264 @@
+<title>MotorPal Logo Studio</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Sora:wght@700&family=Outfit:wght@700&family=Manrope:wght@800&family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Unbounded:wght@700&display=swap">
+<style>
+/* Layout: a live preview stage on the left, a tidy control panel on the right; stacks on phones. */
+:root{
+  --bg:#EEF1F5; --panel:#FFFFFF; --fg:#0F172A; --muted:#5A6577; --line:#DDE3EA; --accent:#4D7C0F; --accent-ink:#FFFFFF; --stage:#E4E9F0; --chip:#F3F5F8;
+  --ui:"Plus Jakarta Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0B1120; --panel:#131B2E; --fg:#E7ECF3; --muted:#9AA6B8; --line:#24304A; --accent:#A3E635; --accent-ink:#0F172A; --stage:#0F1729; --chip:#1A2338; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0B1120; --panel:#131B2E; --fg:#E7ECF3; --muted:#9AA6B8; --line:#24304A; --accent:#A3E635; --accent-ink:#0F172A; --stage:#0F1729; --chip:#1A2338; color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:15px/1.45 var(--ui);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1240px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{margin:0;font-size:26px;letter-spacing:-.02em;text-wrap:balance}
+header p{margin:4px 0 0;color:var(--muted);max-width:60ch}
+.grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(300px,1fr);gap:18px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.stage{background:var(--stage);border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+.hero{display:grid;place-items:center;padding:12px 0}
+.hero svg{width:min(300px,70vw);height:auto;filter:drop-shadow(0 18px 28px rgba(15,23,42,.25))}
+.lock{border-radius:16px;padding:18px 20px;display:flex;justify-content:center;overflow:hidden}
+.lock svg{width:100%;max-width:520px;height:auto}
+.sizes{display:flex;align-items:flex-end;justify-content:center;gap:16px;flex-wrap:wrap}
+.sizes small{color:var(--muted);font-size:12px;align-self:center}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:20px;padding:18px;display:flex;flex-direction:column;gap:18px;min-width:0}
+fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+legend{font-weight:700;font-size:13px;letter-spacing:.02em;color:var(--muted);margin-bottom:8px;padding:0}
+.presets{display:flex;flex-wrap:wrap;gap:8px}
+.preset{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;padding:6px 12px 6px 6px;font:600 13px var(--ui);cursor:pointer}
+.preset[aria-pressed="true"]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 35%,transparent)}
+.preset i{width:22px;height:22px;border-radius:50%;flex:none}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.row label{font-weight:600;font-size:14px}
+.row output{font-variant-numeric:tabular-nums;color:var(--muted);font-size:13px;min-width:3.5ch;text-align:right}
+input[type=range]{width:100%;accent-color:var(--accent)}
+.slider{display:flex;flex-direction:column;gap:4px}
+.colors{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.color{display:flex;align-items:center;gap:8px;background:var(--chip);border:1px solid var(--line);border-radius:12px;padding:6px 8px}
+.color input[type=color]{width:34px;height:34px;border:0;padding:0;background:none;cursor:pointer;flex:none}
+.color span{font-size:13px;font-weight:600;line-height:1.2;min-width:0}
+.color code{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.check{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.check input{width:18px;height:18px;accent-color:var(--accent)}
+.text{display:flex;gap:8px}
+.text input,select{flex:1;min-width:0;border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:10px;padding:9px 10px;font:600 14px var(--ui)}
+.btns{display:flex;flex-wrap:wrap;gap:8px}
+button.b{border:1px solid var(--line);background:var(--chip);color:var(--fg);border-radius:999px;padding:9px 14px;font:700 13px var(--ui);cursor:pointer}
+button.b.primary{background:var(--accent);color:var(--accent-ink);border-color:transparent}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+#toast{min-height:1.4em;font-size:13px;font-weight:600;color:var(--accent);margin:0}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>MotorPal Logo Studio</h1>
+      <p>Change the colours and shape of the dial-and-clock mark, see it as an app icon and with the name, then download it.</p>
+    </div>
+    <div class="btns">
+      <button class="b" id="reset" type="button">Back to the chosen logo</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="stage" aria-label="Preview">
+      <div class="hero" id="hero"></div>
+      <div class="lock" id="lockLight" style="background:#FFFFFF"></div>
+      <div class="lock" id="lockDark"></div>
+      <div class="sizes" id="sizes"></div>
+    </section>
+
+    <form class="panel" id="panel" autocomplete="off">
+      <fieldset>
+        <legend>Colour sets</legend>
+        <div class="presets" id="presets"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Colours</legend>
+        <div class="colors" id="colors"></div>
+        <label class="check"><input type="checkbox" id="multi"> A different colour for each part of the dial</label>
+        <div class="colors" id="segColors" hidden></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Shape</legend>
+        <div class="slider"><div class="row"><label for="hand">Hand thickness</label><output id="handO"></output></div><input type="range" id="hand" min="10" max="44" step="1"></div>
+        <div class="slider"><div class="row"><label for="mouth">Mouth opening</label><output id="mouthO"></output></div><input type="range" id="mouth" min="18" max="60" step="1"></div>
+        <div class="slider"><div class="row"><label for="ring">Dial thickness</label><output id="ringO"></output></div><input type="range" id="ring" min="24" max="64" step="1"></div>
+        <div class="slider"><div class="row"><label for="parts">Parts in the dial</label><output id="partsO"></output></div><input type="range" id="parts" min="1" max="6" step="1"></div>
+        <div class="slider"><div class="row"><label for="gap">Gap between parts</label><output id="gapO"></output></div><input type="range" id="gap" min="0" max="50" step="1"></div>
+        <div class="slider"><div class="row"><label for="dot">Centre dot</label><output id="dotO"></output></div><input type="range" id="dot" min="0" max="48" step="1"></div>
+        <div class="slider"><div class="row"><label for="round">Icon corners</label><output id="roundO"></output></div><input type="range" id="round" min="0" max="256" step="2"></div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Name</legend>
+        <div class="text"><input id="w1" aria-label="First part of the name"><input id="w2" aria-label="Second part of the name"></div>
+        <select id="font" aria-label="Font for the name">
+          <option>Space Grotesk</option><option>Sora</option><option>Outfit</option><option>Manrope</option><option>Plus Jakarta Sans</option><option>Unbounded</option>
+        </select>
+      </fieldset>
+
+      <fieldset>
+        <legend>Download</legend>
+        <div class="btns" id="dl">
+          <button class="b primary" type="button" data-dl="icon-png">Icon, PNG</button>
+          <button class="b" type="button" data-dl="icon-svg">Icon, SVG</button>
+          <button class="b" type="button" data-dl="logo-light-png">Logo on white, PNG</button>
+          <button class="b" type="button" data-dl="logo-dark-png">Logo on dark, PNG</button>
+          <button class="b" type="button" data-dl="logo-light-svg">Logo, SVG</button>
+        </div>
+        <p class="note" id="dlNote">PNG files are ready to use anywhere. SVG files stay sharp at any size and open in Figma, Canva, Illustrator or Inkscape; the name in a logo SVG needs its font installed.</p>
+        <div class="btns"><button class="b" type="button" id="copy">Copy settings to send to Claude</button></div>
+        <p id="toast" role="status"></p>
+      </fieldset>
+    </form>
+  </div>
+</div>
+
+<script>
+const CHOSEN = {tile:'#0F172A', dial:'#A3E635', hands:'#FFFFFF', dotc:'#FFFFFF', motor:'#0B0B0F', pal:'#65A30D', palDark:'#A3E635', darkbg:'#0F172A',
+  multi:false, segs:['#A3E635','#22D3EE','#FBBF24','#A78BFA','#F472B6','#60A5FA'], hand:30, mouth:35, ring:44, parts:4, gap:22, dot:32, round:120,
+  w1:'Motor', w2:'Pal', font:'Space Grotesk'};
+const PRESETS = [
+  ['Navy and lime', {}],
+  ['Four colours', {multi:true}],
+  ['Night drive', {tile:'#0B1026', dial:'#22D3EE', pal:'#0891B2', palDark:'#22D3EE', darkbg:'#0B1026'}],
+  ['Sunset', {tile:'#0B0B0F', dial:'#FF5A4E', pal:'#E11D63', palDark:'#FF7A59', darkbg:'#0B0B0F'}],
+  ['Indigo and coral', {tile:'#3730A3', dial:'#FF8A80', pal:'#4F46E5', palDark:'#FF8A80', darkbg:'#1E1B4B'}],
+  ['Teal and peach', {tile:'#0F766E', dial:'#FDBA74', pal:'#0D9488', palDark:'#FDBA74', darkbg:'#134E4A'}],
+  ['Light', {tile:'#FFFFFF', dial:'#65A30D', hands:'#0F172A', dotc:'#0F172A', pal:'#65A30D', palDark:'#A3E635', darkbg:'#0F172A'}],
+];
+const COLORS = [['tile','Icon background'],['dial','Dial'],['hands','Hands'],['dotc','Centre dot'],['motor','First word'],['pal','Second word'],['palDark','Second word on dark'],['darkbg','Dark background']];
+let S = load();
+
+function load(){ try{ const j = JSON.parse(localStorage.getItem('motorpal-studio')||'null'); if(j) return {...CHOSEN, ...j}; }catch(e){} return structuredClone(CHOSEN); }
+function save(){ try{ localStorage.setItem('motorpal-studio', JSON.stringify(S)); }catch(e){} }
+
+/* ---------- the mark ---------- */
+const CX=244, CY=256, R=150;
+const f2 = n => (Math.round(n*100)/100).toString();
+function P(deg,r){const t=deg*Math.PI/180;return [CX+r*Math.cos(t),CY+r*Math.sin(t)]}
+function sector(a0,a1,ro,ri){
+  const large = (a1-a0)>180?1:0, A=P(a0,ro),B=P(a1,ro),C=P(a1,ri),D=P(a0,ri);
+  return `M${f2(A[0])} ${f2(A[1])} A${ro} ${ro} 0 ${large} 1 ${f2(B[0])} ${f2(B[1])} L${f2(C[0])} ${f2(C[1])} A${ri} ${ri} 0 ${large} 0 ${f2(D[0])} ${f2(D[1])} Z`;
+}
+function handPath(deg,side,hw,ro){
+  const t=deg*Math.PI/180,u=[Math.cos(t),Math.sin(t)],n=[side*Math.sin(t),-side*Math.cos(t)];
+  const L=Math.sqrt(Math.max(ro*ro-hw*hw,0));
+  const pts=[[CX,CY],[CX+n[0]*hw,CY+n[1]*hw],[CX+n[0]*hw+u[0]*L,CY+n[1]*hw+u[1]*L],[CX+u[0]*ro,CY+u[1]*ro]];
+  return 'M'+pts.map(p=>f2(p[0])+' '+f2(p[1])).join(' L')+' Z';
+}
+function markSVG(opts={}){
+  const tile = opts.tile!==false, s=S, ro=R+s.ring/2, ri=R-s.ring/2;
+  const arc = 360-2*s.mouth, gapDeg = s.gap/(2*Math.PI*R)*360, n=s.parts;
+  const seg = (arc-(n-1)*gapDeg)/n;
+  let out = '';
+  if(tile) out += `<rect id="tile" width="512" height="512" rx="${s.round}" fill="${s.tile}"/>`;
+  out += '<g id="dial">';
+  for(let i=0;i<n;i++){ const a0=s.mouth+i*(seg+gapDeg); out += `<path d="${sector(a0,a0+seg,ro,ri)}" fill="${s.multi?s.segs[i]:s.dial}"/>`; }
+  out += `</g><g id="hands" fill="${s.hands}"><path d="${handPath(s.mouth,1,s.hand,ro)}"/><path d="${handPath(-s.mouth,-1,s.hand,ro)}"/></g>`;
+  if(s.dot>0) out += `<circle id="centre-dot" cx="${CX}" cy="${CY}" r="${s.dot}" fill="${s.dotc}"/>`;
+  return out;
+}
+const iconFile = () => `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">${markSVG()}</svg>`;
+function logoSVG(dark, forFile){
+  const s=S, bg = dark?s.darkbg:'#FFFFFF', w1c = dark?'#FFFFFF':s.motor, w2c = dark?s.palDark:s.pal;
+  const showTile = !dark || s.tile.toLowerCase()!==s.darkbg.toLowerCase();
+  const fam = `${s.font}, Arial, sans-serif`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="400" viewBox="0 0 1360 400">`+
+    (forFile?`<rect width="1360" height="400" fill="${bg}"/>`:'')+
+    `<g transform="translate(40 40) scale(0.625)">${markSVG({tile:showTile})}</g>`+
+    `<text x="410" y="262" font-family="${fam}" font-weight="700" font-size="190" letter-spacing="-7.6"><tspan fill="${w1c}">${esc(s.w1)}</tspan><tspan fill="${w2c}">${esc(s.w2)}</tspan></text></svg>`;
+}
+function esc(t){return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+/* ---------- render ---------- */
+const $ = id => document.getElementById(id);
+function render(){
+  $('hero').innerHTML = `<svg viewBox="0 0 512 512" role="img" aria-label="MotorPal icon">${markSVG()}</svg>`;
+  $('lockLight').innerHTML = logoSVG(false,false);
+  $('lockDark').style.background = S.darkbg;
+  $('lockDark').innerHTML = logoSVG(true,false);
+  $('sizes').innerHTML = [96,60,36,24].map(z=>`<svg viewBox="0 0 512 512" width="${z}" height="${z}" aria-hidden="true">${markSVG()}</svg>`).join('')+'<small>App icon sizes</small>';
+  for(const k of ['hand','mouth','ring','parts','gap','dot','round']){ $(k).value=S[k]; $(k+'O').textContent = S[k]; }
+  $('mouthO').textContent = (S.mouth*2)+'°';
+  for(const [k] of COLORS){ const el=$('c-'+k); if(el){ el.value=S[k]; el.nextElementSibling.querySelector('code').textContent=S[k].toUpperCase(); } }
+  $('multi').checked = S.multi; $('segColors').hidden = !S.multi;
+  [...$('segColors').children].forEach((c,i)=>{ c.hidden = i>=S.parts; const inp=c.querySelector('input'); inp.value=S.segs[i]; c.querySelector('code').textContent=S.segs[i].toUpperCase(); });
+  $('w1').value=S.w1; $('w2').value=S.w2; $('font').value=S.font;
+  [...$('presets').children].forEach((b,i)=>b.setAttribute('aria-pressed', String(matches(PRESETS[i][1]))));
+  save();
+}
+function matches(p){ const t={...CHOSEN,...p}; return ['tile','dial','hands','dotc','pal','palDark','darkbg','multi'].every(k=>String(t[k]).toLowerCase()===String(S[k]).toLowerCase()); }
+
+/* ---------- controls ---------- */
+$('presets').innerHTML = PRESETS.map(([name,p])=>{ const t={...CHOSEN,...p}; const c2 = t.multi?'conic-gradient(#A3E635 0 25%,#22D3EE 0 50%,#FBBF24 0 75%,#A78BFA 0)':t.dial;
+  return `<button type="button" class="preset"><i style="background:${t.tile};box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)"></i><i style="background:${c2};margin-left:-14px"></i>${name}</button>`; }).join('');
+[...$('presets').children].forEach((b,i)=>b.addEventListener('click',()=>{ const keep={hand:S.hand,mouth:S.mouth,ring:S.ring,parts:S.parts,gap:S.gap,dot:S.dot,round:S.round,w1:S.w1,w2:S.w2,font:S.font}; S={...CHOSEN,...PRESETS[i][1],...keep}; render(); }));
+$('colors').innerHTML = COLORS.map(([k,l])=>`<label class="color"><input type="color" id="c-${k}"><span>${l}<code></code></span></label>`).join('');
+COLORS.forEach(([k])=>$('c-'+k).addEventListener('input',e=>{S[k]=e.target.value;render()}));
+$('segColors').innerHTML = S.segs.map((c,i)=>`<label class="color"><input type="color" id="seg-${i}"><span>Part ${i+1}<code></code></span></label>`).join('');
+S.segs.forEach((c,i)=>$('seg-'+i).addEventListener('input',e=>{S.segs[i]=e.target.value;render()}));
+$('multi').addEventListener('change',e=>{S.multi=e.target.checked;render()});
+for(const k of ['hand','mouth','ring','parts','gap','dot','round']) $(k).addEventListener('input',e=>{S[k]=+e.target.value;render()});
+$('w1').addEventListener('input',e=>{S.w1=e.target.value;render()});
+$('w2').addEventListener('input',e=>{S.w2=e.target.value;render()});
+$('font').addEventListener('change',e=>{S.font=e.target.value;render()});
+$('reset').addEventListener('click',()=>{S=structuredClone(CHOSEN);render();toast('Back to the chosen logo.')});
+$('panel').addEventListener('submit',e=>e.preventDefault());
+
+/* ---------- downloads ---------- */
+let downloads = null;
+(async()=>{ try{ downloads = await window.claude?.use?.('downloads'); }catch(e){ downloads=null; } if(!downloads){ $('dl').hidden=true; $('dlNote').textContent='Downloading isn’t available in this view. Use “Copy settings” and send them to Claude, who can make the files.'; } })();
+function toast(t){ $('toast').textContent=t; clearTimeout(toast.t); toast.t=setTimeout(()=>$('toast').textContent='',4000); }
+function svgToImage(svg){ return new Promise((res,rej)=>{ const img=new Image(); img.onload=()=>res(img); img.onerror=rej; img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg); }); }
+async function iconPNG(){ const c=document.createElement('canvas'); c.width=c.height=1024; const img=await svgToImage(iconFile()); c.getContext('2d').drawImage(img,0,0,1024,1024); return new Promise(r=>c.toBlob(r,'image/png')); }
+async function logoPNG(dark){
+  await document.fonts.load(`700 190px "${S.font}"`);
+  const k=2, c=document.createElement('canvas'); c.width=1360*k; c.height=400*k; const x=c.getContext('2d'); x.scale(k,k);
+  x.fillStyle = dark?S.darkbg:'#FFFFFF'; x.fillRect(0,0,1360,400);
+  const showTile = !dark || S.tile.toLowerCase()!==S.darkbg.toLowerCase();
+  const img = await svgToImage(`<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">${markSVG({tile:showTile})}</svg>`);
+  x.drawImage(img,40,40,320,320);
+  x.font = `700 190px "${S.font}", Arial, sans-serif`; try{ x.letterSpacing='-7.6px'; }catch(e){}
+  x.textBaseline='alphabetic'; x.fillStyle = dark?'#FFFFFF':S.motor; x.fillText(S.w1,410,262);
+  const w = x.measureText(S.w1).width; x.fillStyle = dark?S.palDark:S.pal; x.fillText(S.w2,410+w,262);
+  return new Promise(r=>c.toBlob(r,'image/png'));
+}
+const slug = () => (S.w1+S.w2).toLowerCase().replace(/[^a-z0-9]+/g,'') || 'logo';
+$('dl').addEventListener('click',async e=>{
+  const b=e.target.closest('button[data-dl]'); if(!b||!downloads) return;
+  const kind=b.dataset.dl; let filename, data;
+  try{
+    if(kind==='icon-png'){ filename=`${slug()}-icon.png`; data=await iconPNG(); }
+    if(kind==='icon-svg'){ filename=`${slug()}-icon.svg`; data=iconFile(); }
+    if(kind==='logo-light-png'){ filename=`${slug()}-logo-white.png`; data=await logoPNG(false); }
+    if(kind==='logo-dark-png'){ filename=`${slug()}-logo-dark.png`; data=await logoPNG(true); }
+    if(kind==='logo-light-svg'){ filename=`${slug()}-logo.svg`; data=logoSVG(false,true); }
+    await downloads.save({filename, data});
+    toast('Saved '+filename+'.');
+  }catch(err){
+    const c = err && err.code;
+    if(c==='declined') toast('Download cancelled.');
+    else if(c==='rate_limited') toast('A download is already waiting for you to confirm.');
+    else toast('That download didn’t work here. Try “Copy settings” and send them to Claude.');
+  }
+});
+$('copy').addEventListener('click',async()=>{
+  const text = 'MotorPal logo settings: '+JSON.stringify(S);
+  try{ await navigator.clipboard.writeText(text); toast('Settings copied. Paste them into your chat with Claude.'); }
+  catch(e){ const t=document.createElement('textarea'); t.value=text; t.style.width='100%'; t.rows=4; $('toast').replaceChildren(t); t.select(); }
+});
+render();
+</script>
