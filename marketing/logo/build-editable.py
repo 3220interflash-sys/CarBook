@@ -1,14 +1,19 @@
 # Writes clean, layered, editable SVG files of the MotorPal logo into editable/.
 import math
 NAVY, LIME, W, INK = '#0F172A', '#A3E635', '#FFFFFF', '#0B0B0F'
-CX, CY, RO, RI, HW = 244, 256, 172, 128, 30
+# Settings chosen by the owner in the Logo Studio.
+MOUTH, RING, HW, DOT, GAP_PX, PARTS = 27, 42, 19, 22, 22, 4
+CX, CY = 244, 256
+RO, RI = 150 + RING / 2, 150 - RING / 2
 def P(deg, r): t = math.radians(deg); return (CX + r * math.cos(t), CY + r * math.sin(t))
 f = lambda p: f'{p[0]:.2f} {p[1]:.2f}'
-SEG, GAP, START = 171 / (2 * math.pi * 150) * 360, 22 / (2 * math.pi * 150) * 360, 35
+GAP = GAP_PX / (2 * math.pi * 150) * 360
+SEG = (360 - 2 * MOUTH - (PARTS - 1) * GAP) / PARTS
+START = MOUTH
 def sector(a0, a1):
     return (f'M{f(P(a0, RO))} A{RO} {RO} 0 0 1 {f(P(a1, RO))} L{f(P(a1, RI))} '
             f'A{RI} {RI} 0 0 0 {f(P(a0, RI))} Z')
-segments = [sector(START + i * (SEG + GAP), START + i * (SEG + GAP) + SEG) for i in range(4)]
+segments = [sector(START + i * (SEG + GAP), START + i * (SEG + GAP) + SEG) for i in range(PARTS)]
 def hand(deg, side):
     t = math.radians(deg); u = (math.cos(t), math.sin(t)); n = (side * math.sin(t), -side * math.cos(t))
     L = math.sqrt(RO ** 2 - HW ** 2)
@@ -21,12 +26,12 @@ def mark(tile=True, ink=W):
     out.append('  <g id="dial">')
     out += [f'    <path id="segment-{i + 1}-{names[i].lower().replace(" ", "-")}" d="{d}" fill="{LIME}"/>' for i, d in enumerate(segments)]
     out.append('  </g>')
-    out.append(f'  <g id="hands" fill="{ink}">\n    <path id="hand-lower" d="{hand(35, 1)}"/>\n    <path id="hand-upper" d="{hand(-35, -1)}"/>\n  </g>')
-    out.append(f'  <circle id="centre-dot" cx="{CX}" cy="{CY}" r="32" fill="{ink}"/>')
+    out.append(f'  <g id="hands" fill="{ink}">\n    <path id="hand-lower" d="{hand(MOUTH, 1)}"/>\n    <path id="hand-upper" d="{hand(-MOUTH, -1)}"/>\n  </g>')
+    out.append(f'  <circle id="centre-dot" cx="{CX}" cy="{CY}" r="{DOT}" fill="{ink}"/>')
     return '\n'.join(out)
-HEAD = '<?xml version="1.0" encoding="UTF-8"?>\n<!-- MotorPal logo. Colours: navy #0F172A, lime #A3E635, white #FFFFFF. Font for the name: Space Grotesk Bold (free from Google Fonts). -->\n'
+HEAD = '<?xml version="1.0" encoding="UTF-8"?>\n<!-- MotorPal logo. Colours: navy #0F172A, lime #A3E635, white #FFFFFF. Font for the name: Plus Jakarta Sans Bold (free from Google Fonts). -->\n'
 def word(x, y, size, motor, pal):
-    return (f'  <text id="name" x="{x}" y="{y}" font-family="Space Grotesk, Arial, sans-serif" font-weight="700" font-size="{size}" letter-spacing="{-0.04 * size:.1f}">'
+    return (f'  <text id="name" x="{x}" y="{y}" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="700" font-size="{size}" letter-spacing="{-0.04 * size:.1f}">'
             f'<tspan fill="{motor}">Motor</tspan><tspan fill="{pal}">Pal</tspan></text>')
 files = {
  'motorpal-icon.svg': f'{HEAD}<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">\n{mark()}\n</svg>\n',

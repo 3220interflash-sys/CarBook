@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- MotorPal logo. Colours: navy #0F172A, lime #A3E635, white #FFFFFF. Font for the name: Space Grotesk Bold (free from Google Fonts). -->
+<!-- MotorPal logo. Colours: navy #0F172A, lime #A3E635, white #FFFFFF. Font for the name: Plus Jakarta Sans Bold (free from Google Fonts). -->
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
 <!-- The mark without its tile, for use on dark backgrounds. -->
   <g id="dial">
-    <path id="segment-1-reminders" d="M384.89 354.66 A172 172 0 0 1 213.20 425.22 L221.08 381.93 A128 128 0 0 0 348.85 329.42 Z" fill="#A3E635"/>
-    <path id="segment-2-service-records" d="M188.80 418.90 A172 172 0 0 1 72.93 273.87 L116.69 269.30 A128 128 0 0 0 202.92 377.23 Z" fill="#A3E635"/>
-    <path id="segment-3-fuel-and-costs" d="M72.16 248.67 A172 172 0 0 1 178.90 96.80 L195.55 137.52 A128 128 0 0 0 116.12 250.55 Z" fill="#A3E635"/>
-    <path id="segment-4-warranties" d="M202.86 88.99 A172 172 0 0 1 378.57 148.88 L344.14 176.28 A128 128 0 0 0 213.38 131.72 Z" fill="#A3E635"/>
+    <path id="segment-1-reminders" d="M396.36 333.63 A171.0 171.0 0 0 1 222.58 425.65 L227.84 383.98 A129.0 129.0 0 0 0 358.94 314.56 Z" fill="#A3E635"/>
+    <path id="segment-2-service-records" d="M198.01 420.70 A171.0 171.0 0 0 1 73.46 268.53 L115.35 265.45 A129.0 129.0 0 0 0 209.31 380.25 Z" fill="#A3E635"/>
+    <path id="segment-3-fuel-and-costs" d="M73.46 243.47 A171.0 171.0 0 0 1 198.01 91.30 L209.31 131.75 A129.0 129.0 0 0 0 115.35 246.55 Z" fill="#A3E635"/>
+    <path id="segment-4-warranties" d="M222.58 86.35 A171.0 171.0 0 0 1 396.36 178.37 L358.94 197.44 A129.0 129.0 0 0 0 227.84 128.02 Z" fill="#A3E635"/>
   </g>
   <g id="hands" fill="#FFFFFF">
-    <path id="hand-lower" d="M244.00 256.00 L261.21 231.43 L399.94 328.57 L384.89 354.66 Z"/>
-    <path id="hand-upper" d="M244.00 256.00 L261.21 280.57 L399.94 183.43 L384.89 157.34 Z"/>
+    <path id="hand-lower" d="M244.00 256.00 L252.63 239.07 L404.04 316.22 L396.36 333.63 Z"/>
+    <path id="hand-upper" d="M244.00 256.00 L252.63 272.93 L404.04 195.78 L396.36 178.37 Z"/>
   </g>
-  <circle id="centre-dot" cx="244" cy="256" r="32" fill="#FFFFFF"/>
+  <circle id="centre-dot" cx="244" cy="256" r="22" fill="#FFFFFF"/>
 </svg>

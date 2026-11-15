@@ -11,5 +11,5 @@ MotorPal logo for Canva
 4. To add the logo to another Canva design, use Uploads > Upload files and pick an .svg file.
    SVGs stay sharp at any size and you can change their colours in Canva.
 
-The name uses the font Space Grotesk Bold. If Canva shows a different font, select the text and pick Space Grotesk.
+The name uses the font Plus Jakarta Sans Bold. If Canva shows a different font, select the text and pick Plus Jakarta Sans.
 Colours: navy #0F172A, lime #A3E635, darker green for "Pal" on white #65A30D, white #FFFFFF.

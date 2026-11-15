@@ -13,7 +13,7 @@ const jobs = [
   for (const [src, out, w, h, bg] of jobs) {
     const svg = fs.readFileSync(path.join(D, src), 'utf8').replace(/<\?xml[^>]*>/, '').replace(/<!--[\s\S]*?-->/g, '')
       .replace('<svg ', `<svg style="width:${w}px;height:${h}px;display:block" `);
-    await p.setContent(`<html><head><link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet"><style>*{margin:0}html,body{background:${bg}}</style></head><body>${svg}</body></html>`);
+    await p.setContent(`<html><head><link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet"><style>*{margin:0}html,body{background:${bg}}</style></head><body>${svg}</body></html>`);
     await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(300);
     await p.pdf({ path: path.join(O, out), width: w + 'px', height: h + 'px', printBackground: true, pageRanges: '1' });
     fs.copyFileSync(path.join(D, src), path.join(O, src));

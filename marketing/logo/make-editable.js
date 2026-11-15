@@ -6,7 +6,7 @@ const files = ['motorpal-icon.svg', 'motorpal-logo-light.svg', 'motorpal-logo-da
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();
-  const font = '<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@700&display=swap" rel="stylesheet">';
+  const font = '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet">';
   const pages = files.map(f => {
     let s = fs.readFileSync(path.join(D, f), 'utf8').replace(/<\?xml[^>]*>/, '');
     const w = +s.match(/width="(\d+)"/)[1], h = +s.match(/height="(\d+)"/)[1];
