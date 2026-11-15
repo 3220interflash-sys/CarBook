@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- MotorPal: five modern logo directions, each with its own colours and typeface. make-modern.js renders this. -->
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Space+Grotesk:wght@700&family=Outfit:wght@700;800&family=Manrope:wght@800&family=Unbounded:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:2100px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F4F4F6;color:#0B0B0F;padding:80px 90px 90px}
+h1{font-size:64px;font-weight:800;letter-spacing:-.03em}
+.lead{margin-top:12px;font-size:28px;color:#5B5F6A;font-weight:500}
+.cols{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.col{background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 18px 36px -14px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.hero{display:grid;place-items:center;padding:56px 0}
+.hero svg{width:260px;height:260px;filter:drop-shadow(0 24px 36px rgba(0,0,0,.22))}
+.lock{display:flex;align-items:center;justify-content:center;gap:16px;padding:30px 0}
+.lock svg{width:64px;height:64px;flex:none}
+.lock span{font-size:50px;line-height:1}
+.sizes{display:flex;align-items:center;justify-content:center;gap:20px;padding:6px 0 28px}
+.sw{display:flex;gap:10px;padding:0 32px}
+.sw i{flex:1;height:54px;border-radius:14px;display:flex;align-items:flex-end;padding:0 0 8px 10px;font-style:normal;font-size:15px;font-weight:700}
+.cap{padding:24px 32px 34px}
+.cap small{font-size:20px;font-weight:700;color:#8A8F99}
+.cap b{display:block;margin-top:4px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+.cap p{margin-top:10px;font-size:23px;line-height:1.42;color:#474B55;font-weight:500}
+</style></head>
+<body>
+<h1>MotorPal: the pulse, three colours</h1>
+<p class="lead">An uneven heartbeat: a small beat, two spikes of different heights, a small beat, then the dot. The M is there if you look for it, not spelled out. Font: Unbounded.</p>
+<div class="cols" id="cols"></div>
+<script>
+const ideas=[{"tag": "Colour 1", "name": "Sunset", "why": "Black with an orange-to-pink beat. Bold and youthful, stands out on any phone screen and on Instagram.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#FF7A18\"/><stop offset=\"1\" stop-color=\"#FF2E7E\"/></linearGradient></defs><rect x=\"4\" y=\"4\" width=\"504\" height=\"504\" rx=\"116\" fill=\"#0B0B0F\"/><path d=\"M52 300 H112 Q124 300 130 290 Q140 270 150 290 Q156 300 168 300 H184 L198 326 L230 148 L256 322 L280 214 L300 334 L314 300 H344 Q358 300 366 284 Q376 266 386 284 Q392 300 404 300 H414\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"34\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"446\" cy=\"300\" r=\"24\" fill=\"#FFFFFF\"/>", "hero": "#FFEFF4", "dark": "#0B0B0F", "pal": "linear-gradient(90deg,#FF7A18,#FF2E7E)", "palDark": "linear-gradient(90deg,#FF7A18,#FF2E7E)", "sw": [["#0B0B0F", "#fff"], ["#FF7A18", "#0B0B0F"], ["#FF2E7E", "#fff"], ["#FFEFF4", "#BE185D"]]}, {"tag": "Colour 2", "name": "Night drive", "why": "Deep navy with a cyan-to-violet beat. Calm, techy and premium, like a modern banking app.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#22D3EE\"/><stop offset=\"1\" stop-color=\"#8B5CF6\"/></linearGradient></defs><rect x=\"4\" y=\"4\" width=\"504\" height=\"504\" rx=\"116\" fill=\"#0B1026\"/><path d=\"M52 300 H112 Q124 300 130 290 Q140 270 150 290 Q156 300 168 300 H184 L198 326 L230 148 L256 322 L280 214 L300 334 L314 300 H344 Q358 300 366 284 Q376 266 386 284 Q392 300 404 300 H414\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"34\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"446\" cy=\"300\" r=\"24\" fill=\"#FFFFFF\"/>", "hero": "#EAF0FF", "dark": "#0B1026", "pal": "linear-gradient(90deg,#0891B2,#7C3AED)", "palDark": "linear-gradient(90deg,#22D3EE,#8B5CF6)", "sw": [["#0B1026", "#fff"], ["#22D3EE", "#0B1026"], ["#8B5CF6", "#fff"], ["#EAF0FF", "#4338CA"]]}, {"tag": "Colour 3", "name": "Clean light", "why": "A white icon with an indigo-to-pink beat and a dark dot. Fresh and friendly, the lightest feel of the three.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#4F46E5\"/><stop offset=\"1\" stop-color=\"#EC4899\"/></linearGradient></defs><rect x=\"4\" y=\"4\" width=\"504\" height=\"504\" rx=\"116\" fill=\"#FFFFFF\" stroke=\"#E4E4EC\" stroke-width=\"8\"/><path d=\"M52 300 H112 Q124 300 130 290 Q140 270 150 290 Q156 300 168 300 H184 L198 326 L230 148 L256 322 L280 214 L300 334 L314 300 H344 Q358 300 366 284 Q376 266 386 284 Q392 300 404 300 H414\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"34\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"446\" cy=\"300\" r=\"24\" fill=\"#0B0B0F\"/>", "hero": "#F1EEFF", "dark": "#1E1B4B", "pal": "linear-gradient(90deg,#4F46E5,#DB2777)", "palDark": "linear-gradient(90deg,#A5B4FC,#F9A8D4)", "sw": [["#FFFFFF", "#4F46E5"], ["#4F46E5", "#fff"], ["#EC4899", "#fff"], ["#0B0B0F", "#fff"]]}];
+let k=0;
+const icon=(s,size)=>{k++;const t=s.replace(/id="(g\d)"/g,`id="$1_${k}"`).replace(/url\(#(g\d)\)/g,`url(#$1_${k})`);return `<svg viewBox="0 0 512 512"${size?` width="${size}" height="${size}"`:''}>${t}</svg>`};
+const pal=c=>c.startsWith('linear')?`background:${c};-webkit-background-clip:text;background-clip:text;color:transparent`:`color:${c}`;
+const word=(d,dark)=>`<span style="font-family:'Unbounded',sans-serif;font-weight:700;letter-spacing:-.03em;color:${dark?'#fff':'#0B0B0F'}">Motor<span style="${pal(dark?d.palDark:d.pal)}">Pal</span></span>`;
+document.getElementById('cols').innerHTML=ideas.map(d=>`
+<div class="col">
+ <div class="hero" style="background:${d.hero}">${icon(d.svg)}</div>
+ <div class="lock">${icon(d.svg)}${word(d,false)}</div>
+ <div class="lock" style="background:${d.dark}">${icon(d.svg)}${word(d,true)}</div>
+ <div class="sizes" style="padding-top:28px">${icon(d.svg,96)}${icon(d.svg,60)}${icon(d.svg,36)}</div>
+ <div class="sw">${d.sw.map(([c,f])=>`<i style="background:${c};color:${f}">${c}</i>`).join('')}</div>
+ <div class="cap"><small>${d.tag}</small><b>${d.name}</b><p>${d.why}</p></div>
+</div>`).join('');
+</script></body></html>
