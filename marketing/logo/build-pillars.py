@@ -3,7 +3,7 @@
 # Writes clean, layered, editable SVGs into final/.
 import math
 NAVY, LIME, LIME_DARK, W, INK = '#050505', '#00A86B', '#006E47', '#FFFFFF', '#0B0B0F'   # black, deep mint (option 10c)
-NEEDLE_OPACITY = 0.75   # the white needle is slightly see-through
+NEEDLE_OPACITY = 0.7    # needle and centre dot fade together (Version C)
 CX, CY, R, RING = 256, 282, 150, 44
 RO, RI = R + RING / 2, R - RING / 2
 DEG = 360 / (2 * math.pi * R)            # degrees per pixel along the dial
@@ -19,11 +19,13 @@ def mark(tile=True):
     o.append('  <g id="dial">')
     o += [f'    <path id="segment-{i + 1}-{names[i]}" d="{sector(START + i * (SEG + GAP), START + i * (SEG + GAP) + SEG)}" fill="{LIME}"/>' for i in range(4)]
     o.append('  </g>')
-    o.append(f'  <path id="needle" d="M256 282 L352 232" stroke="{W}" stroke-opacity="{NEEDLE_OPACITY}" stroke-width="28" stroke-linecap="round" fill="none"/>')
-    o.append(f'  <circle id="hub" cx="256" cy="282" r="30" fill="{W}"/>')
+    o.append(f'  <g id="needle-and-dot" opacity="{NEEDLE_OPACITY}">')
+    o.append(f'    <path id="needle" d="M256 282 L352 232" stroke="{W}" stroke-width="28" stroke-linecap="round" fill="none"/>')
+    o.append(f'    <circle id="hub" cx="256" cy="282" r="30" fill="{W}"/>')
+    o.append('  </g>')
     return '\n'.join(o)
 HEAD = ('<?xml version="1.0" encoding="UTF-8"?>\n<!-- MotorPal logo, "Four pillars". The four dial segments stand for reminders, service records, '
-        'fuel and costs, and warranties. Colours: black #050505, mint #00A86B, deeper mint #006E47, white #FFFFFF (needle at 75% opacity). Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->\n')
+        'fuel and costs, and warranties. Colours: black #050505, mint #00A86B, deeper mint #006E47, white #FFFFFF (needle and centre dot at 70% opacity). Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->\n')
 def word(motor, pal):
     return (f'  <text id="name" x="410" y="262" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-7.6">'
             f'<tspan fill="{motor}">Motor</tspan><tspan fill="{pal}">Pal</tspan></text>')
