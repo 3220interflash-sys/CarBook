@@ -1,0 +1,85 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- MotorPal: five modern logo directions, each with its own colours and typeface. make-modern.js renders this. -->
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Space+Grotesk:wght@700&family=Outfit:wght@700;800&family=Manrope:wght@800&family=Unbounded:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:2600px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F4F4F6;color:#0B0B0F;padding:80px 90px 90px}
+h1{font-size:64px;font-weight:800;letter-spacing:-.03em}
+.lead{margin-top:12px;font-size:28px;color:#5B5F6A;font-weight:500}
+.cols{margin-top:56px;display:grid;grid-template-columns:repeat(5,1fr);gap:32px}
+.col{background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 18px 36px -14px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.hero{display:grid;place-items:center;padding:56px 0}
+.hero svg{width:260px;height:260px;filter:drop-shadow(0 24px 36px rgba(0,0,0,.22))}
+.lock{display:flex;align-items:center;justify-content:center;gap:16px;padding:30px 0}
+.lock svg{width:64px;height:64px;flex:none}
+.lock span{font-size:50px;line-height:1}
+.sizes{display:flex;align-items:center;justify-content:center;gap:20px;padding:6px 0 28px}
+.sw{display:flex;gap:10px;padding:0 32px}
+.sw i{flex:1;height:54px;border-radius:14px;display:flex;align-items:flex-end;padding:0 0 8px 10px;font-style:normal;font-size:15px;font-weight:700}
+.cap{padding:24px 32px 34px}
+.cap small{font-size:20px;font-weight:700;color:#8A8F99}
+.cap b{display:block;margin-top:4px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+.cap p{margin-top:10px;font-size:23px;line-height:1.42;color:#474B55;font-weight:500}
+</style></head>
+<body>
+<h1>MotorPal: five modern directions</h1>
+<p class="lead">Each with its own colours and typeface. Shown as the app icon, the name on light and dark, small sizes, and the palette.</p>
+<div class="cols" id="cols"></div>
+<script>
+const ideas = [
+{ n:'1', name:'Pulse', font:"'Sora'", w:800, ls:'-.04em', hero:'#EEF0FF', dark:'#1E1B4B', pal:'#FF6B6B', palDark:'#FF8A8A',
+  colors:[['#4F46E5','#fff'],['#7C3AED','#fff'],['#FF6B6B','#fff'],['#EEF0FF','#4F46E5']],
+  why:'A road that becomes a heartbeat. Your vehicle’s health, quietly watched for you. Feels like a modern health or fintech app.',
+  svg:`<defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#4F46E5"/><stop offset="1" stop-color="#7C3AED"/></linearGradient></defs>
+  <rect width="512" height="512" rx="120" fill="url(#g1)"/>
+  <path d="M86 290 H184 L222 206 L270 360 L308 250 L334 290 H392" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="414" cy="290" r="30" fill="#FF6B6B"/>`},
+{ n:'2', name:'Gauge', font:"'Space Grotesk'", w:700, ls:'-.04em', hero:'#E9EEF6', dark:'#0F172A', pal:'#65A30D', palDark:'#A3E635',
+  colors:[['#0F172A','#fff'],['#334155','#fff'],['#A3E635','#0F172A'],['#E9EEF6','#0F172A']],
+  why:'A dashboard gauge sitting in the green. Always know where you stand on dates, service and spending. Sharp and techy.',
+  svg:`<rect width="512" height="512" rx="120" fill="#0F172A"/>
+  <circle cx="256" cy="282" r="150" fill="none" stroke="#334155" stroke-width="44" stroke-linecap="round" stroke-dasharray="707 942" transform="rotate(135 256 282)"/>
+  <circle cx="256" cy="282" r="150" fill="none" stroke="#A3E635" stroke-width="44" stroke-linecap="round" stroke-dasharray="500 942" transform="rotate(135 256 282)"/>
+  <path d="M256 282 L352 232" stroke="#fff" stroke-width="28" stroke-linecap="round"/><circle cx="256" cy="282" r="30" fill="#fff"/>`},
+{ n:'3', name:'Ask a pal', font:"'Outfit'", w:800, ls:'-.03em', hero:'#E3F7F5', dark:'#134E4A', pal:'#0D9488', palDark:'#FDBA74',
+  colors:[['#0D9488','#fff'],['#134E4A','#fff'],['#FDBA74','#134E4A'],['#E3F7F5','#0D9488']],
+  why:'A steering wheel inside a chat bubble. A friend you can ask about your vehicle, any time. Warm, approachable, very “pal”.',
+  svg:`<defs><linearGradient id="g3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#14B8A6"/><stop offset="1" stop-color="#0D9488"/></linearGradient></defs>
+  <rect width="512" height="512" rx="120" fill="url(#g3)"/>
+  <path d="M136 112 H376 A60 60 0 0 1 436 172 V312 A60 60 0 0 1 376 372 H236 L166 426 V372 H136 A60 60 0 0 1 76 312 V172 A60 60 0 0 1 136 112 Z" fill="#fff"/>
+  <circle cx="256" cy="242" r="82" fill="none" stroke="#0D9488" stroke-width="24"/>
+  <path d="M176 236 H336 M256 250 V322" stroke="#0D9488" stroke-width="22" stroke-linecap="round"/>
+  <circle cx="256" cy="242" r="26" fill="#FDBA74"/>`},
+{ n:'4', name:'Shield road', font:"'Manrope'", w:800, ls:'-.04em', hero:'#FFF4E6', dark:'#111827', pal:'#EA580C', palDark:'#F59E0B',
+  colors:[['#111827','#fff'],['#F59E0B','#111827'],['#F97316','#fff'],['#FFF4E6','#B45309']],
+  why:'A road running into a shield. Covered and on the road: reminders, warranties and records keeping you protected. Strong and trustworthy.',
+  svg:`<defs><linearGradient id="g4" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F59E0B"/><stop offset="1" stop-color="#F97316"/></linearGradient></defs>
+  <rect width="512" height="512" rx="120" fill="#111827"/>
+  <path d="M256 84 L404 140 V256 C404 346 342 404 256 432 C170 404 108 346 108 256 V140 Z" fill="url(#g4)"/>
+  <path d="M190 412 L240 176 H272 L322 412 Z" fill="#111827"/>
+  <rect x="252" y="198" width="8" height="30" rx="4" fill="#fff"/><rect x="250" y="252" width="12" height="42" rx="6" fill="#fff"/><rect x="248" y="322" width="16" height="56" rx="8" fill="#fff"/>`},
+{ n:'5', name:'M route', font:"'Unbounded'", w:700, ls:'-.03em', hero:'#FFEFF4', dark:'#0B0B0F', pal:'#E11D63', palDark:'#FF5A8A',
+  colors:[['#0B0B0F','#fff'],['#FF7A18','#0B0B0F'],['#FF2E7E','#fff'],['#FFEFF4','#BE185D']],
+  why:'The M of MotorPal drawn as one road, ending at a destination dot. Every journey of your vehicle, from day one to today. Bold and youthful.',
+  svg:`<defs><linearGradient id="g5" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#FF7A18"/><stop offset="1" stop-color="#FF2E7E"/></linearGradient></defs>
+  <rect width="512" height="512" rx="120" fill="#0B0B0F"/>
+  <path d="M124 384 V176 Q124 138 156 160 L256 284 L356 160 Q388 138 388 176 V318" fill="none" stroke="url(#g5)" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="388" cy="388" r="32" fill="#fff"/>`},
+];
+// Each svg gets unique gradient ids per copy so repeated icons still render.
+let k = 0;
+const icon = (s, size) => { k++; const t = s.replace(/id="(g\d)"/g, `id="$1_${k}"`).replace(/url\(#(g\d)\)/g, `url(#$1_${k})`);
+  return `<svg viewBox="0 0 512 512"${size ? ` width="${size}" height="${size}"` : ''}>${t}</svg>`; };
+const word = (d, onDark) => `<span style="font-family:${d.font},sans-serif;font-weight:${d.w};letter-spacing:${d.ls};color:${onDark ? '#fff' : '#0B0B0F'}">Motor<span style="color:${onDark ? d.palDark : d.pal}">Pal</span></span>`;
+document.getElementById('cols').innerHTML = ideas.map(d => `
+  <div class="col">
+    <div class="hero" style="background:${d.hero}">${icon(d.svg)}</div>
+    <div class="lock">${icon(d.svg)}${word(d, false)}</div>
+    <div class="lock" style="background:${d.dark}">${icon(d.svg)}${word(d, true)}</div>
+    <div class="sizes" style="padding-top:28px">${icon(d.svg, 96)}${icon(d.svg, 60)}${icon(d.svg, 36)}</div>
+    <div class="sw">${d.colors.map(([c, f]) => `<i style="background:${c};color:${f}">${c}</i>`).join('')}</div>
+    <div class="cap"><small>Option ${d.n} · ${d.font.replace(/'/g, '')}</small><b>${d.name}</b><p>${d.why}</p></div>
+  </div>`).join('');
+</script>
+</body></html>
