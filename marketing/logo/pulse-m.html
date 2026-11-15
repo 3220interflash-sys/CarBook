@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- MotorPal: five modern logo directions, each with its own colours and typeface. make-modern.js renders this. -->
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Space+Grotesk:wght@700&family=Outfit:wght@700;800&family=Manrope:wght@800&family=Unbounded:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1900px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F4F4F6;color:#0B0B0F;padding:80px 90px 90px}
+h1{font-size:64px;font-weight:800;letter-spacing:-.03em}
+.lead{margin-top:12px;font-size:28px;color:#5B5F6A;font-weight:500}
+.cols{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.col{background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 18px 36px -14px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.hero{display:grid;place-items:center;padding:56px 0}
+.hero svg{width:260px;height:260px;filter:drop-shadow(0 24px 36px rgba(0,0,0,.22))}
+.lock{display:flex;align-items:center;justify-content:center;gap:16px;padding:30px 0}
+.lock svg{width:64px;height:64px;flex:none}
+.lock span{font-size:50px;line-height:1}
+.sizes{display:flex;align-items:center;justify-content:center;gap:20px;padding:6px 0 28px}
+.sw{display:flex;gap:10px;padding:0 32px}
+.sw i{flex:1;height:54px;border-radius:14px;display:flex;align-items:flex-end;padding:0 0 8px 10px;font-style:normal;font-size:15px;font-weight:700}
+.cap{padding:24px 32px 34px}
+.cap small{font-size:20px;font-weight:700;color:#8A8F99}
+.cap b{display:block;margin-top:4px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+.cap p{margin-top:10px;font-size:23px;line-height:1.42;color:#474B55;font-weight:500}
+</style></head>
+<body>
+<h1>MotorPal: the pulse M</h1>
+<p class="lead">Option 1’s heartbeat, shaped into an M, in Option 5’s black with an orange-to-pink gradient. Font: Unbounded.</p>
+<div class="cols" id="cols"></div>
+<script>
+const ideas=[{"n": "A", "name": "Sharp pulse", "why": "Reads as a heartbeat first, then an M. Clean and confident. The white dot is the vehicle \u201calive and on track\u201d.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#FF7A18\"/><stop offset=\"1\" stop-color=\"#FF2E7E\"/></linearGradient></defs><rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0B0B0F\"/><path d=\"M64 336 H140 L190 168 L256 300 L322 168 L372 336 H404\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"44\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"440\" cy=\"336\" r=\"26\" fill=\"#fff\"/>"}, {"n": "B", "name": "Soft pulse", "why": "Same shape with rounded peaks. Friendlier and more \u201cpal\u201d, a little less technical.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#FF7A18\"/><stop offset=\"1\" stop-color=\"#FF2E7E\"/></linearGradient></defs><rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0B0B0F\"/><path d=\"M64 336 H132 Q150 336 158 310 L184 196 Q192 160 214 190 L256 262 L298 190 Q320 160 328 196 L354 310 Q362 336 380 336 H404\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"44\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"440\" cy=\"336\" r=\"26\" fill=\"#fff\"/>"}, {"n": "C", "name": "Heartbeat M", "why": "A small blip, then a tall, upright M, then the line runs on to the dot. The M is clearest here; the pulse is a supporting detail.", "svg": "<defs><linearGradient id=\"g1\" x1=\"0\" y1=\"0\" x2=\"1\" y2=\"0\"><stop offset=\"0\" stop-color=\"#FF7A18\"/><stop offset=\"1\" stop-color=\"#FF2E7E\"/></linearGradient></defs><rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0B0B0F\"/><path d=\"M60 316 H118 L140 280 L162 316 H176 V170 L256 286 L336 170 V316 H404\" fill=\"none\" stroke=\"url(#g1)\" stroke-width=\"40\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"440\" cy=\"316\" r=\"26\" fill=\"#fff\"/>"}];
+let k=0;
+const icon=(s,size)=>{k++;const t=s.replace(/id="(g\d)"/g,`id="$1_${k}"`).replace(/url\(#(g\d)\)/g,`url(#$1_${k})`);return `<svg viewBox="0 0 512 512"${size?` width="${size}" height="${size}"`:''}>${t}</svg>`};
+const word=dark=>`<span style="font-family:'Unbounded',sans-serif;font-weight:700;letter-spacing:-.03em;color:${dark?'#fff':'#0B0B0F'}">Motor<span style="background:linear-gradient(90deg,#FF7A18,#FF2E7E);-webkit-background-clip:text;background-clip:text;color:transparent">Pal</span></span>`;
+const sw=[['#0B0B0F','#fff'],['#FF7A18','#0B0B0F'],['#FF2E7E','#fff'],['#FFEFF4','#BE185D']];
+document.getElementById('cols').innerHTML=ideas.map(d=>`
+<div class="col">
+ <div class="hero" style="background:#FFEFF4">${icon(d.svg)}</div>
+ <div class="lock">${icon(d.svg)}${word(false)}</div>
+ <div class="lock" style="background:#0B0B0F">${icon(d.svg)}${word(true)}</div>
+ <div class="sizes" style="padding-top:28px">${icon(d.svg,96)}${icon(d.svg,60)}${icon(d.svg,36)}</div>
+ <div class="sw">${sw.map(([c,f])=>`<i style="background:${c};color:${f}">${c}</i>`).join('')}</div>
+ <div class="cap"><small>Version ${d.n}</small><b>${d.name}</b><p>${d.why}</p></div>
+</div>`).join('');
+</script></body></html>
