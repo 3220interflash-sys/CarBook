@@ -93,6 +93,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
       <fieldset>
         <legend>Shape</legend>
         <div class="slider"><div class="row"><label for="hand">Hand thickness</label><output id="handO"></output></div><input type="range" id="hand" min="10" max="44" step="1"></div>
+        <label class="check"><input type="checkbox" id="roundEnds"> Rounded hand tips</label>
         <div class="slider"><div class="row"><label for="mouth">Mouth opening</label><output id="mouthO"></output></div><input type="range" id="mouth" min="18" max="60" step="1"></div>
         <div class="slider"><div class="row"><label for="ring">Dial thickness</label><output id="ringO"></output></div><input type="range" id="ring" min="24" max="64" step="1"></div>
         <div class="slider"><div class="row"><label for="parts">Parts in the dial</label><output id="partsO"></output></div><input type="range" id="parts" min="1" max="6" step="1"></div>
@@ -128,7 +129,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid 
 
 <script>
 const CHOSEN = {tile:'#0F172A', dial:'#A3E635', hands:'#FFFFFF', dotc:'#FFFFFF', motor:'#0B0B0F', pal:'#65A30D', palDark:'#A3E635', darkbg:'#0F172A',
-  multi:false, segs:['#A3E635','#22D3EE','#FBBF24','#A78BFA','#F472B6','#60A5FA'], hand:19, mouth:27, ring:42, parts:4, gap:22, dot:22, round:120,
+  multi:false, segs:['#A3E635','#22D3EE','#FBBF24','#A78BFA','#F472B6','#60A5FA'], hand:19, mouth:27, ring:42, parts:4, gap:22, dot:22, round:120, roundEnds:true,
   w1:'Motor', w2:'Pal', font:'Plus Jakarta Sans'};
 const PRESETS = [
   ['Navy and lime', {}],
@@ -155,6 +156,12 @@ function sector(a0,a1,ro,ri){
 }
 function handPath(deg,side,hw,ro){
   const t=deg*Math.PI/180,u=[Math.cos(t),Math.sin(t)],n=[side*Math.sin(t),-side*Math.cos(t)];
+  if(S.roundEnds){
+    const r=hw/2, L=Math.sqrt(Math.max((ro-r)*(ro-r)-r*r,0));
+    const B=[CX+n[0]*hw,CY+n[1]*hw], C=[B[0]+u[0]*L,B[1]+u[1]*L], D=[CX+u[0]*L,CY+u[1]*L];
+    const sweep=(n[0]*u[1]-n[1]*u[0])>0?1:0;
+    return `M${CX} ${CY} L${f2(B[0])} ${f2(B[1])} L${f2(C[0])} ${f2(C[1])} A${f2(r)} ${f2(r)} 0 0 ${sweep} ${f2(D[0])} ${f2(D[1])} Z`;
+  }
   const L=Math.sqrt(Math.max(ro*ro-hw*hw,0));
   const pts=[[CX,CY],[CX+n[0]*hw,CY+n[1]*hw],[CX+n[0]*hw+u[0]*L,CY+n[1]*hw+u[1]*L],[CX+u[0]*ro,CY+u[1]*ro]];
   return 'M'+pts.map(p=>f2(p[0])+' '+f2(p[1])).join(' L')+' Z';
@@ -194,7 +201,7 @@ function render(){
   for(const k of ['hand','mouth','ring','parts','gap','dot','round']){ $(k).value=S[k]; $(k+'O').textContent = S[k]; }
   $('mouthO').textContent = (S.mouth*2)+'°';
   for(const [k] of COLORS){ const el=$('c-'+k); if(el){ el.value=S[k]; el.nextElementSibling.querySelector('code').textContent=S[k].toUpperCase(); } }
-  $('multi').checked = S.multi; $('segColors').hidden = !S.multi;
+  $('multi').checked = S.multi; $('segColors').hidden = !S.multi; $('roundEnds').checked = !!S.roundEnds;
   [...$('segColors').children].forEach((c,i)=>{ c.hidden = i>=S.parts; const inp=c.querySelector('input'); inp.value=S.segs[i]; c.querySelector('code').textContent=S.segs[i].toUpperCase(); });
   $('w1').value=S.w1; $('w2').value=S.w2; $('font').value=S.font;
   [...$('presets').children].forEach((b,i)=>b.setAttribute('aria-pressed', String(matches(PRESETS[i][1]))));
@@ -205,12 +212,13 @@ function matches(p){ const t={...CHOSEN,...p}; return ['tile','dial','hands','do
 /* ---------- controls ---------- */
 $('presets').innerHTML = PRESETS.map(([name,p])=>{ const t={...CHOSEN,...p}; const c2 = t.multi?'conic-gradient(#A3E635 0 25%,#22D3EE 0 50%,#FBBF24 0 75%,#A78BFA 0)':t.dial;
   return `<button type="button" class="preset"><i style="background:${t.tile};box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)"></i><i style="background:${c2};margin-left:-14px"></i>${name}</button>`; }).join('');
-[...$('presets').children].forEach((b,i)=>b.addEventListener('click',()=>{ const keep={hand:S.hand,mouth:S.mouth,ring:S.ring,parts:S.parts,gap:S.gap,dot:S.dot,round:S.round,w1:S.w1,w2:S.w2,font:S.font}; S={...CHOSEN,...PRESETS[i][1],...keep}; render(); }));
+[...$('presets').children].forEach((b,i)=>b.addEventListener('click',()=>{ const keep={roundEnds:S.roundEnds,hand:S.hand,mouth:S.mouth,ring:S.ring,parts:S.parts,gap:S.gap,dot:S.dot,round:S.round,w1:S.w1,w2:S.w2,font:S.font}; S={...CHOSEN,...PRESETS[i][1],...keep}; render(); }));
 $('colors').innerHTML = COLORS.map(([k,l])=>`<label class="color"><input type="color" id="c-${k}"><span>${l}<code></code></span></label>`).join('');
 COLORS.forEach(([k])=>$('c-'+k).addEventListener('input',e=>{S[k]=e.target.value;render()}));
 $('segColors').innerHTML = S.segs.map((c,i)=>`<label class="color"><input type="color" id="seg-${i}"><span>Part ${i+1}<code></code></span></label>`).join('');
 S.segs.forEach((c,i)=>$('seg-'+i).addEventListener('input',e=>{S.segs[i]=e.target.value;render()}));
 $('multi').addEventListener('change',e=>{S.multi=e.target.checked;render()});
+$('roundEnds').addEventListener('change',e=>{S.roundEnds=e.target.checked;render()});
 for(const k of ['hand','mouth','ring','parts','gap','dot','round']) $(k).addEventListener('input',e=>{S[k]=+e.target.value;render()});
 $('w1').addEventListener('input',e=>{S.w1=e.target.value;render()});
 $('w2').addEventListener('input',e=>{S.w2=e.target.value;render()});

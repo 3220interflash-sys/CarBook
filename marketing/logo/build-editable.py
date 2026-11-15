@@ -15,10 +15,13 @@ def sector(a0, a1):
             f'A{RI} {RI} 0 0 0 {f(P(a0, RI))} Z')
 segments = [sector(START + i * (SEG + GAP), START + i * (SEG + GAP) + SEG) for i in range(PARTS)]
 def hand(deg, side):
+    # A hand that lies flush against the end of the dial, with a rounded tip.
     t = math.radians(deg); u = (math.cos(t), math.sin(t)); n = (side * math.sin(t), -side * math.cos(t))
-    L = math.sqrt(RO ** 2 - HW ** 2)
-    pts = [(CX, CY), (CX + n[0] * HW, CY + n[1] * HW), (CX + n[0] * HW + u[0] * L, CY + n[1] * HW + u[1] * L), (CX + u[0] * RO, CY + u[1] * RO)]
-    return 'M' + ' L'.join(f(p) for p in pts) + ' Z'
+    r = HW / 2; L = math.sqrt((RO - r) ** 2 - r ** 2)
+    A = (CX, CY); B = (CX + n[0] * HW, CY + n[1] * HW)
+    C = (B[0] + u[0] * L, B[1] + u[1] * L); D = (CX + u[0] * L, CY + u[1] * L)
+    sweep = 1 if (n[0] * u[1] - n[1] * u[0]) > 0 else 0
+    return f'M{f(A)} L{f(B)} L{f(C)} A{r:.2f} {r:.2f} 0 0 {sweep} {f(D)} Z'
 names = ['Reminders', 'Service records', 'Fuel and costs', 'Warranties']
 def mark(tile=True, ink=W):
     out = []
