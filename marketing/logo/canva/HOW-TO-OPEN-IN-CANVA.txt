@@ -1,0 +1,15 @@
+MotorPal logo for Canva
+
+1. Open canva.com and sign in.
+2. Click Create a design > Import file (or drag a file onto the Canva home page).
+3. Pick one of the PDF files below. Canva opens it as a design you can edit:
+   change colours, move or resize parts, change the text.
+   - motorpal-icon.pdf            the app icon (1080 x 1080)
+   - motorpal-logo-white.pdf      icon and name on white (1360 x 400)
+   - motorpal-logo-dark.pdf       icon and name on navy (1360 x 400)
+   - motorpal-mark-on-dark.pdf    the mark without its tile, on navy (1080 x 1080)
+4. To add the logo to another Canva design, use Uploads > Upload files and pick an .svg file.
+   SVGs stay sharp at any size and you can change their colours in Canva.
+
+The name uses the font Space Grotesk Bold. If Canva shows a different font, select the text and pick Space Grotesk.
+Colours: navy #0F172A, lime #A3E635, darker green for "Pal" on white #65A30D, white #FFFFFF.

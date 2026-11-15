@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MotorPal logo. Colours: navy #0F172A, lime #A3E635, white #FFFFFF. Font for the name: Space Grotesk Bold (free from Google Fonts). -->
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="400" viewBox="0 0 1360 400">
+  <rect id="background" width="1360" height="400" fill="#FFFFFF"/>
+  <g id="icon" transform="translate(40 40) scale(0.625)">
+  <rect id="tile" width="512" height="512" rx="120" fill="#0F172A"/>
+  <g id="dial">
+    <path id="segment-1-reminders" d="M384.89 354.66 A172 172 0 0 1 213.20 425.22 L221.08 381.93 A128 128 0 0 0 348.85 329.42 Z" fill="#A3E635"/>
+    <path id="segment-2-service-records" d="M188.80 418.90 A172 172 0 0 1 72.93 273.87 L116.69 269.30 A128 128 0 0 0 202.92 377.23 Z" fill="#A3E635"/>
+    <path id="segment-3-fuel-and-costs" d="M72.16 248.67 A172 172 0 0 1 178.90 96.80 L195.55 137.52 A128 128 0 0 0 116.12 250.55 Z" fill="#A3E635"/>
+    <path id="segment-4-warranties" d="M202.86 88.99 A172 172 0 0 1 378.57 148.88 L344.14 176.28 A128 128 0 0 0 213.38 131.72 Z" fill="#A3E635"/>
+  </g>
+  <g id="hands" fill="#FFFFFF">
+    <path id="hand-lower" d="M244.00 256.00 L261.21 231.43 L399.94 328.57 L384.89 354.66 Z"/>
+    <path id="hand-upper" d="M244.00 256.00 L261.21 280.57 L399.94 183.43 L384.89 157.34 Z"/>
+  </g>
+  <circle id="centre-dot" cx="244" cy="256" r="32" fill="#FFFFFF"/>
+  </g>
+  <text id="name" x="410" y="262" font-family="Space Grotesk, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-7.6"><tspan fill="#0B0B0F">Motor</tspan><tspan fill="#65A30D">Pal</tspan></text>
+</svg>
