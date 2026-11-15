@@ -1,0 +1,44 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- MotorPal: five modern logo directions, each with its own colours and typeface. make-modern.js renders this. -->
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@700;800&family=Space+Grotesk:wght@700&family=Outfit:wght@700;800&family=Manrope:wght@800&family=Unbounded:wght@700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:2100px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F4F4F6;color:#0B0B0F;padding:80px 90px 90px}
+h1{font-size:64px;font-weight:800;letter-spacing:-.03em}
+.lead{margin-top:12px;font-size:28px;color:#5B5F6A;font-weight:500}
+.cols{margin-top:56px;display:grid;grid-template-columns:repeat(3,1fr);gap:32px}
+.col{background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04),0 18px 36px -14px rgba(0,0,0,.18);display:flex;flex-direction:column}
+.hero{display:grid;place-items:center;padding:56px 0}
+.hero svg{width:260px;height:260px;filter:drop-shadow(0 24px 36px rgba(0,0,0,.22))}
+.lock{display:flex;align-items:center;justify-content:center;gap:16px;padding:30px 0}
+.lock svg{width:64px;height:64px;flex:none}
+.lock span{font-size:50px;line-height:1}
+.sizes{display:flex;align-items:center;justify-content:center;gap:20px;padding:6px 0 28px}
+.sw{display:flex;gap:10px;padding:0 32px}
+.sw i{flex:1;height:54px;border-radius:14px;display:flex;align-items:flex-end;padding:0 0 8px 10px;font-style:normal;font-size:15px;font-weight:700}
+.cap{padding:24px 32px 34px}
+.cap small{font-size:20px;font-weight:700;color:#8A8F99}
+.cap b{display:block;margin-top:4px;font-size:32px;font-weight:800;letter-spacing:-.02em}
+.cap p{margin-top:10px;font-size:23px;line-height:1.42;color:#474B55;font-weight:500}
+</style></head>
+<body>
+<h1>MotorPal: the gauge with clock hands</h1>
+<p class="lead">The dot is gone. Two clock hands meet in the middle and open towards the gap, so together they quietly suggest a mouth.</p>
+<div class="cols" id="cols"></div>
+<script>
+const ideas=[{"hero": "#E9EEF6", "dark": "#0F172A", "pal": "#65A30D", "palDark": "#A3E635", "sw": [["#0F172A", "#fff"], ["#334155", "#fff"], ["#A3E635", "#0F172A"], ["#E9EEF6", "#0F172A"]], "tag": "Version A", "name": "Open smile", "svg": "<rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0F172A\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"0\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-193\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-386\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-579\" transform=\"rotate(35 244 256)\"/><path d=\"M334 222 L244 256 L322 286\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"24\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "why": "No dots. Two equal hands open towards the gap like a gentle open mouth. Clean and subtle: a clock, a gauge and a face, depending on how you look."}, {"hero": "#E9EEF6", "dark": "#0F172A", "pal": "#65A30D", "palDark": "#A3E635", "sw": [["#0F172A", "#fff"], ["#334155", "#fff"], ["#A3E635", "#0F172A"], ["#E9EEF6", "#0F172A"]], "tag": "Version B", "name": "Open smile with an eye", "svg": "<rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0F172A\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"0\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-193\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-386\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-579\" transform=\"rotate(35 244 256)\"/><path d=\"M334 222 L244 256 L322 286\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"24\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><circle cx=\"262\" cy=\"174\" r=\"22\" fill=\"#FFFFFF\"/>", "why": "The same hands, with a small eye kept above. The face reads straight away; a little less subtle."}, {"hero": "#E9EEF6", "dark": "#0F172A", "pal": "#65A30D", "palDark": "#A3E635", "sw": [["#0F172A", "#fff"], ["#334155", "#fff"], ["#A3E635", "#0F172A"], ["#E9EEF6", "#0F172A"]], "tag": "Version C", "name": "Clock hands", "svg": "<rect width=\"512\" height=\"512\" rx=\"120\" fill=\"#0F172A\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"0\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-193\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-386\" transform=\"rotate(35 244 256)\"/><circle cx=\"244\" cy=\"256\" r=\"150\" fill=\"none\" stroke=\"#A3E635\" stroke-width=\"44\" stroke-linecap=\"butt\" stroke-dasharray=\"171 1000\" stroke-dashoffset=\"-579\" transform=\"rotate(35 244 256)\"/><path d=\"M342 256 L244 256 L300 304\" fill=\"none\" stroke=\"#FFFFFF\" stroke-width=\"24\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>", "why": "A long hand and a short hand, like a real clock. The most \u201ctime and reminders\u201d, with the mouth only hinted at."}];
+let k=0;
+const icon=(s,size)=>{k++;const t=s.replace(/id="(g\d)"/g,`id="$1_${k}"`).replace(/url\(#(g\d)\)/g,`url(#$1_${k})`);return `<svg viewBox="0 0 512 512"${size?` width="${size}" height="${size}"`:''}>${t}</svg>`};
+const pal=c=>c.startsWith('linear')?`background:${c};-webkit-background-clip:text;background-clip:text;color:transparent`:`color:${c}`;
+const word=(d,dark)=>`<span style="font-family:'Space Grotesk',sans-serif;font-weight:700;letter-spacing:-.03em;color:${dark?'#fff':'#0B0B0F'}">Motor<span style="${pal(dark?d.palDark:d.pal)}">Pal</span></span>`;
+document.getElementById('cols').innerHTML=ideas.map(d=>`
+<div class="col">
+ <div class="hero" style="background:${d.hero}">${icon(d.svg)}</div>
+ <div class="lock">${icon(d.svg)}${word(d,false)}</div>
+ <div class="lock" style="background:${d.dark}">${icon(d.svg)}${word(d,true)}</div>
+ <div class="sizes" style="padding-top:28px">${icon(d.svg,96)}${icon(d.svg,60)}${icon(d.svg,36)}</div>
+ <div class="sw">${d.sw.map(([c,f])=>`<i style="background:${c};color:${f}">${c}</i>`).join('')}</div>
+ <div class="cap"><small>${d.tag}</small><b>${d.name}</b><p>${d.why}</p></div>
+</div>`).join('');
+</script></body></html>
