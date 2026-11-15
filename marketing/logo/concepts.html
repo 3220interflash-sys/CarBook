@@ -1,0 +1,65 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- MotorPal logo ideas. make.js renders this to motorpal-logo-concepts.png -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{width:1800px;height:1180px;font-family:"Plus Jakarta Sans",system-ui,sans-serif;-webkit-font-smoothing:antialiased;background:#F2F4F3;color:#0D1411;padding:70px 80px}
+h1{font-size:56px;font-weight:800;letter-spacing:-.03em}
+.lead{margin-top:10px;font-size:26px;color:#5B6662;font-weight:500}
+.cols{margin-top:48px;display:grid;grid-template-columns:repeat(3,1fr);gap:36px}
+.col{background:#fff;border-radius:40px;overflow:hidden;box-shadow:0 1px 2px rgba(17,26,22,.04),0 14px 30px -12px rgba(17,26,22,.16);display:flex;flex-direction:column}
+.hero{display:grid;place-items:center;padding:44px 0 30px}
+.hero svg{width:250px;height:250px;filter:drop-shadow(0 18px 30px rgba(10,127,85,.25))}
+.lock{display:flex;align-items:center;justify-content:center;gap:16px;font-size:56px;font-weight:800;letter-spacing:-.035em;padding:6px 0 24px}
+.lock svg{width:70px;height:70px}
+.lock .p{color:#0A7F55}
+.sizes{display:flex;align-items:flex-end;justify-content:center;gap:22px;padding:0 0 26px}
+.sizes span{font-size:20px;color:#5B6662;font-weight:600;margin-left:8px;align-self:center}
+.dark{background:#0D1411;color:#fff}
+.dark .lock{padding:30px 0}
+.dark .lock .p{color:#FFC425}
+.cap{padding:26px 34px 32px}
+.cap b{display:block;font-size:30px;font-weight:800;letter-spacing:-.02em}
+.cap p{margin-top:8px;font-size:23px;line-height:1.4;color:#45534C;font-weight:500}
+</style></head>
+<body>
+<h1>MotorPal: three logo ideas</h1>
+<p class="lead">Green for the brand, goldfish yellow for the spark. Each one stays clear as a tiny app icon.</p>
+<div class="cols" id="cols"></div>
+
+<script>
+const BG = '#0A7F55', Y = '#FFC425', W = '#FFFFFF';
+const tile = inner => `<svg viewBox="0 0 512 512"><rect width="512" height="512" rx="116" fill="${BG}"/>${inner}</svg>`;
+// A: a wheel with a tick sweeping out of it: "your vehicle, on track".
+const A = tile(`<circle cx="250" cy="266" r="146" fill="none" stroke="${W}" stroke-width="54"/>
+  <path d="M168 262 L234 328 L396 150" fill="none" stroke="${BG}" stroke-width="104" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M168 262 L234 328 L396 150" fill="none" stroke="${Y}" stroke-width="56" stroke-linecap="round" stroke-linejoin="round"/>`);
+// B: a friendly car front: headlights for eyes and a small smile: "your pal".
+const B = tile(`<path d="M152 236 L184 160 Q190 146 206 146 L306 146 Q322 146 328 160 L360 236 Z" fill="${W}"/>
+  <path d="M182 228 L204 178 L308 178 L330 228 Z" fill="${BG}"/>
+  <rect x="100" y="226" width="312" height="140" rx="50" fill="${W}"/>
+  <rect x="124" y="350" width="60" height="52" rx="16" fill="${W}"/><rect x="328" y="350" width="60" height="52" rx="16" fill="${W}"/>
+  <circle cx="164" cy="284" r="24" fill="${Y}"/><circle cx="348" cy="284" r="24" fill="${Y}"/>
+  <path d="M214 316 Q256 346 298 316" fill="none" stroke="${BG}" stroke-width="16" stroke-linecap="round"/>`);
+// C: a P made from a wheel, with the hub as a yellow dot: "everything about your vehicle, held in one place".
+const C = tile(`<rect x="148" y="112" width="64" height="300" rx="32" fill="${W}"/>
+  <circle cx="290" cy="220" r="100" fill="none" stroke="${W}" stroke-width="62"/>
+  <circle cx="290" cy="220" r="34" fill="${Y}"/>`);
+
+const ideas = [
+  [A, 'On track', 'A wheel with a tick sweeping out of it. Says “everything’s done right” at a glance. Calm and classy, like a money app.'],
+  [B, 'The friendly car', 'A car front with headlights for eyes and a small smile. Says “pal” straight away. Warm, fun, easy for every age.'],
+  [C, 'The P wheel', 'The P of MotorPal made from a wheel, with a yellow hub. A monogram that feels premium and works on any vehicle.'],
+];
+const sm = (svg, s) => svg.replace('<svg ', `<svg width="${s}" height="${s}" `);
+document.getElementById('cols').innerHTML = ideas.map(([svg, name, why]) => `
+  <div class="col">
+    <div class="hero">${svg}</div>
+    <div class="lock">${svg}<span>Motor<span class="p">Pal</span></span></div>
+    <div class="sizes">${sm(svg,96)}${sm(svg,56)}${sm(svg,32)}<span>App icon sizes</span></div>
+    <div class="dark"><div class="lock">${svg}<span>Motor<span class="p">Pal</span></span></div></div>
+    <div class="cap"><b>${name}</b><p>${why}</p></div>
+  </div>`).join('');
+</script>
+</body></html>
