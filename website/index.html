@@ -16,9 +16,9 @@
 /* CarBook website. Same brand as the app: white, CarBook green, goldfish yellow, Plus Jakarta Sans.
    Layout: one column of full-width bands; each band has a centred inner wrapper. */
 :root {
-  --bg: #FFFFFF; --soft: #F6F8F7; --ink: #111A16; --mut: #56645D; --line: #E4E9E6;
-  --green: #0A7F55; --green-ink: #0A6E4A; --green-tint: #E2F4EB; --deep: #0B3B2B;
-  --yellow: #FFC425; --yellow-tint: #FFF5D1; --on-yellow: #2A2000;
+  --bg: #FFFFFF; --soft: #F6F8F7; --ink: #0B0F0D; --mut: #56645D; --line: #E4E9E6;
+  --green: #007A51; --green-ink: #006E47; --green-tint: #E3F6EE; --deep: #050505;
+  --yellow: #00C47F; --yellow-tint: #E6F9F0; --on-yellow: #050505;
   --red: #B42318; --red-tint: #FEECEB; --amber: #A85400; --amber-tint: #FFF1DC;
   --font: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans Sinhala", "Noto Sans Tamil", sans-serif;
   color-scheme: light;
@@ -130,7 +130,7 @@ body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-a
 .dark .eyebrow { color: var(--yellow); }
 .dark .lead { color: #CBE3D9; }
 .dash-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px; margin-top: 40px; }
-.dl { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #0E1915; border: 1px solid #1F3A2F; text-align: center; font-size: 13px; font-weight: 600; color: #CBE3D9; }
+.dl { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 18px 8px; border-radius: 18px; background: #111614; border: 1px solid #23302A; text-align: center; font-size: 13px; font-weight: 600; color: #CBE3D9; }
 .dl svg { width: 38px; height: 38px; }
 .dl.red svg { color: #FF5A47; filter: drop-shadow(0 0 6px #FF5A47); }
 .dl.amber svg { color: #FFB21E; filter: drop-shadow(0 0 6px #FFB21E); }
@@ -220,8 +220,8 @@ footer a:hover { color: var(--ink); }
 .drive { position: absolute; bottom: 12px; left: 0; width: 170px; animation: drive 11s cubic-bezier(.45, .05, .55, .95) .3s infinite both; }
 .car { width: 170px; height: 70px; overflow: visible; }
 .car .body { fill: var(--green); stroke: none; }
-.car .glass { fill: #DDF2E9; stroke: none; }
-.car .line { stroke: #08603F; stroke-width: 2; fill: none; }
+.car .glass { fill: #DDF8EC; stroke: none; }
+.car .line { stroke: #006E47; stroke-width: 2; fill: none; }
 .car .lamp { fill: var(--yellow); stroke: none; }
 .car .tail { fill: #E5484D; stroke: none; }
 .car .wheel circle { fill: #18201C; stroke: none; }
@@ -273,17 +273,17 @@ body { background: var(--bg); }
 .band.soft { background: #E9EEEB; }
 .nav { background: rgba(242, 244, 243, .94); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .step, .pain, .promise, .person, .how, .say, .fx, .lis, .value, .feature .shot { border: 0 !important; box-shadow: var(--lift); background: #fff; }
-.step.last { background: linear-gradient(135deg, #0B3B2B, #0E5A43); }
+.step.last { background: linear-gradient(135deg, #050505, #14211B); }
 .pain .ic, .faq summary::after { background: var(--bg); }
 .faq details { border-color: #DCE2DF; }
 .btn { border-radius: 999px; }
 .btn.ghost { background: #fff; border-color: transparent; box-shadow: var(--lift); }
 .h2, .hero h1, .step h3, .how .n { font-variant-numeric: tabular-nums; }
-.lis .ic { background: linear-gradient(135deg, #0B3B2B, #0E5A43); color: var(--yellow); }
+.lis .ic { background: linear-gradient(135deg, #050505, #14211B); color: var(--yellow); }
 .hero h1 em { color: var(--green); }
 .badge-float { border: 0; box-shadow: var(--lift); }
 .wallet-float { position: absolute; z-index: 3; right: -6px; top: 34px; width: 230px; display: flex; flex-direction: column; gap: 2px; padding: 16px 18px; border-radius: 22px; color: #fff;
-  background: radial-gradient(180px 140px at 100% 0%, rgba(255, 196, 37, .3), transparent 70%), linear-gradient(135deg, #0B3B2B, #0E5A43); box-shadow: 0 20px 40px -18px rgba(11, 59, 43, .75); }
+  background: radial-gradient(180px 140px at 100% 0%, rgba(0, 196, 127, .3), transparent 70%), linear-gradient(135deg, #050505, #14211B); box-shadow: 0 20px 40px -18px rgba(5, 5, 5, .6); }
 .wf-l { font-size: 12.5px; color: rgba(255, 255, 255, .78); font-weight: 600; }
 .wf-big { font-size: 30px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; font-variant-numeric: tabular-nums; }
 .wf-row { display: flex; gap: 16px; margin-top: 8px; padding-top: 10px; border-top: 1px solid rgba(255, 255, 255, .15); font-size: 12.5px; color: rgba(255, 255, 255, .8); }
