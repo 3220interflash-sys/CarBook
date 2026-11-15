@@ -516,3 +516,19 @@ body { background: var(--bg); }
 .hero.bad .hero-val, .hero.warn .hero-val, .hero.ok .hero-val { color: var(--fg); }
 .hero.bad .hero-when, .hero.warn .hero-when, .hero.ok .hero-when { color: var(--mut); opacity: 1; }
 .hero.bad .hero-btn, .hero.warn .hero-btn, .hero.ok .hero-btn { background: var(--green); color: var(--on-green); }
+
+/* Calmer attention colours (November 2026). The owner found the red too loud on the dark theme.
+   Cards stay dark. Red and amber appear only as a muted coral or honey tone in the dot, the icon,
+   a hairline outline and a faint glow. Words still say what it means. */
+:root { --red-text: #F28B80; --amber-text: #E8B46A; --red-tint: #1E1514; --amber-tint: #1E1913; }
+.hero.bad  { --tone: #F28B80; --tone-soft: rgba(242, 139, 128, .10); --tone-line: rgba(242, 139, 128, .30); }
+.hero.warn { --tone: #E8B46A; --tone-soft: rgba(232, 180, 106, .10); --tone-line: rgba(232, 180, 106, .28); }
+.hero.ok   { --tone: #3EE0A4; --tone-soft: rgba(0, 196, 127, .10); --tone-line: rgba(0, 196, 127, .30); }
+.hero.bad, .hero.warn, .hero.ok { box-shadow: 0 0 0 1px var(--tone-line); }
+.hero.bad .hero-label, .hero.warn .hero-label, .hero.ok .hero-label { background: var(--surface-2); color: var(--fg); }
+.hero.bad .hero-art, .hero.warn .hero-art, .hero.ok .hero-art { background: var(--surface-2); box-shadow: none; }
+.alert-card.red, .alert-card.amber { background: var(--surface) !important; border: 0 !important; }
+.alert-card.red { box-shadow: 0 0 0 1px rgba(242, 139, 128, .30) !important; }
+.alert-card.amber { box-shadow: 0 0 0 1px rgba(232, 180, 106, .28) !important; }
+.tag.bad, .tag.warn, .ic.bad, .ic.warn, .mini.bad .mini-ic, .mini.warn .mini-ic { background: var(--surface-2); }
+.status.bad, .status.warn, .d-status.bad, .d-status.warn { background: var(--surface); }
