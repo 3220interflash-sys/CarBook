@@ -532,3 +532,22 @@ body { background: var(--bg); }
 .alert-card.amber { box-shadow: 0 0 0 1px rgba(232, 180, 106, .28) !important; }
 .tag.bad, .tag.warn, .ic.bad, .ic.warn, .mini.bad .mini-ic, .mini.warn .mini-ic { background: var(--surface-2); }
 .status.bad, .status.warn, .d-status.bad, .d-status.warn { background: var(--surface); }
+
+/* Hazard-style urgent warning (November 2026).
+   For "needs attention now": a strip of hazard-tape stripes along the top of the dark card and a small
+   warning triangle that blinks like hazard lights. Same muted coral as before, so the theme stays intact. */
+.hero.bad { padding-top: 26px; }
+.hero.bad::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 0; height: 8px; pointer-events: none;
+  background: repeating-linear-gradient(-45deg, var(--tone) 0 9px, transparent 9px 18px); opacity: .75;
+}
+.hero.bad .hero-label::before {
+  width: 13px; height: 12px; border-radius: 0; box-shadow: none;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+  animation: hazard-blink 1.1s steps(1, end) infinite;
+}
+@keyframes hazard-blink { 0% { opacity: 1; } 50% { opacity: .2; } }
+@media (prefers-reduced-motion: reduce) { .hero.bad .hero-label::before { animation: none; } }
+
+/* Dashboard symbols in the colour they really show: most information lights are green, the rear fog light is amber. */
+.dash.g-green { color: #3BD16F; } .dash.g-amber { color: #FFB21E; }

@@ -892,23 +892,55 @@ const LIGHTS = [
   { code: 'temp', level: 'red', related: null, icon: '<path d="M12 3v9.5"/><circle cx="12" cy="15" r="2.4"/><path d="M12 5.5h3M12 8.5h3"/><path d="M3 20c1.5-1 3-1 4.5 0s3 1 4.5 0 3-1 4.5 0 3 1 4.5 0"/>' },
   { code: 'battery', level: 'red', related: 'Battery', icon: '<rect x="3" y="7.5" width="18" height="11" rx="1.5"/><path d="M6.5 7.5V5.5h2.5v2M15 7.5V5.5h2.5v2M6.5 13h3.5M14 13h3.5M15.75 11.25v3.5"/>' },
   { code: 'brake', level: 'red', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="6"/><path d="M12 8.8v3.8M12 15.2v.1"/><path d="M4.2 7.2a9.5 9.5 0 0 0 0 9.6M19.8 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
-  { code: 'seatbelt', level: 'red', related: null, icon: '<circle cx="12" cy="4.8" r="2"/><path d="M8 21v-6.5a4 4 0 0 1 8 0V21"/><path d="M8.5 9.5l7.5 9"/>' },
+  { code: 'seatbelt', level: 'red', related: null, types: ['Car', 'Van'], icon: '<circle cx="12" cy="4.8" r="2"/><path d="M8 21v-6.5a4 4 0 0 1 8 0V21"/><path d="M8.5 9.5l7.5 9"/>' },
   { code: 'engine', level: 'amber', related: 'Spark plugs', icon: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M2.5 10.5v4.5M5 12.5H2.5"/>' },
   { code: 'abs', level: 'amber', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="6.5"/><text x="12" y="14.3" text-anchor="middle" font-size="6" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">ABS</text><path d="M3.8 7.2a9.5 9.5 0 0 0 0 9.6M20.2 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
   { code: 'airbag', level: 'amber', related: null, icon: '<circle cx="7.5" cy="5" r="1.8"/><path d="M5 21v-5.5l2.5-4 2 3.5h2.5"/><circle cx="16.5" cy="11" r="4.2"/>' },
   { code: 'tpms', level: 'amber', related: 'Tyres', icon: '<path d="M6.5 5.5c-2.6 3.6-2.6 9.4 0 13h11c2.6-3.6 2.6-9.4 0-13"/><path d="M12 8.5v4.5M12 15.6v.1"/><path d="M5 21h2.5M9.5 21H12M14 21h2.5M18.5 21H20"/>' },
   { code: 'steering', level: 'amber', related: null, icon: '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M5 12h5M14 12h5M12 14v5"/>' },
   { code: 'traction', level: 'amber', related: 'Tyres', icon: '<path d="M6 11.5l1.6-4h8.8l1.6 4v3.5H6z"/><path d="M8.5 15v1.5M15.5 15v1.5"/><path d="M4.5 21c1-1.6 2-1.6 3 0M10.5 21c1-1.6 2-1.6 3 0M16.5 21c1-1.6 2-1.6 3 0"/>' },
-  { code: 'glow', level: 'amber', related: null, diesel: true, icon: '<path d="M3 12c1.4-3.5 2.8-3.5 4.2 0s2.8 3.5 4.2 0 2.8-3.5 4.2 0 2.8 3.5 4.2 0"/><path d="M3 7h18M3 17h18"/>' },
+  { code: 'glow', level: 'amber', related: null, fuels: ['Diesel'], icon: '<path d="M3 12c1.4-3.5 2.8-3.5 4.2 0s2.8 3.5 4.2 0 2.8-3.5 4.2 0 2.8 3.5 4.2 0"/><path d="M3 7h18M3 17h18"/>' },
   { code: 'fuel', level: 'amber', related: null, icon: '<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M5 21h10M15 9h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M8 8h4"/>' },
   { code: 'service', level: 'amber', related: 'Oil change', icon: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.1L3 17.7 6.3 21l6.3-6.3a4 4 0 0 0 5.1-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/>' },
   { code: 'washer', level: 'info', related: null, icon: '<path d="M3 16.5c4.5-6.5 13.5-6.5 18 0z"/><path d="M12 10V6M8.5 7.5L12 4l3.5 3.5"/>' },
-  { code: 'highbeam', level: 'info', related: null, icon: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8.5h6M3 12h6M3 15.5h6"/>' }
+  { code: 'highbeam', level: 'info', related: null, icon: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8.5h6M3 12h6M3 15.5h6"/>' },
+  { code: 'door', level: 'red', related: null, types: ['Car', 'Van'], icon: '<path d="M7.5 4h9l1 6.5V19a1 1 0 0 1-1 1h-9a1 1 0 0 1-1-1v-8.5z"/><path d="M6.5 11L3 15.5M17.5 11l3.5 4.5"/>' },
+  { code: 'parking', level: 'red', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="6.5"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">P</text><path d="M3.8 7.2a9.5 9.5 0 0 0 0 9.6M20.2 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
+  { code: 'hybrid', level: 'red', related: null, fuels: ['Hybrid', 'Electric'], icon: '<path d="M5 15.5l1.6-4.4A2 2 0 0 1 8.5 9.8h7a2 2 0 0 1 1.9 1.3l1.6 4.4v3H5z"/><path d="M12 2.5v4M12 8.2v.1"/>' },
+  { code: 'oillevel', level: 'amber', related: 'Oil change', icon: '<path d="M3 10.5h8.5l2.5 2.5h3.5l3-3v6.5a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3z"/><path d="M7 10.5V8h4M8 8V6.5h2"/><path d="M4 21h3M9 21h3M14 21h3"/>' },
+  { code: 'coolant', level: 'amber', related: null, icon: '<path d="M12 3v9"/><circle cx="12" cy="14.5" r="2.4"/><path d="M5 9.5h4M15 9.5h4"/><path d="M4 20c1.3-.8 2.7-.8 4 0s2.7.8 4 0 2.7-.8 4 0 2.7.8 4 0"/>' },
+  { code: 'trans', level: 'amber', related: null, icon: '<circle cx="12" cy="12" r="3"/><path d="M12 4v2.5M12 17.5V20M4 12h2.5M17.5 12H20M6.3 6.3l1.8 1.8M15.9 15.9l1.8 1.8M6.3 17.7l1.8-1.8M15.9 8.1l1.8-1.8"/>' },
+  { code: 'padwear', level: 'amber', related: 'Brake pads', icon: '<circle cx="12" cy="12" r="5.5" stroke-dasharray="2.2 2"/><path d="M4.2 7.2a9.5 9.5 0 0 0 0 9.6M19.8 7.2a9.5 9.5 0 0 1 0 9.6"/>' },
+  { code: 'bulb', level: 'amber', related: null, icon: '<path d="M9.5 17.5h5M10.5 20.5h3M12 3.5a5.5 5.5 0 0 0-3.3 9.9v2.1h6.6v-2.1A5.5 5.5 0 0 0 12 3.5z"/><path d="M12 7v3.5M12 12.6v.1"/>' },
+  { code: 'dpf', level: 'amber', related: null, fuels: ['Diesel'], icon: '<rect x="3.5" y="7" width="17" height="10" rx="3"/><circle cx="8" cy="12" r=".6"/><circle cx="11" cy="10.5" r=".6"/><circle cx="11" cy="13.5" r=".6"/><circle cx="14" cy="12" r=".6"/><circle cx="17" cy="10.5" r=".6"/><circle cx="17" cy="13.5" r=".6"/>' },
+  { code: 'adblue', level: 'amber', related: null, fuels: ['Diesel'], icon: '<path d="M12 3.5C9 7.5 7 10 7 13a5 5 0 0 0 10 0c0-3-2-5.5-5-9.5z"/><path d="M9.5 14.5c1.6.9 3.4.9 5 0"/>' },
+  { code: 'waterfuel', level: 'amber', related: null, fuels: ['Diesel'], icon: '<rect x="6" y="6" width="12" height="14" rx="2"/><path d="M12 3v3"/><path d="M12 10c-1.4 1.8-2.2 2.9-2.2 4a2.2 2.2 0 0 0 4.4 0c0-1.1-.8-2.2-2.2-4z"/>' },
+  { code: 'immobiliser', level: 'amber', related: null, icon: '<rect x="7" y="11" width="10" height="8.5" rx="2"/><path d="M9.2 11V8.3a2.8 2.8 0 0 1 5.6 0V11M12 14.2v2"/>' },
+  { code: 'epc', level: 'amber', related: null, icon: '<rect x="3.5" y="7.5" width="17" height="9" rx="2.5"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">EPC</text>' },
+  { code: 'keybat', level: 'amber', related: null, icon: '<rect x="8" y="2.5" width="8" height="12" rx="3"/><path d="M12 14.5v7M12 18h2.5M12 20.5h2"/><path d="M10.5 6.5h3"/>' },
+  { code: 'adas', level: 'amber', related: null, types: ['Car', 'Van'], icon: '<path d="M6.5 14.5l1.3-3.6A1.8 1.8 0 0 1 9.5 9.6h5a1.8 1.8 0 0 1 1.7 1.3l1.3 3.6v2.5h-11z"/><path d="M4 21l2.6-8M20 21l-2.6-8"/>' },
+  { code: 'awd', level: 'amber', related: null, types: ['Car', 'Van'], icon: '<rect x="3.5" y="7.5" width="17" height="9" rx="2.5"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">4WD</text>' },
+  { code: 'evlow', level: 'amber', related: null, fuels: ['Electric', 'Hybrid'], icon: '<rect x="3" y="7.5" width="16" height="10" rx="2"/><path d="M21 11v3"/><path d="M12 9.5l-2.5 3.5h3l-2.5 3.5"/>' },
+  { code: 'fi', level: 'amber', related: null, types: ['Motorbike', 'Three-wheeler'], icon: '<rect x="5" y="7.5" width="14" height="9" rx="2.5"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">FI</text>' },
+  { code: 'sidestand', level: 'amber', related: null, types: ['Motorbike'], icon: '<circle cx="6" cy="16" r="3"/><circle cx="18" cy="16" r="3"/><path d="M6 16l3.5-6h5.5l3 6M12 10l-1.5 11"/>' },
+  { code: 'lowbeam', level: 'info', glow: 'green', related: null, icon: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8l6 1.8M3 11.5l6 1.8M3 15l6 1.8"/>' },
+  { code: 'frontfog', level: 'info', glow: 'green', related: null, icon: '<path d="M13 6c-3.5 0-3.5 12 0 12 3.5 0 7-2.7 7-6s-3.5-6-7-6z"/><path d="M3 8h6M3 12h6M3 16h6"/><path d="M6 5c-.8 4.7-.8 9.3 0 14"/>' },
+  { code: 'rearfog', level: 'info', glow: 'amber', related: null, icon: '<path d="M11 6c3.5 0 3.5 12 0 12-3.5 0-7-2.7-7-6s3.5-6 7-6z"/><path d="M15 8h6M15 12h6M15 16h6"/><path d="M18 5c.8 4.7.8 9.3 0 14"/>' },
+  { code: 'indicators', level: 'info', glow: 'green', related: null, icon: '<path d="M2.5 12l4.5-4.5V10h3v4H7v2.5z"/><path d="M21.5 12L17 7.5V10h-3v4h3v2.5z"/>' },
+  { code: 'cruise', level: 'info', glow: 'green', related: null, types: ['Car', 'Van'], icon: '<path d="M4 16.5a8 8 0 1 1 16 0"/><path d="M12 16.5l4-5"/><path d="M4 20h16"/>' },
+  { code: 'eco', level: 'info', glow: 'green', related: null, icon: '<path d="M5 19c0-8 6-13 14-13 0 8-5.5 13-14 13z"/><path d="M5 19l7.5-7.5"/>' },
+  { code: 'ready', level: 'info', glow: 'green', related: null, fuels: ['Hybrid', 'Electric'], icon: '<rect x="2.5" y="7.5" width="19" height="9" rx="2.5"/><text x="12" y="14.6" text-anchor="middle" font-size="6" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">READY</text>' },
+  { code: 'startstop', level: 'info', glow: 'green', related: null, types: ['Car', 'Van'], icon: '<circle cx="12" cy="12" r="7.5"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">A</text><path d="M17 4.5l1.5 2.8-3 .6"/>' },
+  { code: 'neutral', level: 'info', glow: 'green', related: null, types: ['Motorbike'], icon: '<rect x="6" y="5.5" width="12" height="13" rx="3"/><text x="12" y="14.6" text-anchor="middle" font-size="7" font-weight="800" fill="currentColor" stroke="none" font-family="sans-serif">N</text>' },
+  { code: 'sidelights', level: 'info', glow: 'green', related: null, icon: '<path d="M9 6c-2.8 0-2.8 12 0 12M15 6c2.8 0 2.8 12 0 12"/><path d="M3 9l3 1.5M3 15l3-1.5M21 9l-3 1.5M21 15l-3-1.5"/>' }
 ];
 const lightOf = code => LIGHTS.find(l => l.code === code);
+// A light can name the vehicle types or fuels it belongs to; the guide shows those first.
+const fitsVehicle = (l, v) => (!l.types || l.types.includes(v.type)) && (!l.fuels || l.fuels.includes(v.fuel));
 const lightName = l => t('light_' + l.code + '_name');
 const LEVEL_TAG = { red: 'bad', amber: 'warn', info: 'ok' };
-const lightArt = (l, big) => `<span class="dash ${l.level} ${big ? 'big' : ''}">${svg(l.icon)}</span>`;
+// glow: the colour the symbol really shows on the dashboard, when it differs from its level (most information lights are green).
+const lightArt = (l, big) => `<span class="dash ${l.level} ${l.glow ? 'g-' + l.glow : ''} ${big ? 'big' : ''}">${svg(l.icon)}</span>`;
 let lightFilter = 'all', lightQuery = '';
 
 const STILL = ['on', 'onoff', 'off'];
@@ -918,7 +950,7 @@ const ago = iso => { const d = -daysTo(iso); return d <= 0 ? t('todayLower') : t
 
 function viewLights(v) {
   const q = lightQuery.trim().toLowerCase();
-  const list = LIGHTS.filter(l => (lightFilter === 'all' || l.level === lightFilter) && (!l.diesel || v.fuel === 'Diesel' || lightFilter !== 'all' || q) && (!q || lightName(l).toLowerCase().includes(q) || t('light_' + l.code + '_means').toLowerCase().includes(q)));
+  const list = LIGHTS.filter(l => (lightFilter === 'all' || l.level === lightFilter) && (fitsVehicle(l, v) || lightFilter !== 'all' || q) && (!q || lightName(l).toLowerCase().includes(q) || t('light_' + l.code + '_means').toLowerCase().includes(q)));
   const recent = alertsOf(v).slice(0, 3);
   return `${header(v)}
   <section class="lights-head"><h1>${esc(t('lightsTitle'))}</h1><p>${esc(t('lightsSub'))}</p></section>
