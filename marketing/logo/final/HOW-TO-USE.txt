@@ -12,5 +12,5 @@ Files
 SVG files stay sharp at any size and open in Figma, Illustrator, Inkscape and Canva (Uploads).
 To edit in Canva: Create a design > Import file, then pick a PDF.
 
-Colours: black #050505, mint #00A86B, deeper mint for "Pal" on white #006E47, white #FFFFFF. The needle and centre dot are white at 70% opacity, grouped so they fade as one piece.
+Colours: black #050505, mint #00A86B, deeper mint for "Pal" on white #006E47, white #FFFFFF. The needle and centre dot are solid white.
 Name font: Plus Jakarta Sans Bold (free from Google Fonts). If a tool shows another font, select the text and pick Plus Jakarta Sans.
