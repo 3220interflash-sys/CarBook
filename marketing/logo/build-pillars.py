@@ -2,7 +2,7 @@
 # (reminders, service records, fuel and costs, warranties) with a needle in the green.
 # Writes clean, layered, editable SVGs into final/.
 import math
-NAVY, LIME, LIME_DARK, W, INK = '#0F172A', '#A3E635', '#65A30D', '#FFFFFF', '#0B0B0F'
+NAVY, LIME, LIME_DARK, W, INK = '#050505', '#00C47F', '#007F53', '#FFFFFF', '#0B0B0F'   # black, darker mint (option 10b)
 CX, CY, R, RING = 256, 282, 150, 44
 RO, RI = R + RING / 2, R - RING / 2
 DEG = 360 / (2 * math.pi * R)            # degrees per pixel along the dial
@@ -22,7 +22,7 @@ def mark(tile=True):
     o.append(f'  <circle id="hub" cx="256" cy="282" r="30" fill="{W}"/>')
     return '\n'.join(o)
 HEAD = ('<?xml version="1.0" encoding="UTF-8"?>\n<!-- MotorPal logo, "Four pillars". The four dial segments stand for reminders, service records, '
-        'fuel and costs, and warranties. Colours: navy #0F172A, lime #A3E635, darker green #65A30D, white #FFFFFF. Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->\n')
+        'fuel and costs, and warranties. Colours: black #050505, mint #00C47F, deep mint #007F53, white #FFFFFF. Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->\n')
 def word(motor, pal):
     return (f'  <text id="name" x="410" y="262" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-7.6">'
             f'<tspan fill="{motor}">Motor</tspan><tspan fill="{pal}">Pal</tspan></text>')

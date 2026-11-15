@@ -5,9 +5,9 @@ const D = path.join(__dirname, 'final');
 const FONT = '<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700&display=swap" rel="stylesheet">';
 const jobs = [
   ['motorpal-icon.svg', 'motorpal-icon', 1024, 1024, 'transparent'],
-  ['motorpal-mark-only.svg', 'motorpal-mark-on-dark', 1024, 1024, '#0F172A'],
+  ['motorpal-mark-only.svg', 'motorpal-mark-on-dark', 1024, 1024, '#050505'],
   ['motorpal-logo-light.svg', 'motorpal-logo-white', 1360, 400, '#FFFFFF'],
-  ['motorpal-logo-dark.svg', 'motorpal-logo-dark', 1360, 400, '#0F172A'],
+  ['motorpal-logo-dark.svg', 'motorpal-logo-dark', 1360, 400, '#050505'],
 ];
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ deviceScaleFactor: 2 });
