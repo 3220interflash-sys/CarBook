@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- MotorPal logo, "Four pillars". The four dial segments stand for reminders, service records, fuel and costs, and warranties. Colours: black #050505, mint #00C47F, deep mint #007F53, white #FFFFFF. Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->
+<!-- MotorPal logo, "Four pillars". The four dial segments stand for reminders, service records, fuel and costs, and warranties. Colours: black #050505, mint #00A86B, deeper mint #006E47, white #FFFFFF (needle at 75% opacity). Name font: Plus Jakarta Sans Bold (free, Google Fonts). -->
 <svg xmlns="http://www.w3.org/2000/svg" width="1360" height="400" viewBox="0 0 1360 400">
   <rect id="background" width="1360" height="400" fill="#FFFFFF"/>
   <g id="icon" transform="translate(40 40) scale(0.625)">
   <rect id="tile" width="512" height="512" rx="120" fill="#050505"/>
   <g id="dial">
-    <path id="segment-1-reminders" d="M134.38 403.62 A172.0 172.0 0 0 1 90.76 234.26 L133.03 246.47 A128.0 128.0 0 0 0 165.49 372.51 Z" fill="#00C47F"/>
-    <path id="segment-2-service-records" d="M99.51 210.62 A172.0 172.0 0 0 1 242.91 110.50 L246.26 154.37 A128.0 128.0 0 0 0 139.54 228.88 Z" fill="#00C47F"/>
-    <path id="segment-3-fuel-and-costs" d="M268.11 110.43 A172.0 172.0 0 0 1 412.08 209.73 L372.15 228.22 A128.0 128.0 0 0 0 265.01 154.32 Z" fill="#00C47F"/>
-    <path id="segment-4-warranties" d="M420.97 233.31 A172.0 172.0 0 0 1 378.32 402.92 L347.03 371.99 A128.0 128.0 0 0 0 378.76 245.77 Z" fill="#00C47F"/>
+    <path id="segment-1-reminders" d="M134.38 403.62 A172.0 172.0 0 0 1 90.76 234.26 L133.03 246.47 A128.0 128.0 0 0 0 165.49 372.51 Z" fill="#00A86B"/>
+    <path id="segment-2-service-records" d="M99.51 210.62 A172.0 172.0 0 0 1 242.91 110.50 L246.26 154.37 A128.0 128.0 0 0 0 139.54 228.88 Z" fill="#00A86B"/>
+    <path id="segment-3-fuel-and-costs" d="M268.11 110.43 A172.0 172.0 0 0 1 412.08 209.73 L372.15 228.22 A128.0 128.0 0 0 0 265.01 154.32 Z" fill="#00A86B"/>
+    <path id="segment-4-warranties" d="M420.97 233.31 A172.0 172.0 0 0 1 378.32 402.92 L347.03 371.99 A128.0 128.0 0 0 0 378.76 245.77 Z" fill="#00A86B"/>
   </g>
-  <path id="needle" d="M256 282 L352 232" stroke="#FFFFFF" stroke-width="28" stroke-linecap="round" fill="none"/>
+  <path id="needle" d="M256 282 L352 232" stroke="#FFFFFF" stroke-opacity="0.75" stroke-width="28" stroke-linecap="round" fill="none"/>
   <circle id="hub" cx="256" cy="282" r="30" fill="#FFFFFF"/>
   </g>
-  <text id="name" x="410" y="262" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-7.6"><tspan fill="#0B0B0F">Motor</tspan><tspan fill="#007F53">Pal</tspan></text>
+  <text id="name" x="410" y="262" font-family="Plus Jakarta Sans, Arial, sans-serif" font-weight="700" font-size="190" letter-spacing="-7.6"><tspan fill="#0B0B0F">Motor</tspan><tspan fill="#006E47">Pal</tspan></text>
 </svg>
