@@ -79,14 +79,30 @@ const INTERVALS = {
   brakes: { km: 30000 },
   tyres: { km: 40000, years: 5 },
   plugs: { km: 30000 },
-  alignment: { km: 10000, months: 12 }
+  alignment: { km: 10000, months: 12 },
+  // more parts tracked in Car health (defaults only; the owner's manual comes first)
+  airFilter: { km: 15000, months: 12 },
+  cabin: { km: 15000, months: 12 },
+  brakeFluid: { km: 40000, months: 24 },
+  coolant: { km: 40000, months: 24 },
+  gearbox: { km: 60000, months: 48 },
+  wipers: { months: 12 }
+};
+// Parts checked by distance and/or time, with the vehicles they apply to.
+const TIMED_PARTS = [['Air filter', 'airFilter'], ['AC filter', 'cabin'], ['Brake fluid', 'brakeFluid'], ['Coolant', 'coolant'], ['Gearbox oil', 'gearbox'], ['Wiper blades', 'wipers']];
+const partFits = (kind, v) => {
+  const bike = v.type === 'Motorbike', ev = v.fuel === 'Electric';
+  if (kind === 'Air filter' || kind === 'Gearbox oil') return !ev && !bike;
+  if (kind === 'AC filter') return v.type === 'Car' || v.type === 'Van' || !v.type;
+  if (kind === 'Wiper blades' || kind === 'Coolant') return !bike;
+  return true;
 };
 // Stored values. Labels come from strings.js.
 const DOC_KINDS = ['emission', 'insurance', 'revenue', 'driving', 'warranty', 'other'];
 const HINTED = ['emission', 'insurance', 'revenue'];
 const VEHICLE_TYPES = ['Car', 'Motorbike', 'Three-wheeler', 'Van'];
 const FUELS = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
-const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Wheel alignment', 'Battery', 'Spark plugs', 'Other'];
+const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Wheel alignment', 'Battery', 'Spark plugs', 'Air filter', 'AC filter', 'Brake fluid', 'Coolant', 'Gearbox oil', 'Wiper blades', 'Other'];
 const PARTS = ['Genuine', 'Aftermarket', 'Used'];
 const FILTERS = ['Changed', 'Not changed'];
 
@@ -229,6 +245,14 @@ function reminders(v) {
     const byKm = !!byKmDate && byKmDate < byDate, date = byKm ? byKmDate : byDate;
     out.push({ key: 'alignment', cat: 'service', title: label('svc_', 'Wheel alignment'), sub: '', date, days: daysTo(date), kmLeft, byKm, est: byKm, s: urgency(daysTo(byDate), kmLeft), act: 'addService', kind: 'Wheel alignment' });
   }
+  // filters, fluids and wipers: by distance or months, whichever comes first (defaults)
+  TIMED_PARTS.filter(([kind]) => partFits(kind, v)).forEach(([kind, key]) => {
+    const r = lastService(v, kind); if (!r) return;
+    const iv = INTERVALS[key], byDate = addMonthsISO(r.date, iv.months);
+    const kmLeft = iv.km ? r.odo + iv.km - v.odo : null, byKmDate = iv.km ? kmDate(kmLeft) : null;
+    const byKm = !!byKmDate && byKmDate < byDate, date = byKm ? byKmDate : byDate;
+    out.push({ key: kind, cat: 'service', title: label('svc_', kind), sub: '', date, days: daysTo(date), kmLeft, byKm, est: byKm, s: urgency(daysTo(byDate), kmLeft), act: 'addService', kind });
+  });
   // by distance (and tyre age)
   [['Brake pads', INTERVALS.brakes.km], ['Tyres', INTERVALS.tyres.km], ['Spark plugs', INTERVALS.plugs.km]].forEach(([kind, km]) => {
     if (kind === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) return;
@@ -298,6 +322,12 @@ function periodData(v, p) {
 let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false;
 const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICONS = {
+  filter: '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="M7 6v12M10 6v12M13 6v12M16 6v12"/>',
+  fan: '<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C11 6 13.5 3.8 16 5.5c1.6 1.2.4 4.3-4 4.9M13.6 12c4.4-1 6.6 1.5 4.9 4-1.2 1.6-4.3.4-4.9-4M12 13.6c1 4.4-1.5 6.6-4 4.9-1.6-1.2-.4-4.3 4-4.9M10.4 12C6 13 3.8 10.5 5.5 8c1.2-1.6 4.3-.4 4.9 4"/>',
+  drop: '<path d="M12 3.5C9 7.5 6.5 10.4 6.5 13.8a5.5 5.5 0 0 0 11 0c0-3.4-2.5-6.3-5.5-10.3z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5"/>',
+  therm: '<path d="M12 3.5v10"/><circle cx="12" cy="16" r="2.6"/><path d="M12 6h2.5M12 9h2.5"/><path d="M4 21c1.3-.8 2.7-.8 4 0s2.7.8 4 0 2.7-.8 4 0 2.7.8 4 0"/>',
+  wiper: '<path d="M3.5 17a10 10 0 0 1 17 0"/><path d="M12 18L6.5 8.5"/><circle cx="12" cy="18" r="1.2"/>',
+  camera: '<path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.5-2h5.6l1.5 2h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z"/><circle cx="12" cy="12.8" r="3.4"/>',
   home: '<path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/>',
   car: '<path d="M4 15l1.6-4.4A2 2 0 0 1 7.5 9h9a2 2 0 0 1 1.9 1.6L20 15v3a1 1 0 0 1-1 1h-1.5a1 1 0 0 1-1-1v-1h-9v1a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/><path d="M4 15h16"/><circle cx="7.5" cy="15" r=".5"/><circle cx="16.5" cy="15" r=".5"/>',
   money: '<rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10h18M16 14.5h2"/>',
@@ -442,7 +472,7 @@ function confirmSheet(title, msg, okLabel, danger) {
 const field = (lbl, name, o = {}) => `<label for="f_${name}">${esc(lbl)}</label><input id="f_${name}" name="${name}" ${o.type ? `type="${o.type}"` : ''} ${o.step ? `step="${o.step}"` : ''} ${o.min != null ? `min="${o.min}"` : ''} value="${esc(o.value ?? '')}" ${o.ph ? `placeholder="${esc(o.ph)}"` : ''} ${o.req ? 'required' : ''} ${o.mode ? `inputmode="${o.mode}"` : ''} autocomplete="off">${o.help ? `<div class="help">${esc(o.help)}</div>` : ''}`;
 // A dropdown whose stored values stay the same in every language.
 const select = (lbl, name, values, current, prefix, blank) => `<label for="f_${name}">${esc(lbl)}</label><select id="f_${name}" name="${name}">${blank ? `<option value="">${esc(blank)}</option>` : ''}${values.map(x => `<option value="${esc(x)}" ${x === current ? 'selected' : ''}>${esc(prefix ? label(prefix, x) : x)}</option>`).join('')}</select>`;
-const photoField = hasPhoto => `<label for="f_photo">${esc(t(hasPhoto ? 'photoReplace' : 'photoOptional'))}</label><input id="f_photo" name="photo" type="file" accept="image/*" capture="environment"><div id="thumb"></div>`;
+const photoField = (hasPhoto, lbl) => `<label for="f_photo">${esc(t(hasPhoto ? 'photoReplace' : lbl || 'photoOptional'))}</label><input id="f_photo" name="photo" type="file" accept="image/*" capture="environment"><div id="thumb"></div>`;
 async function showThumb(f, id) { try { const b = await getPhoto(id); if (b) { const i = document.createElement('img'); i.className = 'photo-thumb'; i.alt = t('attachedPhoto'); i.src = URL.createObjectURL(b); f.querySelector('#thumb').append(i); } } catch (e) {} }
 async function savePhoto(fd, rec) { const file = fd.get('photo'); if (file && file.size) { await putPhoto(rec.id, file); rec.photo = true; } }
 
@@ -502,10 +532,10 @@ function renewForm(d) {
 function fuelForm(r) {
   const v = veh(), isNew = !r;
   sheet(t(isNew ? 'addFuelTitle' : 'editFuelTitle'),
+    photoField(r?.photo, 'dashPhoto') + `<div class="help">${esc(t('fuelPhotoHelp'))}</div>` +
     `<div class="two"><div>${field(t('litres'), 'litres', { type: 'number', step: '0.01', mode: 'decimal', value: r?.litres, req: true })}</div><div>${field(t('totalRs'), 'total', { type: 'number', step: '0.01', mode: 'decimal', value: r?.total, req: true })}</div></div>` +
     field(t('odometer'), 'odo', { type: 'number', mode: 'numeric', value: r?.odo ?? v.odo, req: true }) +
-    field(t('date'), 'date', { type: 'date', value: r?.date || todayISO(), req: true }) + photoField(r?.photo) +
-    `<div class="help">${esc(t('fuelPhotoHelp'))}</div>`,
+    field(t('date'), 'date', { type: 'date', value: r?.date || todayISO(), req: true }),
     async fd => {
       const litres = +fd.get('litres'), total = +fd.get('total'), odo = +fd.get('odo');
       if (!(litres > 0) || !(total > 0) || !(odo > 0)) return t('errFuel');
@@ -581,16 +611,32 @@ function addExample() {
   svc('Tyres', -640, 35100, 76000);
   svc('Spark plugs', -980, 24800, 6400);
   svc('Wheel alignment', -300, 43700, 3500, { part: '' });
+  svc('Air filter', -240, 45100, 2800); svc('AC filter', -240, 45100, 2400);
+  svc('Brake fluid', -610, 36300, 3900, { part: '' }); svc('Coolant', -420, 40900, 4600, { part: '' });
+  svc('Wiper blades', -200, 46000, 3200, { part: 'Aftermarket' });
   db.alerts.push({ ...newRecord(v), code: 'engine', date: day(-2), odo: 52410, still: 'on', note: '' });
   db.alerts.push({ ...newRecord(v), code: 'tpms', date: day(-210), odo: 46300, still: 'off', note: '', resolvedAt: day(-209) });
   save();
 }
 
 // ---------- items: one list of everything to keep on track ----------
-const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment' };
-const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align' };
+const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment', 'Air filter': 'airfilter', 'AC filter': 'cabin', 'Brake fluid': 'brakefluid', 'Coolant': 'coolantpart', 'Gearbox oil': 'gearboxoil', 'Wiper blades': 'wipers' };
+const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align', 'Air filter': 'filter', 'AC filter': 'fan', 'Brake fluid': 'drop', 'Coolant': 'therm', 'Gearbox oil': 'gear', 'Wiper blades': 'wiper' };
 const iconOf = x => svg(ICONS[KIND_ICON[x.kind] || 'doc']);
-const maintKinds = v => ['Oil change', 'Tyres', 'Wheel alignment', 'Battery', 'Brake pads', 'Spark plugs'].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')));
+const maintKinds = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Wheel alignment', 'Spark plugs', ...TIMED_PARTS.map(p => p[0])].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) && partFits(k, v));
+
+// Car health: how much life a part has left (0 to 1) from its last record and the default interval. Null when there is no record.
+function partLife(v, kind) {
+  const r = lastService(v, kind); if (!r) return null;
+  const used = Math.max(0, v.odo - r.odo), months = Math.max(0, -daysTo(r.date)) / 30.44;
+  const byKm = km => km ? 1 - used / km : 1, byTime = m => m ? 1 - months / m : 1;
+  const key = { 'Oil change': 'oil', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment' }[kind] || (TIMED_PARTS.find(p => p[0] === kind) || [])[1];
+  let life;
+  if (kind === 'Battery') life = 1 - months / (INTERVALS.battery.dueYears * 12);
+  else if (kind === 'Tyres') life = Math.min(byKm(INTERVALS.tyres.km), byTime(INTERVALS.tyres.years * 12));
+  else { const iv = INTERVALS[key] || {}; life = Math.min(byKm(iv.km), byTime(iv.months)); }
+  return Math.max(0, Math.min(1, life));
+}
 
 // Reminders plus a "no record yet" item for any maintenance part with no history.
 function allItems(v) {
@@ -677,24 +723,47 @@ function viewHome(v) {
   </button>`;
   // quick actions, like Send / Top up in a banking app
   const qa = (act, icon, k, extra = '') => `<button class="qa" ${act}><span class="c">${svg(ICONS[icon] || icon)}</span><span>${esc(t(k))}</span>${extra}</button>`;
-  const quick = `<div class="quick">${qa('data-act="addFuel"', 'fuel', 'qaFuel')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
+  const quick = `<div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
   // recent activity, like transactions
   const acts = [
-    ...mine(db.fuel, v).map(f => ({ date: f.date, ic: 'fuel', t: t('actFuel'), s: t('actFuelSub', f.litres), amt: f.total, act: `data-act="fuelDetail" data-id="${f.id}"` })),
     ...mine(db.service, v).map(x => ({ date: x.date, ic: KIND_ICON[x.kind] || 'wrench', t: label('svc_', x.kind), s: x.garage || t('actService'), amt: x.cost || null, act: `data-act="svcDetail" data-id="${x.id}"` })),
     ...alertsOf(v).map(a => ({ date: a.date, ic: null, light: lightOf(a.code), t: lightName(lightOf(a.code)), s: t(a.resolvedAt ? 'alertFixed' : 'still_' + (a.still || 'on')), amt: null, act: `data-act="alertDetail" data-id="${a.id}"` })),
     ...mine(db.docs, v).flatMap(d => (d.history || []).map(h => ({ date: new Date(h.renewedAt - new Date(h.renewedAt).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), ic: KIND_ICON[d.kind] || 'doc', t: t('actRenewed', docTitle(d)), s: t('actNewExpiry', fmtD(d.expiry)), amt: null, act: `data-act="detail" data-key="doc-${d.id}"` })))
   ].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 6);
   const dayLabel = iso => { const d = -daysTo(iso); return d === 0 ? t('today') : d === 1 ? t('yesterday') : fmtD(iso); };
-  const activity = acts.length ? `<div class="sec-h"><h2>${esc(t('recentActivity'))}</h2><button class="link-btn" data-tab="money">${esc(t('seeAll'))}</button></div>
+  const activity = acts.length ? `<div class="sec-h"><h2>${esc(t('recentActivity'))}</h2><button class="link-btn" data-act="serviceList">${esc(t('seeAll'))}</button></div>
     <ul class="list activity">${acts.map(x => `<li><button class="item" ${x.act}>${x.light ? lightArt(x.light) : `<span class="ic plain">${svg(ICONS[x.ic] || ICONS.doc)}</span>`}<span class="it"><span class="t">${esc(x.t)}</span><span class="s">${esc(dayLabel(x.date))} · ${esc(x.s)}</span></span>${x.amt ? `<span class="amt">− ${esc(t('rs', n0(x.amt)))}</span>` : ''}</button></li>`).join('')}</ul>` : '';
+  // car health: every part that wears out, with how much life it has left
+  const parts = maintKinds(v).map(k => {
+    const it = R.filter(x => x.kind === k && x.key !== 'battery-test')[0] || R.find(x => x.kind === k), life = partLife(v, k);
+    return { k, it, life, s: it ? it.s : 'none' };
+  });
+  const tracked = parts.filter(p => p.life != null), okN = tracked.filter(p => p.s === 'ok').length;
+  // the ring shows how many tracked parts are on track
+  const share = tracked.length ? okN / tracked.length : null;
+  const ring = share == null ? '' : `<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" class="ring-bg"/><circle cx="32" cy="32" r="27" class="ring-fg" stroke-dasharray="${(share * 169.6).toFixed(1)} 169.6" transform="rotate(-90 32 32)"/></svg>`;
+  const tile = p => `<button class="part ${p.s}" data-act="detail" data-key="${esc(p.it ? p.it.key : 'none-' + p.k)}">
+      <span class="part-top"><span class="part-ic">${svg(ICONS[KIND_ICON[p.k]] || ICONS.wrench)}</span>${p.life != null ? `<span class="part-pct">${Math.round(p.life * 100)}%</span>` : ''}</span>
+      <span class="part-name">${esc(p.k === 'Oil change' ? t('engineOil') : label('svc_', p.k))}</span>
+      ${p.life != null ? `<span class="life"><span style="width:${Math.max(4, Math.round(p.life * 100))}%"></span></span><span class="part-s">${esc(whenText(p.it))}</span>` : `<span class="part-s add">${esc(t('healthAdd'))}</span>`}
+    </button>`;
+  const healthHtml = `<section class="health">
+    <div class="health-h">${ring ? `<div class="ring-wrap">${ring}<span class="ring-n">${okN}<small>/${tracked.length}</small></span></div>` : ''}
+      <div class="health-t"><h2>${esc(t('healthTitle'))}</h2><p>${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</p></div></div>
+    <div class="parts">${parts.map(tile).join('')}</div>
+    <p class="health-note">${esc(t('healthNote'))}</p>
+  </section>`;
+  // your records: one place for warranties, service records and part changes
+  const nWar = mine(db.docs, v).filter(d => d.kind === 'warranty').length, nSvcAll = mine(db.service, v).length, nParts = mine(db.service, v).filter(s => PART_CHANGES.includes(s.kind)).length;
+  const vt = (act, icon, k, n) => `<button class="vault-t" data-act="${act}"><span class="vault-ic">${svg(ICONS[icon])}</span><span class="vault-n">${n}</span><span class="vault-l">${esc(t(k))}</span></button>`;
+  const vault = `<div class="sec-h"><h2>${esc(t('vaultTitle'))}</h2></div><div class="vault">${vt('warrantyList', 'ribbon', 'vaultWarranties', nWar)}${vt('serviceList', 'wrench', 'vaultService', nSvcAll)}${vt('partsList', 'gear', 'vaultParts', nParts)}</div>`;
   return `${header(v)}
-  ${wallet}
-  ${quick}
+  ${healthHtml}
   ${heroHtml}
   ${openAlerts(v).filter(a => a !== redLight).map(a => { const l = lightOf(a.code); return `<button class="alert-card ${l.level}" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(t('recordedAgo', ago(a.date)))} · ${esc(t('still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>`; }).join('')}
   ${next.length ? `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div><div class="cards" role="list">${next.map(card).join('')}</div>` : ''}
-  ${missing.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missing.slice(0, 4).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('finishSetupCount', missing.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}
+  ${quick}
+  ${vault}
   ${activity}`;
 }
 
@@ -877,10 +946,19 @@ function fuelDetail(id) {
     `<button class="btn wide" data-act="fuel" data-id="${r.id}">${esc(t('edit'))}</button>`);
 }
 
-function serviceList() {
-  const v = veh(), rows = mine(db.service, v).sort((a, b) => b.date.localeCompare(a.date));
-  infoSheet(t('serviceHistory'), rows.length ? `<ul class="list mini">${rows.map(s => `<li><button class="item" data-act="svcDetail" data-id="${s.id}"><span class="it"><span class="t">${esc(label('svc_', s.kind))}</span><span class="s">${fmtD(s.date)}</span></span><span class="side">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('noServiceText'))}</p>`,
+function serviceList(partsOnly) {
+  const v = veh(), rows = mine(db.service, v).filter(s => !partsOnly || PART_CHANGES.includes(s.kind)).sort((a, b) => b.date.localeCompare(a.date));
+  infoSheet(t(partsOnly ? 'vaultParts' : 'serviceHistory'), rows.length ? `<ul class="list mini">${rows.map(s => `<li><button class="item" data-act="svcDetail" data-id="${s.id}"><span class="it"><span class="t">${esc(label('svc_', s.kind))}</span><span class="s">${fmtD(s.date)}</span></span><span class="side">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('noServiceText'))}</p>`,
     `<button class="btn wide" data-act="addService">${esc(t('addServiceTitle'))}</button>`);
+}
+
+// Part changes: records where a part was replaced (as opposed to a check or a top-up).
+const PART_CHANGES = ['Battery', 'Brake pads', 'Tyres', 'Spark plugs', 'Air filter', 'AC filter', 'Wiper blades'];
+
+function warrantyList() {
+  const v = veh(), rows = reminders(v).filter(x => x.cat === 'warranty');
+  infoSheet(t('vaultWarranties'), rows.length ? `<ul class="list mini">${rows.map(x => itemRow(x)).join('')}</ul>` : `<p class="hint">${esc(t('noWarranties'))}</p>`,
+    `<button class="btn wide" data-act="addDoc" data-kind="warranty">${esc(t('addWarranty'))}</button>`);
 }
 
 // ---------- dashboard warning lights ----------
@@ -1120,6 +1198,8 @@ document.addEventListener('click', e => {
     case 'svcDetail': return serviceDetail(id);
     case 'fuelDetail': return fuelDetail(id);
     case 'serviceList': return serviceList();
+    case 'partsList': return serviceList(true);
+    case 'warrantyList': return warrantyList();
     case 'toggleYear': showYear = !showYear; return render();
     case 'odo': return odoForm();
     case 'addDoc': return docForm(null, el.dataset.kind);
