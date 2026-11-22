@@ -40,5 +40,18 @@
     "auto",
     "productivity",
     "lifestyle"
+  ],
+  "shortcuts": [
+    {
+      "name": "Log a fill-up",
+      "short_name": "Fill-up",
+      "url": "./?add=fuel",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
   ]
 }

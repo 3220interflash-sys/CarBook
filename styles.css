@@ -714,3 +714,40 @@ body { background: var(--bg); color: var(--fg); }
 .car-card .car-sub { color: #A9B3AF; }
 .car-card .car-ic { background: #00C47F; color: #04120C; }
 .car-card .link-btn { color: #3EE0A4; }
+
+/* ---------- Fuel: period picker, fill-up reminder, since a service ---------- */
+.period { display: flex; align-items: center; gap: 10px; margin-top: 14px; }
+.period label { color: var(--mut); font-size: 14px; font-weight: 700; white-space: nowrap; }
+.pill-select { flex: 1; min-width: 0; width: 100%; min-height: 48px; padding: 0 40px 0 16px; border: 0; border-radius: 999px; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23050505' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E") no-repeat right 14px center / 18px; box-shadow: var(--lift); color: var(--fg); font: inherit; font-weight: 700; appearance: none; -webkit-appearance: none; }
+.pill-select:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.range { margin-top: 10px; }
+.range label { display: block; margin: 0 4px 4px; color: var(--mut); font-size: 13px; font-weight: 700; }
+.range input { width: 100%; min-height: 48px; padding: 0 12px; border: 0; border-radius: 14px; background: var(--surface); box-shadow: var(--lift); color: var(--fg); font: inherit; }
+.stat.key { background: #050505; color: #fff; border-color: #050505; }
+.stat.key .n { color: #00C47F; }
+.stat.key .l, .stat.key .cmp { color: rgba(255, 255, 255, .75); }
+.stat.key .chg.up { color: #7BE3B0; } .stat.key .chg.down { color: #FFD27A; }
+.stat .cmp { font-size: 12.5px; }
+.kpl-how { margin-top: 8px; }
+.list .side small { display: block; color: var(--mut); font-size: 12.5px; font-weight: 600; text-align: right; }
+.nudge { display: flex; gap: 12px; margin-top: 14px; padding: 14px; border-radius: 20px; background: var(--surface); box-shadow: var(--lift); }
+.nudge-ic { flex: none; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #050505; color: #00C47F; }
+.nudge-ic svg { width: 22px; height: 22px; }
+.nudge-t { flex: 1; min-width: 0; }
+.nudge-t .t { margin: 2px 0 2px; font-weight: 800; font-size: 16px; }
+.nudge-t .s { margin: 0; color: var(--mut); font-size: 14px; line-height: 1.4; }
+.nudge-b { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.nudge-b .btn { width: auto; min-height: 44px; padding: 0 18px; }
+.perf { margin-top: 18px; padding: 16px; border-radius: 22px; background: var(--surface); box-shadow: var(--lift); scroll-margin-top: 12px; }
+.perf h2 { margin: 0 0 2px; }
+.perf .pill-select { margin: 6px 0 4px; background-color: var(--surface-2); box-shadow: none; }
+.perf-nums { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 14px; }
+.perf-nums > div { flex: 1; display: flex; flex-direction: column; align-items: center; padding: 12px 6px; border-radius: 16px; background: var(--surface-2); }
+.perf-nums > div:last-child { background: #050505; color: #fff; }
+.perf-nums > div:last-child .n { color: #00C47F; }
+.perf-nums .l { font-size: 13px; color: inherit; opacity: .75; font-weight: 700; }
+.perf-nums .n { font-size: 30px; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.perf-nums .u { font-size: 12.5px; opacity: .75; }
+.perf-arrow svg { width: 20px; height: 20px; color: var(--mut); }
+.perf-res { margin: 12px 0 6px; text-align: center; font-weight: 800; font-size: 17px; }
+.perf-wait { margin-top: 10px; }

@@ -127,7 +127,8 @@ function status(days) {
 
 function fuelRows(v) {
   const f = mine(db.fuel, v).sort((a, b) => a.odo - b.odo || a.date.localeCompare(b.date));
-  return f.map((x, i) => ({ ...x, kpl: i && x.litres > 0 && x.odo > f[i - 1].odo ? (x.odo - f[i - 1].odo) / x.litres : null }));
+  return f.map((x, i) => { const ok = i && x.litres > 0 && x.odo > f[i - 1].odo;
+    return { ...x, prevOdo: i ? f[i - 1].odo : null, dist: ok ? x.odo - f[i - 1].odo : null, kpl: ok ? (x.odo - f[i - 1].odo) / x.litres : null }; });
 }
 const avg = a => a.length ? a.reduce((s, x) => s + x, 0) / a.length : null;
 
@@ -300,11 +301,25 @@ function valueOf(x) {
 }
 
 // ---------- fuel periods ----------
-const PERIODS = ['1M', '6M', '1Y', '2Y', '5Y'];
+const PERIODS = ['1M', '6M', '1Y', '2Y', '5Y', 'C'];
+let cFrom = addMonthsISO(todayISO(), -3), cTo = todayISO();
 // Calendar buckets for a period, oldest first: { start, end (exclusive), label }
 function buckets(p) {
   const now = new Date(todayISO() + 'T00:00'), y = now.getFullYear(), m = now.getMonth(), out = [];
   const mLabel = (d, yr) => d.toLocaleDateString(loc(), yr ? { month: 'short', year: '2-digit' } : { month: 'short' });
+  if (p === 'C') {
+    // Owner's own dates: weeks for up to two months, months for up to two years, quarters after that.
+    const end = addDaysISO(cTo, 1), span = daysTo(end) - daysTo(cFrom);
+    let s = cFrom;
+    while (s < end && out.length < 40) {
+      const sd = new Date(s + 'T00:00');
+      let e = span <= 62 ? addDaysISO(s, 7) : span <= 730 ? isoOf(new Date(sd.getFullYear(), sd.getMonth() + 1, 1)) : isoOf(new Date(sd.getFullYear(), Math.floor(sd.getMonth() / 3) * 3 + 3, 1));
+      if (e > end) e = end;
+      out.push({ start: s, end: e, label: span <= 62 ? sd.toLocaleDateString(loc(), { day: 'numeric', month: 'short' }) : span <= 730 ? mLabel(sd, span > 365 || sd.getMonth() === 0) : t('quarter', Math.floor(sd.getMonth() / 3) + 1, String(sd.getFullYear()).slice(2)) });
+      s = e;
+    }
+    return out;
+  }
   if (p === '1M') {
     const end = new Date(now); end.setDate(end.getDate() + 1);
     for (let i = 4; i >= 0; i--) { const e = new Date(end); e.setDate(e.getDate() - 6 * i); const s = new Date(e); s.setDate(s.getDate() - 6);
@@ -323,21 +338,80 @@ function buckets(p) {
 // Totals for fill-ups dated in [start, end).
 function fuelStats(v, start, end) {
   const rows = fuelRows(v).filter(x => x.date >= start && x.date < end);
-  const spent = rows.reduce((s, x) => s + x.total, 0), litres = rows.reduce((s, x) => s + x.litres, 0), k = rows.map(x => x.kpl).filter(Boolean);
-  return { fills: rows.length, spent, litres, price: litres ? spent / litres : null, kpl: k.length ? avg(k) : null };
+  const spent = rows.reduce((s, x) => s + x.total, 0), litres = rows.reduce((s, x) => s + x.litres, 0), k = rows.filter(x => x.kpl);
+  const km = k.reduce((s, x) => s + x.dist, 0), kl = k.reduce((s, x) => s + x.litres, 0);
+  // km per litre = distance driven between fill-ups / litres pumped (needs a full tank each time)
+  return { fills: rows.length, spent, litres, km, price: litres ? spent / litres : null, kpl: kl ? km / kl : null };
 }
 function periodData(v, p) {
   const bs = buckets(p), start = bs[0].start, end = bs.at(-1).end;
   const span = daysTo(end) - daysTo(start), prevStart = addDaysISO(start, -span);
   // Only compare when the records reach back far enough to cover the whole earlier period.
   const first = mine(db.fuel, v).map(x => x.date).sort()[0], covered = first && daysTo(first) <= daysTo(prevStart) + 20;
-  const prev = covered ? fuelStats(v, prevStart, start) : { fills: 0, spent: 0, litres: 0, price: null, kpl: null };
+  const prev = covered ? fuelStats(v, prevStart, start) : { fills: 0, spent: 0, litres: 0, km: 0, price: null, kpl: null };
   return { bs: bs.map(b => ({ ...b, ...fuelStats(v, b.start, b.end) })), cur: fuelStats(v, start, end), prev };
+}
+
+// ---------- fill-up reminders ----------
+const median = a => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+// "Forgot a fill-up?": the owner usually fills up every N days (or km); it has been well over that.
+function fuelNudge(v) {
+  const rows = mine(db.fuel, v).sort((a, b) => a.date.localeCompare(b.date)).slice(-11);
+  if (rows.length < 3 || (v.fuelSnooze && v.fuelSnooze > todayISO())) return null;
+  const gaps = rows.slice(1).map((x, i) => daysTo(x.date) - daysTo(rows[i].date)).filter(g => g > 0);
+  const kms = fuelRows(v).slice(-10).map(x => x.dist).filter(Boolean);
+  const last = rows.at(-1), usual = median(gaps), since = -daysTo(last.date), usualKm = median(kms), kmSince = v.odo - last.odo;
+  const lateDays = usual && since > Math.max(usual * 1.5, usual + 5), lateKm = usualKm && kmSince > usualKm * 1.25;
+  return lateDays || lateKm ? { since, usual: Math.round(usual || 0), kmSince, lateKm } : null;
+}
+function nudgeCard(n) {
+  return `<section class="nudge"><span class="nudge-ic">${svg(ICONS.fuel)}</span><div class="nudge-t"><p class="t">${esc(t('nudgeTitle'))}</p>
+    <p class="s">${esc(n.lateKm && !(n.since > n.usual * 1.5) ? t('nudgeKm', n0(n.kmSince)) : t('nudgeDays', n.since, n.usual))}</p>
+    <div class="nudge-b"><button class="btn small" data-act="addFuel">${esc(t('addFuelTitle'))}</button><button class="btn quiet small" data-act="nudgeLater">${esc(t('notYet'))}</button></div></div></section>`;
+}
+
+// ---------- km per litre before and after a service ----------
+// Services that can change fuel economy, most telling first. Used for the "how is your car since..." prompt.
+const PERF_KINDS = ['Engine tune-up', 'Spark plugs', 'Air filter', 'Oil change', 'Tyres', 'Wheel alignment'];
+function perfSince(v, s) {
+  const rows = fuelRows(v).filter(x => x.kpl);
+  const sum = a => { const km = a.reduce((t, x) => t + x.dist, 0), l = a.reduce((t, x) => t + x.litres, 0); return l ? km / l : null; };
+  const before = rows.filter(x => x.odo <= s.odo && x.date <= s.date).slice(-5);
+  // only fill-ups whose whole stretch of driving came after the service
+  const after = rows.filter(x => x.prevOdo >= s.odo && x.date >= s.date).slice(0, 6);
+  const b = sum(before), a = sum(after);
+  return { nB: before.length, nA: after.length, before: b, after: a, pct: b && a && before.length >= 2 && after.length >= 2 ? (a - b) / b * 100 : null };
+}
+const perfList = v => mine(db.service, v).filter(s => s.date >= addDaysISO(todayISO(), -1100)).sort((a, b) => b.date.localeCompare(a.date) || b.odo - a.odo);
+// The app offers the comparison itself once a recent service has enough fill-ups after it.
+function perfPrompt(v) {
+  const seen = v.perfSeen || [], since = addDaysISO(todayISO(), -270);
+  return perfList(v).filter(s => PERF_KINDS.includes(s.kind) && s.date >= since && !seen.includes(s.id) && perfSince(v, s).nA >= 3 && perfSince(v, s).pct != null)
+    .sort((a, b) => PERF_KINDS.indexOf(a.kind) - PERF_KINDS.indexOf(b.kind) || b.date.localeCompare(a.date))[0] || null;
+}
+// Asked once per visit to the garage: services done the same day count as one.
+function perfDone(v, id) { const s = db.service.find(x => x.id === id); v.perfSeen = [...(v.perfSeen || []), ...mine(db.service, v).filter(x => x.id === id || (s && x.date === s.date)).map(x => x.id)]; save(); }
+function perfCard(v) {
+  const list = perfList(v); if (!list.length) return '';
+  const s = list.find(x => x.id === perfSvc) || list.find(x => PERF_KINDS.includes(x.kind)) || list[0], r = perfSince(v, s);
+  const opts = list.map(x => `<option value="${x.id}" ${x === s ? 'selected' : ''}>${esc(label('svc_', x.kind))} · ${esc(fmtD(x.date))}</option>`).join('');
+  let body;
+  if (r.pct == null) body = `<p class="hint perf-wait">${esc(r.nA < 2 ? t('perfNeedAfter', 2 - r.nA) : t('perfNeedBefore'))}</p>`;
+  else {
+    const same = Math.abs(r.pct) < 2, up = r.pct > 0;
+    body = `<div class="perf-nums"><div><span class="l">${esc(t('perfBefore'))}</span><span class="n">${n1(r.before)}</span><span class="u">${esc(t('kplUnit'))}</span></div>
+      <span class="perf-arrow">${svg(ICONS.chev)}</span>
+      <div><span class="l">${esc(t('perfAfter'))}</span><span class="n">${n1(r.after)}</span><span class="u">${esc(t('kplUnit'))}</span></div></div>
+      <p class="perf-res"><span class="chg ${same ? '' : up ? 'up' : 'down'}">${same ? esc(t('perfSame')) : `${up ? '↑' : '↓'} ${Math.abs(Math.round(r.pct))}% ${esc(t(up ? 'perfBetter' : 'perfWorse'))}`}</span></p>
+      <p class="hint">${esc(t('perfBasis', r.nB, r.nA))} ${esc(t(!same && !up && r.pct < -5 ? 'perfAskMech' : 'perfOther'))}</p>`;
+  }
+  return `<section class="perf" id="perf"><h2>${esc(t('perfTitle'))}</h2><p class="hint">${esc(t('perfSub'))}</p>
+    <label class="sr" for="perfSel">${esc(t('perfPick'))}</label><select id="perfSel" class="pill-select">${opts}</select>${body}</section>`;
 }
 
 // ---------- ui state ----------
 let partQuery = '';
-let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false;
+let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false, perfSvc = null;
 const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICONS = {
   health: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
@@ -616,11 +690,11 @@ function addExample() {
   [['emission', 12, ''], ['insurance', 64, ''], ['revenue', 140, ''], ['driving', 610, ''], ['warranty', 150, t('exampleBatteryWarranty')], ['warranty', 290, t('exampleTyreWarranty')]]
     .forEach(([kind, n, title]) => db.docs.push({ ...newRecord(v), kind, title, expiry: day(n), note: '' }));
   // Fill-ups every 12 to 16 days going back about three years. Example prices only, drifting down over time.
-  const fills = []; let d = -6, odo = 51900;
+  const fills = []; let d = -6, odo = 52230;
   while (d > -1100) {
     const litres = +(24 + rnd() * 8).toFixed(1), price = 296 + Math.max(0, -d - 120) * 0.055 + (rnd() - 0.5) * 8;
     fills.push({ ...newRecord(v), litres, total: Math.round(litres * price), odo, date: day(d) });
-    const gap = 12 + Math.round(rnd() * 4); d -= gap; odo -= Math.round(litres * (12.4 + rnd() * 1.6));
+    const gap = 12 + Math.round(rnd() * 4); d -= gap; odo -= Math.round(litres * ((d > -240 ? 13.1 : 12.2) + rnd() * 1.4));
   }
   db.fuel.push(...fills);
   const svc = (kind, n, odo, cost, extra = {}) => db.service.push({ ...newRecord(v), kind, oil: '', filter: '', odo, cost, date: day(n), garage: t('exampleGarage'), part: 'Genuine', note: '', ...extra });
@@ -771,9 +845,14 @@ function viewHome(v) {
   const quick = `<div class="sec-h"><h2>${esc(t('quickTitle'))}</h2></div><div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
   const help = `<section class="help-card"><div class="help-h"><span class="help-av">${svg(ICONS.bot)}</span><div><h2>${esc(t('helpTitle'))}</h2><p>${esc(t('helpSub'))}</p></div></div>
     <div class="help-actions"><button class="chipbtn" data-tab="lights">${esc(t('helpLight'))}</button><button class="chipbtn" data-tab="ask">${esc(t('helpAsk'))}</button><button class="chipbtn" data-act="helpMech">${esc(t('helpMech'))}</button></div></section>`;
+  const nudge = fuelNudge(v), ps = perfPrompt(v);
+  const perfAsk = ps ? `<section class="nudge perf-ask"><span class="nudge-ic">${svg(ICONS.gauge)}</span><div class="nudge-t"><p class="t">${esc(t('perfAskTitle', label('svc_', ps.kind).toLowerCase()))}</p><p class="s">${esc(t('perfAskSub'))}</p>
+    <div class="nudge-b"><button class="btn small" data-act="perfShow" data-id="${ps.id}">${esc(t('showMe'))}</button><button class="btn quiet small" data-act="perfHide" data-id="${ps.id}">${esc(t('notNow'))}</button></div></div></section>` : '';
   return `${header(v)}
   ${banner}
   ${health}
+  ${nudge ? nudgeCard(nudge) : ''}
+  ${perfAsk}
   ${lights}
   ${coming}
   ${quick}
@@ -906,15 +985,20 @@ function viewMoney(v) {
   const rows = fuelRows(v).reverse();
   const yearAgo = addDaysISO(todayISO(), -365), svcSpent = mine(db.service, v).filter(s => s.date >= yearAgo).reduce((s, x) => s + (x.cost || 0), 0);
   if (!rows.length) return `${header(v)}<div class="empty"><b>${esc(t('noFuelTitle'))}</b>${esc(t('noFuelText'))}</div><div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div>`;
-  const d = periodData(v, period), c = d.cur, p = d.prev;
+  const d = periodData(v, period), c = d.cur, p = d.prev, nudge = fuelNudge(v);
   return `${header(v)}
-  <div class="seg" role="group" aria-label="${esc(t('periodLabel'))}">${PERIODS.map(k => `<button data-act="period" data-p="${k}" ${k === period ? 'aria-pressed="true"' : ''}>${esc(t('p_' + k))}</button>`).join('')}</div>
-  <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period)))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}</section>
-  <div class="stats three">
-    <div class="stat"><span class="n">${c.price ? esc(t('rs', n0(c.price))) : '–'}</span><span class="l">${esc(t('perLitre'))}</span></div>
-    <div class="stat"><span class="n">${c.kpl ? n1(c.kpl) : '–'}</span><span class="l">${esc(t('kplUnit'))}</span></div>
+  ${nudge ? nudgeCard(nudge) : ''}
+  <div class="period"><label for="periodSel">${esc(t('periodLabel'))}</label><select id="periodSel" class="pill-select">${PERIODS.map(k => `<option value="${k}" ${k === period ? 'selected' : ''}>${esc(t('pl_' + k))}</option>`).join('')}</select></div>
+  ${period === 'C' ? `<div class="two range"><div><label for="cFrom">${esc(t('fromDate'))}</label><input type="date" id="cFrom" value="${cFrom}" max="${cTo}"></div><div><label for="cTo">${esc(t('toDate'))}</label><input type="date" id="cTo" value="${cTo}" min="${cFrom}" max="${todayISO()}"></div></div>` : ''}
+  <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period, fmtD(cFrom), fmtD(cTo))))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}</section>
+  <div class="stats">
+    <div class="stat key"><span class="n">${c.kpl ? n1(c.kpl) : '–'}</span><span class="l">${esc(t('kplUnit'))}</span>${c.kpl && p.kpl ? delta(c.kpl, p.kpl, true, period) : ''}</div>
+    <div class="stat"><span class="n">${c.km ? n0(c.km) : '–'}</span><span class="l">${esc(t('kmDriven'))}</span></div>
     <div class="stat"><span class="n">${n0(c.litres)}</span><span class="l">${esc(t('litresWord'))}</span></div>
+    <div class="stat"><span class="n">${c.price ? esc(t('rs', n0(c.price))) : '–'}</span><span class="l">${esc(t('perLitre'))}</span></div>
   </div>
+  <p class="hint kpl-how">${esc(t('kplHow'))}</p>
+  ${perfCard(v)}
   <section class="chart-card">
     <div class="readout" id="readout" aria-live="polite"></div>
     <p class="chart-h">${esc(t('chartSpent'))}</p><div class="chart" id="ch-spent"></div>
@@ -924,9 +1008,10 @@ function viewMoney(v) {
   </section>
   <div class="stats one"><div class="stat"><span class="n">${esc(t('rs', n0(svcSpent)))}</span><span class="l">${esc(t('svcSpent12'))}</span></div></div>
   <h2>${esc(t('fillUps'))}</h2>
-  <ul class="list">${rows.slice(0, 20).map(x => `<li><button class="item" data-act="fuelDetail" data-id="${x.id}"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('rs', n0(x.total)))}</span><span class="s">${fmtD(x.date)}</span></span><span class="side">${x.kpl ? esc(t('kpl', n1(x.kpl))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
+  <ul class="list">${rows.slice(0, 20).map(x => `<li><button class="item" data-act="fuelDetail" data-id="${x.id}"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('rs', n0(x.total)))}</span><span class="s">${fmtD(x.date)}</span></span><span class="side">${x.kpl ? esc(t('kpl', n1(x.kpl))) : ''}${x.dist ? `<small>${esc(t('kmShort', n0(x.dist)))}</small>` : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
   ${rows.length > 20 ? `<p class="hint">${esc(t('showingRecent', 20, rows.length))}</p>` : ''}
-  <p class="hint">${esc(t('fillAssumption'))}</p>`;
+  <p class="hint">${esc(t('fillAssumption'))}</p>
+  <p class="hint">${esc(t('stationNote'))}</p>`;
 }
 
 // ---------- charts (hand-drawn SVG, works offline) ----------
@@ -1263,7 +1348,14 @@ function render() {
   main.innerHTML = { home: viewHome, health: viewHealth, car: viewCar, money: viewMoney, ask: viewAsk, lights: viewLights }[tab](v);
   tabs.innerHTML = `<div class="in">${TABS.map(([k, l]) => `<button data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}>${svg(ICONS[k])}<span>${esc(t(l))}</span></button>`).join('')}</div>`;
   fab.hidden = tab === 'ask'; fab.setAttribute('aria-label', t('addWhat')); fab.innerHTML = svg(ICONS.plus);
-  if (tab === 'money') drawFuelCharts(v);
+  if (tab === 'money') {
+    drawFuelCharts(v);
+    const ps = $('#periodSel'); if (ps) ps.onchange = () => { period = ps.value; fsel = null; render(); };
+    const f = $('#cFrom'), to = $('#cTo');
+    if (f) f.onchange = () => { if (f.value && f.value < cTo) { cFrom = f.value; fsel = null; render(); } };
+    if (to) to.onchange = () => { if (to.value && to.value > cFrom) { cTo = to.value > todayISO() ? todayISO() : to.value; fsel = null; render(); } };
+    const pf = $('#perfSel'); if (pf) pf.onchange = () => { perfSvc = pf.value; render(); $('#perf')?.scrollIntoView({ block: 'start' }); };
+  }
   if (tab === 'health') { const q = $('#partq'); if (q) q.oninput = () => { partQuery = q.value; const pos = q.selectionStart; render(); const n = $('#partq'); n.focus(); n.setSelectionRange(pos, pos); }; }
   if (tab === 'lights') { const q = $('#lightq'); q.oninput = () => { lightQuery = q.value; const pos = q.selectionStart; render(); const n = $('#lightq'); n.focus(); n.setSelectionRange(pos, pos); }; }
   if (tab === 'ask') { const inp = $('#chatin'); if (inp && keep && !chatBusy) inp.value = keep; $('#composer').onsubmit = e => { e.preventDefault(); const q = $('#chatin').value; $('#chatin').value = ''; sendChat(q); }; scrollChat(); }
@@ -1312,6 +1404,9 @@ document.addEventListener('click', e => {
     case 'addService': return serviceForm(null, el.dataset.kind);
     case 'service': return serviceForm(db.service.find(x => x.id === id));
     case 'period': period = el.dataset.p; fsel = null; return render();
+    case 'nudgeLater': v.fuelSnooze = addDaysISO(todayISO(), 4); save(); return render();
+    case 'perfShow': perfDone(v, id); tab = 'money'; perfSvc = id; render(); return $('#perf')?.scrollIntoView({ block: 'start' });
+    case 'perfHide': perfDone(v, id); return render();
     case 'suggest': return sendChat(el.dataset.q);
     case 'stopchat': return chatCtl?.abort();
     case 'clearchat': chat = []; return render();
@@ -1332,4 +1427,6 @@ $('#menu').addEventListener('click', e => { if (e.target.id === 'menu') e.target
 let resizeT; addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(() => tab === 'money' && drawFuelCharts(veh()), 150); });
 
 render();
+// Long-press the app icon, then "Log a fill-up" (manifest shortcut) opens the fill-up form straight away.
+if (new URLSearchParams(location.search).get('add') === 'fuel' && veh()) { history.replaceState(null, '', location.pathname); fuelForm(null); }
 if ('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js').catch(() => {});
