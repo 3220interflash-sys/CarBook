@@ -35,10 +35,11 @@ const KEY = 'carbook.v1';
 let db = load();
 function load() {
   try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1) return upgrade(d); } catch (e) {}
-  return { v: 1, active: null, vehicles: [], docs: [], fuel: [], service: [], alerts: [] };
+  return { v: 1, active: null, vehicles: [], docs: [], fuel: [], service: [], alerts: [], tracked: [] };
 }
 // Fill in fields added after a record was first saved. Never removes anything.
 function upgrade(d) {
+  d.tracked = d.tracked || [];
   ['docs', 'fuel', 'service', 'alerts'].forEach(k => (d[k] || (d[k] = [])).forEach(r => { if (!r.visibility) r.visibility = 'private'; }));
   return d;
 }
@@ -110,7 +111,7 @@ const FILTERS = ['Changed', 'Not changed'];
 
 const kindName = k => t('kind_' + k);
 const kindHint = k => HINTED.includes(k) ? t('hint_' + k) : '';
-const label = (prefix, value) => STRINGS.en[prefix + value] ? t(prefix + value) : value;
+const label = (prefix, value) => typeof value === 'string' && value.startsWith('c:') ? t('cat_' + value.slice(2) + '_name') : STRINGS.en[prefix + value] ? t(prefix + value) : value;
 const exemptEmission = v => v.fuel === 'Electric' || v.fuel === 'Hybrid';
 const requiredKinds = v => exemptEmission(v) ? ['insurance', 'revenue'] : ['emission', 'insurance', 'revenue'];
 const docTitle = d => d.title || kindName(d.kind);
@@ -255,6 +256,19 @@ function reminders(v) {
     const byKm = !!byKmDate && byKmDate < byDate, date = byKm ? byKmDate : byDate;
     out.push({ key: kind, cat: 'service', title: label('svc_', kind), sub: '', date, days: daysTo(date), kmLeft, byKm, est: byKm, s: urgency(daysTo(byDate), kmLeft), act: 'addService', kind });
   });
+  // parts picked from the catalogue, and reminder dates the owner set for any part
+  trackedOf(v).forEach(tr => {
+    const kind = tr.comp;
+    if (kind.startsWith('c:') && catOf(kind.slice(2))) {
+      const r = lastService(v, kind), iv = partIv(v, kind);
+      if (r && (iv.km || iv.months)) {
+        const byDate = iv.months ? addMonthsISO(r.date, iv.months) : null, kmLeft = iv.km ? r.odo + iv.km - v.odo : null, byKmDate = iv.km ? kmDate(kmLeft) : null;
+        const byKm = !!byKmDate && (!byDate || byKmDate < byDate), date = byKm ? byKmDate : byDate;
+        out.push({ key: kind, cat: 'service', title: label('svc_', kind), sub: '', date, days: date ? daysTo(date) : null, kmLeft, byKm, est: byKm, s: urgency(byDate ? daysTo(byDate) : null, kmLeft), act: 'addService', kind });
+      } else if (r) out.push({ key: kind, cat: 'service', title: label('svc_', kind), sub: '', date: null, days: null, kmLeft: null, s: 'ok', cond: true, act: 'addService', kind });
+    }
+    if (tr.remindOn) { const days = daysTo(tr.remindOn); out.push({ key: 'remind-' + tr.id, cat: 'service', title: label('svc_', kind), sub: t('yourReminder'), date: tr.remindOn, days, kmLeft: null, est: false, s: status(days).c, act: 'addService', kind, reminder: true }); }
+  });
   // by distance (and tyre age)
   [['Brake pads', INTERVALS.brakes.km], ['Tyres', INTERVALS.tyres.km], ['Spark plugs', INTERVALS.plugs.km]].forEach(([kind, km]) => {
     if (kind === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) return;
@@ -272,6 +286,7 @@ function reminders(v) {
 // The big value shown for a reminder: { big, unit, small }.
 function valueOf(x) {
   if (x.s === 'none') return { big: t('add'), unit: '', small: '' };
+  if (x.cond) return { big: t('condShort'), unit: '', small: t('condCheck') };
   if (x.checkNow) return { big: t('checkNow'), unit: '', small: t('atNextService') };
   const kmFirst = x.kmLeft != null && (x.byKm || x.days == null || x.kmLeft <= 1500);
   if (kmFirst) {
@@ -321,9 +336,11 @@ function periodData(v, p) {
 }
 
 // ---------- ui state ----------
+let partQuery = '';
 let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false;
 const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICONS = {
+  health: '<path d="M3 12h4l2-5 4 10 2-5h6"/>',
   tuneup: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M12.5 9.5l-2 3.2h2.6l-2 3.3"/>',
   filter: '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="M7 6v12M10 6v12M13 6v12M16 6v12"/>',
   fan: '<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C11 6 13.5 3.8 16 5.5c1.6 1.2.4 4.3-4 4.9M13.6 12c4.4-1 6.6 1.5 4.9 4-1.2 1.6-4.3.4-4.9-4M12 13.6c1 4.4-1.5 6.6-4 4.9-1.6-1.2-.4-4.3 4-4.9M10.4 12C6 13 3.8 10.5 5.5 8c1.2-1.6 4.3-.4 4.9 4"/>',
@@ -357,7 +374,7 @@ const ICONS = {
   gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'
 };
-const TABS = [['home', 'tabHome'], ['car', 'tabCar'], ['money', 'tabMoney'], ['ask', 'tabAsk']];
+const TABS = [['home', 'tabHome'], ['health', 'tabHealth'], ['car', 'tabCar'], ['ask', 'tabAsk']];
 function toast(m) { const el = $('#toast'); el.textContent = m; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 2400); }
 // ---------- assistant ----------
 // Real AI answers where the page can reach Claude (the claude.ai preview).
@@ -554,7 +571,7 @@ function serviceForm(s, kind) {
   const v = veh(), isNew = !s;
   kind = s?.kind || kind || 'Oil change';
   sheet(t(isNew ? 'addServiceTitle' : 'editServiceTitle'),
-    select(t('whatDone'), 'kind', SERVICE_KINDS, kind, 'svc_') +
+    select(t('whatDone'), 'kind', SERVICE_KINDS.includes(kind) ? SERVICE_KINDS : [kind, ...SERVICE_KINDS], kind, 'svc_') +
     `<div id="oilbox">${field(t('oilType'), 'oil', { value: s?.oil, ph: t('oilTypePh') })}${select(t('oilFilter'), 'filter', FILTERS, s?.filter, 'filter_', t('notRecorded'))}</div>` +
     `<div class="two"><div>${field(t('odometer'), 'odo', { type: 'number', mode: 'numeric', value: s?.odo ?? v.odo, req: true })}</div><div>${field(t('costRs'), 'cost', { type: 'number', mode: 'decimal', value: s?.cost })}</div></div>` +
     field(t('date'), 'date', { type: 'date', value: s?.date || todayISO(), req: true }) + field(t('garage'), 'garage', { value: s?.garage }) +
@@ -620,20 +637,36 @@ function addExample() {
   svc('Wiper blades', -200, 46000, 3200, { part: 'Aftermarket' });
   db.alerts.push({ ...newRecord(v), code: 'engine', date: day(-2), odo: 52410, still: 'on', note: '' });
   db.alerts.push({ ...newRecord(v), code: 'tpms', date: day(-210), odo: 46300, still: 'off', note: '', resolvedAt: day(-209) });
+  db.tracked = db.tracked || [];
+  db.tracked.push({ ...newRecord(v), comp: 'c:engine-timing-belt' }); svc('c:engine-timing-belt', -900, 26000, 24000, { part: 'Genuine' });
+  db.tracked.push({ ...newRecord(v), comp: 'c:tyres-tyre-rotation', remindOn: day(20) });
   save();
 }
 
 // ---------- items: one list of everything to keep on track ----------
 const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment', 'Engine tune-up': 'tuneup', 'Air filter': 'airfilter', 'AC filter': 'cabin', 'Brake fluid': 'brakefluid', 'Coolant': 'coolantpart', 'Gearbox oil': 'gearboxoil', 'Wiper blades': 'wipers' };
 const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align', 'Engine tune-up': 'tuneup', 'Air filter': 'filter', 'AC filter': 'fan', 'Brake fluid': 'drop', 'Coolant': 'therm', 'Gearbox oil': 'gear', 'Wiper blades': 'wiper' };
-const iconOf = x => svg(ICONS[KIND_ICON[x.kind] || 'doc']);
-const maintKinds = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Wheel alignment', 'Spark plugs', ...TIMED_PARTS.map(p => p[0])].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) && partFits(k, v));
+const iconOf = x => svg(ICONS[kindIcon(x.kind)] || ICONS.doc);
+// Parts the owner picked from the catalogue (research/maintenance-checklist), tracked alongside the built-in ones.
+const catOf = id => CATALOGUE.find(c => c.id === id);
+const catFits = (c, v) => (!c.types || c.types.includes(v.type)) && (!c.fuels || c.fuels.includes(v.fuel));
+const trackedOf = v => mine(db.tracked || [], v);
+const trackOf = (v, comp) => trackedOf(v).find(x => x.comp === comp);
+// The reminder interval for a catalogue part: the owner's own setting, else the catalogue's suggestion.
+function partIv(v, kind) {
+  const tr = trackOf(v, kind), c = catOf(kind.slice(2)) || {};
+  return { km: tr && 'km' in tr ? tr.km || null : c.km || null, months: tr && 'months' in tr ? tr.months || null : c.months || null };
+}
+const kindIcon = k => typeof k === 'string' && k.startsWith('c:') ? CATALOGUE_GROUPS[(catOf(k.slice(2)) || {}).g] || 'wrench' : KIND_ICON[k];
+const maintKinds = v => [...maintKindsBase(v), ...trackedOf(v).map(x => x.comp).filter(k => k.startsWith('c:') && catOf(k.slice(2)))];
+const maintKindsBase = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Wheel alignment', 'Spark plugs', ...TIMED_PARTS.map(p => p[0])].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) && partFits(k, v));
 
 // Car health: how much life a part has left (0 to 1) from its last record and the default interval. Null when there is no record.
 function partLife(v, kind) {
   const r = lastService(v, kind); if (!r) return null;
   const used = Math.max(0, v.odo - r.odo), months = Math.max(0, -daysTo(r.date)) / 30.44;
   const byKm = km => km ? 1 - used / km : 1, byTime = m => m ? 1 - months / m : 1;
+  if (kind.startsWith('c:')) { const iv = partIv(v, kind); if (!iv.km && !iv.months) return null; return Math.max(0, Math.min(1, Math.min(byKm(iv.km), byTime(iv.months)))); }
   const key = { 'Oil change': 'oil', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment' }[kind] || (TIMED_PARTS.find(p => p[0] === kind) || [])[1];
   let life;
   if (kind === 'Battery') life = 1 - months / (INTERVALS.battery.dueYears * 12);
@@ -653,6 +686,8 @@ const findItem = (v, key) => allItems(v).find(x => x.key === key);
 // A short plain status line, e.g. "In 12 days" or "720 km to go".
 function whenText(x) {
   if (x.s === 'none') return t('noRecordYet');
+  if (x.cond) return t('condCheck');
+  if (x.reminder) return t('yourReminder') + ' · ' + (x.days < 0 ? t('overByDaysShort', -x.days) : x.days === 0 ? t('dueToday') : t('inTime', x.days < 60 ? t('days', x.days) : t('months', Math.round(x.days / 30))));
   if (x.checkNow) return t('askAtService');
   const kmFirst = x.kmLeft != null && (x.byKm || x.days == null || x.kmLeft <= 1500);
   if (kmFirst) return x.kmLeft <= 0 ? t('overByKmShort', n0(-x.kmLeft)) : t('kmToGo', n0(x.kmLeft));
@@ -691,89 +726,124 @@ function viewOnboard() {
   <p class="small mut">${esc(t('onDevice'))}</p>${langPicker()}</div>`;
 }
 
+// Car health summary for every tracked part: { k, it (its item), life (0..1 or null), s }.
+function healthParts(v, R) {
+  return maintKinds(v).map(k => {
+    const its = R.filter(x => x.kind === k && x.key !== 'battery-test'), it = its.find(x => !x.reminder) || its[0] || R.find(x => x.kind === k);
+    return { k, it, life: partLife(v, k), s: it ? it.s : 'none' };
+  });
+}
+const partName = k => k === 'Oil change' ? t('engineOil') : label('svc_', k);
+const ring = (okN, n) => `<div class="ring-wrap"><svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" class="ring-bg"/><circle cx="32" cy="32" r="27" class="ring-fg" stroke-dasharray="${(n ? okN / n * 169.6 : 0).toFixed(1)} 169.6" transform="rotate(-90 32 32)"/></svg><span class="ring-n">${okN}<small>/${n}</small></span></div>`;
+const partKey = p => p.it ? p.it.key : 'none-' + p.k;
+
 function viewHome(v) {
-  const R = allItems(v), active = R.filter(x => x.s !== 'none'), missing = R.filter(x => x.s === 'none');
-  const hero = active[0], next = active.slice(1, 8);
-  const now = new Date(todayISO() + 'T00:00'), mStart = isoOf(new Date(now.getFullYear(), now.getMonth(), 1));
-  const month = fuelStats(v, mStart, addDaysISO(todayISO(), 1));
-  let heroHtml;
+  const R = allItems(v), parts = healthParts(v, R), tracked = parts.filter(p => p.s !== 'none'), okN = tracked.filter(p => p.s === 'ok').length;
+  const attn = [...parts.filter(p => p.s === 'bad'), ...parts.filter(p => p.s === 'warn')].slice(0, 4);
+  const health = `<section class="health compact">
+    <div class="health-h">${tracked.length ? ring(okN, tracked.length) : ''}<div class="health-t"><h2>${esc(t('healthTitle'))}</h2><p>${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</p></div></div>
+    ${attn.length ? `<div class="attn">${attn.map(p => `<button class="attn-i ${p.s}" data-act="detail" data-key="${esc(partKey(p))}"><span class="attn-ic">${svg(ICONS[kindIcon(p.k)] || ICONS.wrench)}</span><span class="attn-n">${esc(partName(p.k))}</span><span class="attn-s">${esc(p.it ? whenText(p.it) : t('noRecordYet'))}</span></button>`).join('')}</div>`
+      : `<p class="all-ok">${svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>')}${esc(t('allOnTrack'))}</p>`}
+    <button class="btn quiet wide" data-tab="health">${esc(t('openHealth'))}</button>
+  </section>`;
+  // a red dashboard light the owner recorded still takes the banner
   const redLight = openAlerts(v).find(a => lightOf(a.code).level === 'red');
+  let banner = '';
   if (redLight) {
     const l = lightOf(redLight.code);
-    heroHtml = `<section class="hero bad"><p class="hero-label">${esc(t('heroNow'))}</p>
+    banner = `<section class="hero bad"><p class="hero-label">${esc(t('heroNow'))}</p>
       <div class="hero-row">${lightArt(l, true)}<div class="hero-txt"><p class="hero-title">${esc(lightName(l))}</p><p class="hero-when">${esc(t('recordedAgo', ago(redLight.date)))} · ${esc(t('still_' + (redLight.still || 'on')))}</p><p class="hero-urgent">${esc(t('lvlLong_red'))}</p></div></div>
       <button class="hero-btn" data-act="alertDetail" data-id="${redLight.id}">${esc(t('heroWhatToDo'))}</button></section>`;
-  } else if (!hero) heroHtml = `<section class="hero setup"><div class="hero-art">${svg(ICONS.car)}</div><div class="hero-txt"><p class="hero-label">${esc(t('heroSetupLabel'))}</p><p class="hero-title">${esc(t('heroSetupTitle'))}</p></div><button class="hero-btn" data-act="add">${esc(t('heroSetupBtn'))}</button></section>`;
-  else {
-    const val = valueOf(hero);
-    heroHtml = `<section class="hero ${hero.s}">
-      <p class="hero-label">${esc(t(hero.s === 'bad' ? 'heroNow' : hero.s === 'warn' ? 'heroSoon' : 'heroNext'))}</p>
-      <div class="hero-row"><div class="hero-art">${iconOf(hero)}</div>
-        <div class="hero-txt"><p class="hero-title">${esc(hero.title)}</p><p class="hero-val">${esc(val.big)}${val.unit ? `<small>${esc(val.unit)}</small>` : ''}</p>${val.small ? `<p class="hero-when">${esc(val.small)}${hero.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div></div>
-      <button class="hero-btn" data-act="detail" data-key="${esc(hero.key)}">${esc(t('heroWhatToDo'))}</button></section>`;
   }
-  const card = x => { const val = valueOf(x); return `<button class="mini ${x.s}" data-act="detail" data-key="${esc(x.key)}"><span class="mini-ic">${iconOf(x)}</span><span class="mini-t">${esc(x.title)}</span><span class="mini-v">${esc(val.big)}${val.unit ? ` <small>${esc(val.unit)}</small>` : ''}</span>${tag(x.s)}</button>`; };
-  // wallet card: this month's fuel spend, like a balance
-  const lastM = fuelStats(v, isoOf(new Date(now.getFullYear(), now.getMonth() - 1, 1)), mStart);
-  const recent = fuelRows(v).map(x => x.kpl).filter(Boolean).slice(-3);
-  // compare like with like: this month so far vs the same number of days last month
-  const lastSoFar = fuelStats(v, isoOf(new Date(now.getFullYear(), now.getMonth() - 1, 1)), isoOf(new Date(now.getFullYear(), now.getMonth() - 1, now.getDate() + 1)));
-  const chg = lastSoFar.spent ? Math.round((month.spent - lastSoFar.spent) / lastSoFar.spent * 100) : null;
-  const wallet = `<button class="wallet" data-tab="money">
-    <span class="w-top"><span class="w-label">${esc(t('walletLabel'))}</span><span class="w-car">${esc([v.name, v.plate].filter(Boolean).join(' · '))}</span></span>
-    <span class="w-big">${esc(t('rs', n0(month.spent)))}</span>
-    ${chg != null ? `<span class="w-chip">${chg <= 0 ? '↓' : '↑'} ${Math.abs(chg)}% ${esc(t('vsLastMonthShort'))}</span>` : `<span class="w-chip">${esc(t('walletFirst'))}</span>`}
-    <span class="w-row"><span><b>${n0(v.odo)}</b> ${esc(t('km'))}<small>${esc(t('odometerShort'))}</small></span><span><b>${recent.length ? n1(avg(recent)) : '–'}</b> ${esc(t('kplUnit'))}<small>${esc(t('recentEconomy'))}</small></span><span><b>${esc(t('rs', n0(lastM.spent)))}</b><small>${esc(t('lastMonthWord'))}</small></span></span>
-  </button>`;
-  // quick actions, like Send / Top up in a banking app
-  const qa = (act, icon, k, extra = '') => `<button class="qa" ${act}><span class="c">${svg(ICONS[icon] || icon)}</span><span>${esc(t(k))}</span>${extra}</button>`;
-  const quick = `<div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
-  // recent activity, like transactions
-  const acts = [
-    ...mine(db.service, v).map(x => ({ date: x.date, ic: KIND_ICON[x.kind] || 'wrench', t: label('svc_', x.kind), s: x.garage || t('actService'), amt: x.cost || null, act: `data-act="svcDetail" data-id="${x.id}"` })),
-    ...alertsOf(v).map(a => ({ date: a.date, ic: null, light: lightOf(a.code), t: lightName(lightOf(a.code)), s: t(a.resolvedAt ? 'alertFixed' : 'still_' + (a.still || 'on')), amt: null, act: `data-act="alertDetail" data-id="${a.id}"` })),
-    ...mine(db.docs, v).flatMap(d => (d.history || []).map(h => ({ date: new Date(h.renewedAt - new Date(h.renewedAt).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), ic: KIND_ICON[d.kind] || 'doc', t: t('actRenewed', docTitle(d)), s: t('actNewExpiry', fmtD(d.expiry)), amt: null, act: `data-act="detail" data-key="doc-${d.id}"` })))
-  ].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 6);
-  const dayLabel = iso => { const d = -daysTo(iso); return d === 0 ? t('today') : d === 1 ? t('yesterday') : fmtD(iso); };
-  const activity = acts.length ? `<div class="sec-h"><h2>${esc(t('recentActivity'))}</h2><button class="link-btn" data-act="serviceList">${esc(t('seeAll'))}</button></div>
-    <ul class="list activity">${acts.map(x => `<li><button class="item" ${x.act}>${x.light ? lightArt(x.light) : `<span class="ic plain">${svg(ICONS[x.ic] || ICONS.doc)}</span>`}<span class="it"><span class="t">${esc(x.t)}</span><span class="s">${esc(dayLabel(x.date))} · ${esc(x.s)}</span></span>${x.amt ? `<span class="amt">− ${esc(t('rs', n0(x.amt)))}</span>` : ''}</button></li>`).join('')}</ul>` : '';
-  // car health: every part that wears out, with how much life it has left
-  const parts = maintKinds(v).map(k => {
-    const it = R.filter(x => x.kind === k && x.key !== 'battery-test')[0] || R.find(x => x.kind === k), life = partLife(v, k);
-    return { k, it, life, s: it ? it.s : 'none' };
-  });
-  const tracked = parts.filter(p => p.life != null), okN = tracked.filter(p => p.s === 'ok').length;
-  // the ring shows how many tracked parts are on track
-  const share = tracked.length ? okN / tracked.length : null;
-  const ring = share == null ? '' : `<svg class="ring" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="32" r="27" class="ring-bg"/><circle cx="32" cy="32" r="27" class="ring-fg" stroke-dasharray="${(share * 169.6).toFixed(1)} 169.6" transform="rotate(-90 32 32)"/></svg>`;
-  const tile = p => `<button class="part ${p.s}" data-act="detail" data-key="${esc(p.it ? p.it.key : 'none-' + p.k)}">
-      <span class="part-top"><span class="part-ic">${svg(ICONS[KIND_ICON[p.k]] || ICONS.wrench)}</span>${p.life != null ? `<span class="part-pct">${Math.round(p.life * 100)}%</span>` : ''}</span>
-      <span class="part-name">${esc(p.k === 'Oil change' ? t('engineOil') : label('svc_', p.k))}</span>
-      ${p.life != null ? `<span class="life"><span style="width:${Math.max(4, Math.round(p.life * 100))}%"></span></span><span class="part-s">${esc(whenText(p.it))}</span>` : `<span class="part-s add">${esc(t('healthAdd'))}</span>`}
-    </button>`;
-  const healthHtml = `<section class="health">
-    <div class="health-h">${ring ? `<div class="ring-wrap">${ring}<span class="ring-n">${okN}<small>/${tracked.length}</small></span></div>` : ''}
-      <div class="health-t"><h2>${esc(t('healthTitle'))}</h2><p>${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</p></div></div>
-    <div class="parts">${parts.map(tile).join('')}</div>
-    <p class="health-note">${esc(t('healthNote'))}</p>
-  </section>`;
-  // your records: one place for warranties, service records and part changes
-  const nWar = mine(db.docs, v).filter(d => d.kind === 'warranty').length, nSvcAll = mine(db.service, v).length, nParts = mine(db.service, v).filter(s => PART_CHANGES.includes(s.kind)).length;
-  const vt = (act, icon, k, n) => `<button class="vault-t" data-act="${act}"><span class="vault-ic">${svg(ICONS[icon])}</span><span class="vault-n">${n}</span><span class="vault-l">${esc(t(k))}</span></button>`;
-  const vault = `<div class="sec-h"><h2>${esc(t('vaultTitle'))}</h2></div><div class="vault">${vt('warrantyList', 'ribbon', 'vaultWarranties', nWar)}${vt('serviceList', 'wrench', 'vaultService', nSvcAll)}${vt('partsList', 'gear', 'vaultParts', nParts)}</div>`;
+  const lights = openAlerts(v).filter(a => a !== redLight).map(a => { const l = lightOf(a.code); return `<button class="alert-card ${l.level}" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(t('recordedAgo', ago(a.date)))} · ${esc(t('still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>`; }).join('');
+  // coming up: tests, insurance, licences, warranties and the owner's own reminders
+  const upcoming = R.filter(x => x.s !== 'none' && (x.cat !== 'service' || x.reminder)).slice(0, 4);
+  const missingDocs = R.filter(x => x.s === 'none' && x.cat === 'doc');
+  const coming = `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div>
+    ${upcoming.length ? `<ul class="list">${upcoming.map(x => itemRow(x)).join('')}</ul>` : ''}
+    ${missingDocs.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missingDocs.slice(0, 3).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('papersMissing', missingDocs.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}`;
+  const qa = (act, icon, k) => `<button class="qa" ${act}><span class="c">${svg(ICONS[icon] || icon)}</span><span>${esc(t(k))}</span></button>`;
+  const quick = `<div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-tab="money"', 'money', 'qaSpend')}</div>`;
+  const help = `<section class="help-card"><div class="help-h"><span class="help-av">${svg(ICONS.bot)}</span><div><h2>${esc(t('helpTitle'))}</h2><p>${esc(t('helpSub'))}</p></div></div>
+    <div class="help-actions"><button class="chipbtn" data-tab="lights">${esc(t('helpLight'))}</button><button class="chipbtn" data-tab="ask">${esc(t('helpAsk'))}</button><button class="chipbtn" data-act="helpMech">${esc(t('helpMech'))}</button></div></section>`;
   return `${header(v)}
-  ${healthHtml}
-  ${heroHtml}
-  ${openAlerts(v).filter(a => a !== redLight).map(a => { const l = lightOf(a.code); return `<button class="alert-card ${l.level}" data-act="alertDetail" data-id="${a.id}">${lightArt(l)}<span class="it"><span class="t">${esc(lightName(l))}</span><span class="s">${esc(t('recordedAgo', ago(a.date)))} · ${esc(t('still_' + (a.still || 'on')))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>`; }).join('')}
-  ${next.length ? `<div class="sec-h"><h2>${esc(t('comingUp'))}</h2><button class="link-btn" data-tab="car">${esc(t('seeAll'))}</button></div><div class="cards" role="list">${next.map(card).join('')}</div>` : ''}
+  ${banner}
+  ${health}
+  ${lights}
+  ${coming}
   ${quick}
-  ${vault}
-  ${activity}`;
+  ${help}`;
+}
+
+function viewHealth(v) {
+  const R = allItems(v), parts = healthParts(v, R), tracked = parts.filter(p => p.s !== 'none'), okN = tracked.filter(p => p.s === 'ok').length;
+  const q = partQuery.trim().toLowerCase();
+  const results = q ? CATALOGUE.filter(c => catFits(c, v) && (t('cat_' + c.id + '_name').toLowerCase().includes(q) || t('catg_' + c.g).toLowerCase().includes(q))).slice(0, 8) : [];
+  const inUse = id => { const c = catOf(id); return c.core ? maintKinds(v).includes(c.core) : !!trackOf(v, 'c:' + id); };
+  const row = p => `<li><button class="item part-row" data-act="detail" data-key="${esc(partKey(p))}">
+      <span class="ic ${p.s}">${svg(ICONS[kindIcon(p.k)] || ICONS.wrench)}</span>
+      <span class="it"><span class="t">${esc(partName(p.k))}</span><span class="s">${esc(p.it ? whenText(p.it) : t('noRecordYet'))}</span>${p.life != null ? `<span class="life"><span style="width:${Math.max(4, Math.round(p.life * 100))}%"></span></span>` : ''}</span>
+      ${p.life != null ? `<span class="side">${Math.round(p.life * 100)}%</span>` : ''}<span class="chev">${svg(ICONS.chev)}</span></button></li>`;
+  const groups = [['bad', 'hNow'], ['warn', 'hSoon'], ['ok', 'hOk'], ['none', 'hNone']];
+  return `${header(v)}
+  <section class="health-top">${tracked.length ? ring(okN, tracked.length) : ''}<div class="health-t"><h1>${esc(t('healthTitle'))}</h1><p>${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</p></div></section>
+  <label class="search"><span class="sr">${esc(t('partSearch'))}</span>${svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}<input id="partq" type="search" value="${esc(partQuery)}" placeholder="${esc(t('partSearch'))}" autocomplete="off"></label>
+  ${q ? (results.length ? `<ul class="list results">${results.map(c => `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="ic plain">${svg(ICONS[CATALOGUE_GROUPS[c.g]] || ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span><span class="s">${esc(t('catg_' + c.g))}${inUse(c.id) ? ' · ' + esc(t('alreadyTracked')) : ''}</span></span><span class="chev">${svg(ICONS.plus)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('partNone'))}</p>`) : ''}
+  ${groups.map(([s, k]) => { const ps = parts.filter(p => p.s === s); return ps.length ? `<h2 class="grp-h">${esc(t(k))} <span class="count">${ps.length}</span></h2><ul class="list">${ps.map(row).join('')}</ul>` : ''; }).join('')}
+  <button class="btn quiet wide" data-act="browseParts" style="margin-top:14px">${esc(t('browseAll', CATALOGUE.filter(c => catFits(c, v)).length))}</button>
+  <p class="hint" style="margin-top:12px">${esc(t('healthNote'))}</p>`;
+}
+
+// What a catalogue part is checked and replaced like, from the owner's research.
+function catExplain(id) {
+  const typ = t('cat_' + id + '_typical');
+  return `<div class="explain"><h4>${esc(t('howOftenCheck'))}</h4><p>${esc(t('cat_' + id + '_check'))}</p><h4>${esc(t('typicalReplace'))}</h4><p>${esc(typ && typ !== 'cat_' + id + '_typical' ? typ : t('condBasedLong'))}</p><p class="small mut">${esc(t('manualFirst'))}</p></div>`;
+}
+
+// Picking a part in the search: built-in parts open their page; others open the "track it" form.
+function pickPart(id) {
+  const v = veh(), c = catOf(id); if (!c) return;
+  const kind = c.core && maintKindsBase(v).includes(c.core) ? c.core : 'c:' + id;
+  if (kind !== 'c:' + id || trackOf(v, kind)) { const it = allItems(v).find(x => x.kind === kind && !x.reminder); if (it) return itemDetail(it.key); }
+  trackForm(kind);
+}
+
+function browseParts() {
+  const v = veh(), byG = {};
+  CATALOGUE.filter(c => catFits(c, v)).forEach(c => (byG[c.g] = byG[c.g] || []).push(c));
+  infoSheet(t('browseTitle'), `<p class="hint">${esc(t('browseSub'))}</p>${Object.keys(byG).map(g => `<details class="grp"><summary>${svg(ICONS[CATALOGUE_GROUPS[g]] || ICONS.wrench)}<span>${esc(t('catg_' + g))}</span><span class="count">${byG[g].length}</span></summary><ul class="list mini">${byG[g].map(c => { const on = c.core ? maintKinds(v).includes(c.core) : !!trackOf(v, 'c:' + c.id); return `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span>${on ? `<span class="s">${esc(t('alreadyTracked'))}</span>` : ''}</span><span class="chev">${svg(on ? ICONS.chev : ICONS.plus)}</span></button></li>`; }).join('')}</ul></details>`).join('')}`);
+}
+
+// Start tracking a part, or change its reminder. Works for built-in parts too (a reminder date only).
+function trackForm(comp) {
+  const v = veh(), tr = trackOf(v, comp), isCat = comp.startsWith('c:'), c = isCat ? catOf(comp.slice(2)) : null, last = lastService(v, comp);
+  const iv = isCat ? partIv(v, comp) : null;
+  sheet(label('svc_', comp),
+    (isCat ? catExplain(c.id) + `<div class="two"><div>${field(t('remindEveryKm'), 'km', { type: 'number', mode: 'numeric', value: iv.km ?? '' })}</div><div>${field(t('remindEveryMonths'), 'months', { type: 'number', mode: 'numeric', value: iv.months ?? '' })}</div></div><div class="help">${esc(t(c.km || c.months ? 'suggestedHelp' : 'condHelp'))}</div>` : '') +
+    (isCat && !last ? `<div class="two"><div>${field(t('lastDoneDate'), 'ldate', { type: 'date' })}</div><div>${field(t('lastDoneOdo'), 'lodo', { type: 'number', mode: 'numeric' })}</div></div><div class="help">${esc(t('lastDoneHelp'))}</div>` : '') +
+    field(t('remindOnDate'), 'remind', { type: 'date', value: tr?.remindOn || '', help: t('remindOnHelp') }),
+    fd => {
+      const rec = tr || { ...newRecord(v), comp };
+      if (isCat) { rec.km = +fd.get('km') || 0; rec.months = +fd.get('months') || 0; }
+      rec.remindOn = fd.get('remind') || null;
+      if (tr) rec.updatedAt = Date.now(); else { if (!isCat && !rec.remindOn) return t('errRemind'); (db.tracked = db.tracked || []).push(rec); }
+      const ld = isCat && !last && fd.get('ldate');
+      if (ld) db.service.push({ ...newRecord(v), kind: comp, oil: '', filter: '', odo: +fd.get('lodo') || v.odo, cost: 0, date: ld, garage: '', part: '', note: '' });
+      partQuery = ''; save();
+    },
+    { save: t(tr ? 'save' : isCat ? 'startTracking' : 'setReminder'), del: tr && (() => { db.tracked = db.tracked.filter(x => x.id !== tr.id); save(); }) });
 }
 
 function viewCar(v) {
-  const R = allItems(v), papers = R.filter(x => x.cat !== 'service').sort((a, b) => (a.days ?? -1e9) - (b.days ?? -1e9)), maint = maintKinds(v).map(k => R.filter(x => x.kind === k).sort((a, b) => ({ bad: 0, warn: 1, ok: 2, none: 3 })[a.s] - ({ bad: 0, warn: 1, ok: 2, none: 3 })[b.s])[0]).filter(Boolean);
-  const nSvc = mine(db.service, v).length, nFuel = mine(db.fuel, v).length;
+  const R = allItems(v), papers = R.filter(x => x.cat !== 'service').sort((a, b) => (a.days ?? -1e9) - (b.days ?? -1e9));
+  const parts = healthParts(v, R), tracked = parts.filter(p => p.s !== 'none'), okN = tracked.filter(p => p.s === 'ok').length;
+  const nWar = mine(db.docs, v).filter(d => d.kind === 'warranty').length, nSvcAll = mine(db.service, v).length, nParts = mine(db.service, v).filter(s => PART_CHANGES.includes(s.kind)).length;
+  const vt = (act, icon, k, n) => `<button class="vault-t" data-act="${act}"><span class="vault-ic">${svg(ICONS[icon])}</span><span class="vault-n">${n}</span><span class="vault-l">${esc(t(k))}</span></button>`;
+  const acts = [
+    ...mine(db.service, v).map(x => ({ date: x.date, ic: kindIcon(x.kind) || 'wrench', t: label('svc_', x.kind), s: x.garage || t('actService'), amt: x.cost || null, act: `data-act="svcDetail" data-id="${x.id}"` })),
+    ...alertsOf(v).map(a => ({ date: a.date, light: lightOf(a.code), t: lightName(lightOf(a.code)), s: t(a.resolvedAt ? 'alertFixed' : 'still_' + (a.still || 'on')), amt: null, act: `data-act="alertDetail" data-id="${a.id}"` })),
+    ...mine(db.docs, v).flatMap(d => (d.history || []).map(h => ({ date: new Date(h.renewedAt - new Date(h.renewedAt).getTimezoneOffset() * 6e4).toISOString().slice(0, 10), ic: KIND_ICON[d.kind] || 'doc', t: t('actRenewed', docTitle(d)), s: t('actNewExpiry', fmtD(d.expiry)), amt: null, act: `data-act="detail" data-key="doc-${d.id}"` })))
+  ].sort((x, y) => y.date.localeCompare(x.date)).slice(0, 5);
   return `${header(v)}
   <section class="car-card">
     <div class="car-ic">${svg(ICONS.car)}</div>
@@ -783,17 +853,15 @@ function viewCar(v) {
   <h2 id="sec-papers">${esc(t('papers'))}</h2>
   <ul class="list">${papers.map(x => itemRow(x)).join('')}</ul>
   <button class="link-btn" data-act="addDoc">${svg(ICONS.plus)}${esc(t('addADocument'))}</button>
-  <h2 id="sec-maint">${esc(t('maintenance'))}</h2>
-  <ul class="list">${maint.map(x => itemRow(x)).join('')}</ul>
-  <h2>${esc(t('records'))}</h2>
-  <ul class="list">
-    <li><button class="item" data-act="serviceList"><span class="ic plain">${svg(ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('serviceHistory'))}</span><span class="s">${esc(t('nRecords', nSvc))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
-    <li><button class="item" data-act="alertList"><span class="ic plain">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}</span><span class="it"><span class="t">${esc(t('lightHistory'))}</span><span class="s">${esc(t('nRecords', alertsOf(v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
-    <li><button class="item" data-tab="money"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('fuelHistory'))}</span><span class="s">${esc(t('nFillups', nFuel))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
-    <li><button class="item" data-act="odo"><span class="ic plain">${svg(ICONS.gauge)}</span><span class="it"><span class="t">${esc(t('odometerShort'))}</span><span class="s">${n0(v.odo)} ${esc(t('km'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
-  </ul>
+  <h2>${esc(t('vaultTitle'))}</h2>
+  <div class="vault">${vt('warrantyList', 'ribbon', 'vaultWarranties', nWar)}${vt('serviceList', 'wrench', 'vaultService', nSvcAll)}${vt('partsList', 'gear', 'vaultParts', nParts)}</div>
+  <ul class="list" style="margin-top:12px"><li><button class="item" data-tab="health"><span class="ic plain">${svg(ICONS.health)}</span><span class="it"><span class="t">${esc(t('healthTitle'))}</span><span class="s">${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+    <li><button class="item" data-tab="money"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('menuFuelMoney'))}</span><span class="s">${esc(t('nFillups', mine(db.fuel, v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
+    <li><button class="item" data-act="alertList"><span class="ic plain">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}</span><span class="it"><span class="t">${esc(t('lightHistory'))}</span><span class="s">${esc(t('nRecords', alertsOf(v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li></ul>
+  ${acts.length ? `<h2>${esc(t('recentActivity'))}</h2><ul class="list activity">${acts.map(x => `<li><button class="item" ${x.act}>${x.light ? lightArt(x.light) : `<span class="ic plain">${svg(ICONS[x.ic] || ICONS.doc)}</span>`}<span class="it"><span class="t">${esc(x.t)}</span><span class="s">${esc(fmtD(x.date))} · ${esc(x.s)}</span></span>${x.amt ? `<span class="amt">− ${esc(t('rs', n0(x.amt)))}</span>` : ''}</button></li>`).join('')}</ul>` : ''}
   <h2>${esc(t('settings'))}</h2>
   <ul class="list">
+    <li><button class="item" data-act="odo"><span class="ic plain">${svg(ICONS.gauge)}</span><span class="it"><span class="t">${esc(t('odometerShort'))}</span><span class="s">${n0(v.odo)} ${esc(t('km'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
     <li><button class="item" data-act="export"><span class="ic plain">${svg('<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>')}</span><span class="it"><span class="t">${esc(t('export'))}</span><span class="s">${esc(t('dataNote'))}</span></span></button></li>
     <li><button class="item" data-act="import"><span class="ic plain">${svg('<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>')}</span><span class="it"><span class="t">${esc(t('import'))}</span></span></button></li>
     <li><a class="item" href="privacy.html"><span class="ic plain">${svg(ICONS.shield)}</span><span class="it"><span class="t">${esc(t('privacyPolicy'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></a></li>
@@ -920,7 +988,8 @@ function itemDetail(key) {
   const v = veh(), x = findItem(v, key); if (!x) return;
   const info = KIND_INFO[x.kind] || x.kind, val = valueOf(x);
   const head = `<div class="d-status ${x.s}"><div class="d-art">${iconOf(x)}</div><div class="d-txt">${tag(x.s)}<p class="d-big">${esc(x.s === 'none' ? t('noRecordYet') : val.big)}${val.unit && x.s !== 'none' ? `<small>${esc(val.unit)}</small>` : ''}</p>${x.s !== 'none' && val.small ? `<p class="d-small">${esc(val.small)}${x.est ? ' · ' + esc(t('estimated')) : ''}</p>` : ''}</div></div>`;
-  const explain = `<div class="explain"><h4>${esc(t('whatIsIt'))}</h4><p>${esc(t('about_' + info))}</p><h4>${esc(t('whatToDo'))}</h4><p>${esc(t('todo_' + info))}</p></div>`;
+  const cid = typeof x.kind === 'string' && x.kind.startsWith('c:') ? x.kind.slice(2) : null;
+  const explain = cid ? catExplain(cid) : `<div class="explain"><h4>${esc(t('whatIsIt'))}</h4><p>${esc(t('about_' + info))}</p><h4>${esc(t('whatToDo'))}</h4><p>${esc(t('todo_' + info))}</p></div>`;
   let body = '', actions = '';
   if (x.cat !== 'service') {
     const d = db.docs.find(r => r.id === x.id);
@@ -933,7 +1002,7 @@ function itemDetail(key) {
     const hist = mine(db.service, v).filter(s => s.kind === x.kind).sort((a, b) => b.date.localeCompare(a.date)), last = hist[0];
     if (last) body = `<h4 class="sub-h">${esc(t('lastTime'))}</h4>` + facts([[t('date'), fmtD(last.date)], [t('odometer'), n0(last.odo) + ' ' + t('km')], [t('costLabel'), last.cost ? t('rs', n0(last.cost)) : ''], [t('garage'), last.garage], [t('oilType'), last.oil], [t('oilFilter'), last.filter && label('filter_', last.filter)], [t('partsUsed'), last.part && label('part_', last.part)]]);
     if (hist.length > 1) body += `<h4 class="sub-h">${esc(t('earlierTimes'))}</h4><ul class="list mini">${hist.slice(1).map(s => `<li><button class="item" data-act="svcDetail" data-id="${s.id}"><span class="it"><span class="t">${fmtD(s.date)}</span><span class="s">${n0(s.odo)} ${esc(t('km'))}</span></span><span class="side">${s.cost ? esc(t('rs', n0(s.cost))) : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>`;
-    actions = `${last ? `<button class="btn quiet" data-act="service" data-id="${last.id}">${esc(t('editLast'))}</button>` : ''}<button class="btn" data-act="addService" data-kind="${esc(x.kind)}">${esc(t(last ? 'logDone' : 'addLast'))}</button>`;
+    actions = `<button class="btn quiet" data-act="track" data-comp="${esc(x.kind)}">${esc(t('setReminder'))}</button>${last ? `<button class="btn quiet" data-act="service" data-id="${last.id}">${esc(t('editLast'))}</button>` : ''}<button class="btn" data-act="addService" data-kind="${esc(x.kind)}">${esc(t(last ? 'logDone' : 'addLast'))}</button>`;
   }
   infoSheet(x.title, head + explain + body, actions);
 }
@@ -1133,7 +1202,7 @@ function openMenu() {
     <ul class="m-list">
       ${link('data-tab="home"', 'home', 'tabHome')}
       ${link('data-act="goto" data-go="car" data-anchor="sec-papers"', 'doc', 'papers')}
-      ${link('data-act="goto" data-go="car" data-anchor="sec-maint"', 'wrench', 'maintenance')}
+      ${link('data-tab="health"', 'health', 'healthTitle')}
       ${link('data-act="serviceList"', 'oil', 'serviceHistory')}
       ${link('data-tab="money"', 'money', 'menuFuelMoney')}
       ${link('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'lightsTitle', `<span class="m-new">${esc(t('newWord'))}</span>`)}
@@ -1167,10 +1236,11 @@ function render() {
   tabs.setAttribute('aria-label', t('mainNav'));
   if (!v) { main.innerHTML = viewOnboard(); tabs.innerHTML = ''; fab.hidden = true; return; }
   const keep = $('#chatin')?.value || '';
-  main.innerHTML = { home: viewHome, car: viewCar, money: viewMoney, ask: viewAsk, lights: viewLights }[tab](v);
+  main.innerHTML = { home: viewHome, health: viewHealth, car: viewCar, money: viewMoney, ask: viewAsk, lights: viewLights }[tab](v);
   tabs.innerHTML = `<div class="in">${TABS.map(([k, l]) => `<button data-tab="${k}" ${tab === k ? 'aria-current="page"' : ''}>${svg(ICONS[k])}<span>${esc(t(l))}</span></button>`).join('')}</div>`;
   fab.hidden = tab === 'ask'; fab.setAttribute('aria-label', t('addWhat')); fab.innerHTML = svg(ICONS.plus);
   if (tab === 'money') drawFuelCharts(v);
+  if (tab === 'health') { const q = $('#partq'); if (q) q.oninput = () => { partQuery = q.value; const pos = q.selectionStart; render(); const n = $('#partq'); n.focus(); n.setSelectionRange(pos, pos); }; }
   if (tab === 'lights') { const q = $('#lightq'); q.oninput = () => { lightQuery = q.value; const pos = q.selectionStart; render(); const n = $('#lightq'); n.focus(); n.setSelectionRange(pos, pos); }; }
   if (tab === 'ask') { const inp = $('#chatin'); if (inp && keep && !chatBusy) inp.value = keep; $('#composer').onsubmit = e => { e.preventDefault(); const q = $('#chatin').value; $('#chatin').value = ''; sendChat(q); }; scrollChat(); }
 }
@@ -1202,6 +1272,10 @@ document.addEventListener('click', e => {
     case 'svcDetail': return serviceDetail(id);
     case 'fuelDetail': return fuelDetail(id);
     case 'serviceList': return serviceList();
+    case 'track': return trackForm(el.dataset.comp);
+    case 'pickPart': return pickPart(el.dataset.id);
+    case 'browseParts': return browseParts();
+    case 'helpMech': { tab = 'ask'; const qs = questions(v); chat.push({ role: 'user', text: t('sugMechanic') }, { role: 'assistant', text: t('mechIntro') + '\n' + qs.map(q => '• ' + q[0]).join('\n'), list: qs, src: 'local' }); render(); return scrollChat(); }
     case 'partsList': return serviceList(true);
     case 'warrantyList': return warrantyList();
     case 'toggleYear': showYear = !showYear; return render();

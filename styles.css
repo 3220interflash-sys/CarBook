@@ -606,3 +606,43 @@ body { background: var(--bg); }
 /* The small lists in sheets share the class name "mini" with the Coming up cards; keep them full-width lists. */
 .list.mini { display: block; padding: 0; gap: 0; }
 .list.mini li { display: block; }
+
+/* ---------- Simpler layout (November 2026) ----------
+   Home: compact Car health card (at most four parts needing attention), Coming up as a short list,
+   quick actions, and a help card. The full part tracker lives on the Health tab. */
+.health.compact { padding: 16px; }
+.health.compact .btn.wide { margin-top: 14px; min-height: 48px; }
+.attn { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.attn-i { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-height: 96px; padding: 11px; border: 0; border-radius: 16px; background: var(--surface-2); color: var(--fg); text-align: left; font: inherit; }
+.attn-ic { width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: #0B100E; }
+.attn-ic svg { width: 19px; height: 19px; }
+.attn-i.bad .attn-ic { color: var(--red-text); } .attn-i.warn .attn-ic { color: var(--amber-text); }
+.attn-i.bad { box-shadow: inset 0 0 0 1px rgba(242, 139, 128, .30); } .attn-i.warn { box-shadow: inset 0 0 0 1px rgba(232, 180, 106, .26); }
+.attn-n { font-weight: 700; font-size: 14px; line-height: 1.25; overflow-wrap: anywhere; }
+.attn-s { font-size: 12.5px; color: var(--mut); line-height: 1.3; }
+.all-ok { display: flex; align-items: center; gap: 10px; margin: 14px 0 0; padding: 12px 14px; border-radius: 14px; background: var(--green-tint); color: var(--green-ink); font-weight: 700; }
+.all-ok svg { width: 22px; height: 22px; flex: none; }
+.help-card { margin-top: 18px; padding: 16px; border-radius: 22px; background: var(--surface); box-shadow: var(--lift); }
+.help-h { display: flex; align-items: center; gap: 12px; }
+.help-h h2 { margin: 0; font-size: 18px; } .help-h p { margin: 2px 0 0; color: var(--mut); font-size: 14px; }
+.help-av { flex: none; width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; background: var(--yellow); color: var(--on-yellow); }
+.help-av svg { width: 24px; height: 24px; }
+.help-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.help-actions .chipbtn { min-height: 44px; }
+
+/* Health tab */
+.health-top { display: flex; align-items: center; gap: 14px; margin-top: 8px; }
+.health-top h1 { margin: 0; font-size: 26px; } .health-top p { margin: 2px 0 0; color: var(--mut); }
+.health-top + .search { margin-top: 16px; }
+.grp-h { display: flex; align-items: center; gap: 8px; }
+.count { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 8px; border-radius: 99px; background: var(--surface-2); color: var(--mut); font-size: 12.5px; font-weight: 800; }
+.part-row .it { min-width: 0; }
+.part-row .life { margin-top: 6px; height: 5px; width: 100%; max-width: 220px; }
+.part-row .side { font-weight: 800; font-variant-numeric: tabular-nums; color: var(--fg); }
+.results { margin-top: 10px; }
+details.grp { margin-top: 8px; border-radius: 16px; background: var(--surface-2); }
+details.grp summary { display: flex; align-items: center; gap: 10px; min-height: 52px; padding: 0 14px; cursor: pointer; font-weight: 700; list-style: none; }
+details.grp summary::-webkit-details-marker { display: none; }
+details.grp summary svg { width: 20px; height: 20px; color: var(--green-ink); }
+details.grp summary .count { margin-left: auto; }
+details.grp .list { margin: 0 8px 8px; }
