@@ -785,16 +785,16 @@ body { background: var(--bg); color: var(--fg); }
 
 /* ---------- Deep green background (November 2026, a setting: Background > Deep green / Light) ----------
    A darker page in the logo's colours: deep green-black with a soft mint glow at the top. The owner found white
-   cards too bright on it, so cards are a soft green one step lighter than the page, with light text.
+   cards too bright on it, so cards are a soft, muted sage green (#23342E) lighter than the page, with light text; the owner then asked for a calmer green, easier on the eyes.
    The logo's black tiles (Car health, wallet card, km/L) and mint actions stay as they are.
-   Contrast (checked): text #EAF2EE on cards #173B2E 11:1, muted #A9C4B8 6.6:1, mint #3EE0A4 7.3:1,
-   red text #FF9B90 6.5:1 and amber #FFC070 7:1 on their tints. */
+   Contrast (checked): text #EAF2EE on cards #23342E 11.5:1, muted #B3C6BE 7.3:1, mint #3EE0A4 7.7:1,
+   red text #FF9B90 6.3:1 and amber #FFC070 6.8:1 on their tints. */
 :root[data-bg="deep"] {
-  --bg: #06150F; --surface: #173B2E; --surface-2: #1F4638; --line: rgba(234, 242, 238, .10);
-  --fg: #EAF2EE; --mut: #A9C4B8;
-  --green: #00C47F; --green-ink: #3EE0A4; --green-tint: #1E4C3B; --on-green: #04120C;
-  --yellow: #00C47F; --yellow-tint: #1E4C3B; --on-yellow: #04120C;
-  --red-tint: #4A2622; --amber-tint: #47391F; --red-text: #FF9B90; --amber-text: #FFC070;
+  --bg: #06150F; --surface: #23342E; --surface-2: #2D433B; --line: rgba(234, 242, 238, .10);
+  --fg: #EAF2EE; --mut: #B3C6BE;
+  --green: #00C47F; --green-ink: #3EE0A4; --green-tint: #264A3D; --on-green: #04120C;
+  --yellow: #00C47F; --yellow-tint: #264A3D; --on-yellow: #04120C;
+  --red-tint: #4A2A26; --amber-tint: #463B24; --red-text: #FF9B90; --amber-text: #FFC070;
   --lift: inset 0 1px 0 rgba(255, 255, 255, .05), 0 10px 24px -14px rgba(0, 0, 0, .55);
   color-scheme: dark;
 }
@@ -816,4 +816,4 @@ body { background: var(--bg); color: var(--fg); }
 :root[data-bg="deep"] .sw.ln { background: #EAF2EE; }
 :root[data-bg="deep"] .chart .bar { opacity: .5; }
 :root[data-bg="deep"] #dlg input:not([type=file]), :root[data-bg="deep"] #dlg select { background: var(--surface-2); color: var(--fg); }
-:root[data-bg="deep"] #dlg input:focus, :root[data-bg="deep"] #dlg select:focus { background: #24503F; }
+:root[data-bg="deep"] #dlg input:focus, :root[data-bg="deep"] #dlg select:focus { background: #36504A; }
