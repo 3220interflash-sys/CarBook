@@ -8,6 +8,7 @@ New artwork, posts, videos, decks and listing material go in this folder.
 | Logo (final, "Four pillars", deep mint on black) | `logo/final/` (SVG, PNG, Canva-ready PDF, how-to note) |
 | Logo explorations and the Logo Studio | `logo/` and https://claude.ai/artifact/3sof6fvxcFHr7bPCqZVqRo |
 | Instagram posts: English (16), Sinhala (16), Tamil (10) | `instagram/posts`, `instagram/posts-si`, `instagram/posts-ta`; captions in `instagram/posts-copy-english.md`, Tamil plan in `instagram/plan-tamil.md` |
+| LinkedIn launch posts (5, with captions) | `linkedin/posts/`, captions in `linkedin/captions.md`; rebuild with `node marketing/linkedin/make.js` |
 | Short videos (three 20-second parts and a 60-second cut) | `video/out/` |
 | One-pagers (CarBook and MotorPal versions) | `one-pager/` |
 | Google Play listing text and images | `play-store/` |
