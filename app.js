@@ -374,7 +374,7 @@ const ICONS = {
   gauge: '<path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/>',
   gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/>'
 };
-const TABS = [['home', 'tabHome'], ['health', 'tabHealth'], ['car', 'tabCar'], ['ask', 'tabAsk']];
+const TABS = [['home', 'tabHome'], ['money', 'tabMoney'], ['car', 'tabCar'], ['ask', 'tabAsk']];
 function toast(m) { const el = $('#toast'); el.textContent = m; el.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove('on'), 2400); }
 // ---------- assistant ----------
 // Real AI answers where the page can reach Claude (the claude.ai preview).
@@ -640,6 +640,11 @@ function addExample() {
   db.tracked = db.tracked || [];
   db.tracked.push({ ...newRecord(v), comp: 'c:engine-timing-belt' }); svc('c:engine-timing-belt', -900, 26000, 24000, { part: 'Genuine' });
   db.tracked.push({ ...newRecord(v), comp: 'c:tyres-tyre-rotation', remindOn: day(20) });
+  db.tracked.push({ ...newRecord(v), comp: 'c:filters-fuel-filter-petrol' }); svc('c:filters-fuel-filter-petrol', -700, 36000, 4800);
+  db.tracked.push({ ...newRecord(v), comp: 'c:engine-engine-belts-accessory-serpentine' }); svc('c:engine-engine-belts-accessory-serpentine', -1300, 12000, 7500);
+  db.tracked.push({ ...newRecord(v), comp: 'c:tyres-shock-absorbers', remindOn: day(75) }); svc('c:tyres-shock-absorbers', -1000, 28500, 38000);
+  db.tracked.push({ ...newRecord(v), comp: 'c:fluids-automatic-transmission-fluid-atf' }); svc('c:fluids-automatic-transmission-fluid-atf', -980, 24800, 11500);
+  db.tracked.push({ ...newRecord(v), comp: 'c:brakes-brake-discs-rotors' });
   save();
 }
 
@@ -763,7 +768,7 @@ function viewHome(v) {
     ${upcoming.length ? `<ul class="list">${upcoming.map(x => itemRow(x)).join('')}</ul>` : ''}
     ${missingDocs.length ? `<button class="setup-card" data-tab="car"><span class="setup-icons">${missingDocs.slice(0, 3).map(x => `<span>${iconOf(x)}</span>`).join('')}</span><span class="it"><span class="t">${esc(t('finishSetup'))}</span><span class="s">${esc(t('papersMissing', missingDocs.length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button>` : ''}`;
   const qa = (act, icon, k) => `<button class="qa" ${act}><span class="c">${svg(ICONS[icon] || icon)}</span><span>${esc(t(k))}</span></button>`;
-  const quick = `<div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-tab="money"', 'money', 'qaSpend')}</div>`;
+  const quick = `<div class="sec-h"><h2>${esc(t('quickTitle'))}</h2></div><div class="quick">${qa('data-act="addFuel"', 'camera', 'qaSnap')}${qa('data-act="addService"', 'wrench', 'qaService')}${qa('data-act="addDoc"', 'doc', 'qaDoc')}${qa('data-tab="lights"', '<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>', 'qaLight')}${qa('data-act="odo"', 'gauge', 'qaOdo')}</div>`;
   const help = `<section class="help-card"><div class="help-h"><span class="help-av">${svg(ICONS.bot)}</span><div><h2>${esc(t('helpTitle'))}</h2><p>${esc(t('helpSub'))}</p></div></div>
     <div class="help-actions"><button class="chipbtn" data-tab="lights">${esc(t('helpLight'))}</button><button class="chipbtn" data-tab="ask">${esc(t('helpAsk'))}</button><button class="chipbtn" data-act="helpMech">${esc(t('helpMech'))}</button></div></section>`;
   return `${header(v)}
@@ -778,7 +783,7 @@ function viewHome(v) {
 function viewHealth(v) {
   const R = allItems(v), parts = healthParts(v, R), tracked = parts.filter(p => p.s !== 'none'), okN = tracked.filter(p => p.s === 'ok').length;
   const q = partQuery.trim().toLowerCase();
-  const results = q ? CATALOGUE.filter(c => catFits(c, v) && (t('cat_' + c.id + '_name').toLowerCase().includes(q) || t('catg_' + c.g).toLowerCase().includes(q))).slice(0, 8) : [];
+  const results = q ? searchParts(q, v).slice(0, 8) : [];
   const inUse = id => { const c = catOf(id); return c.core ? maintKinds(v).includes(c.core) : !!trackOf(v, 'c:' + id); };
   const row = p => `<li><button class="item part-row" data-act="detail" data-key="${esc(partKey(p))}">
       <span class="ic ${p.s}">${svg(ICONS[kindIcon(p.k)] || ICONS.wrench)}</span>
@@ -788,9 +793,11 @@ function viewHealth(v) {
   return `${header(v)}
   <section class="health-top">${tracked.length ? ring(okN, tracked.length) : ''}<div class="health-t"><h1>${esc(t('healthTitle'))}</h1><p>${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</p></div></section>
   <label class="search"><span class="sr">${esc(t('partSearch'))}</span>${svg('<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/>')}<input id="partq" type="search" value="${esc(partQuery)}" placeholder="${esc(t('partSearch'))}" autocomplete="off"></label>
-  ${q ? (results.length ? `<ul class="list results">${results.map(c => `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="ic plain">${svg(ICONS[CATALOGUE_GROUPS[c.g]] || ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span><span class="s">${esc(t('catg_' + c.g))}${inUse(c.id) ? ' · ' + esc(t('alreadyTracked')) : ''}</span></span><span class="chev">${svg(ICONS.plus)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('partNone'))}</p>`) : ''}
+  ${q ? '' : `<p class="chips-h">${esc(t('popularParts'))}</p><div class="chips-row">${POPULAR.map(id => catOf(id)).filter(c => c && catFits(c, v) && !inUse(c.id)).slice(0, 6).map(c => `<button class="chipbtn" data-act="pickPart" data-id="${esc(c.id)}">${esc(t('cat_' + c.id + '_name'))}</button>`).join('')}</div>`}
+  ${q ? (results.length ? `<ul class="list results">${results.map(c => `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="ic plain">${svg(ICONS[CATALOGUE_GROUPS[c.g]] || ICONS.wrench)}</span><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span><span class="s">${esc(t('catg_' + c.g))}${inUse(c.id) ? ' · ' + esc(t('alreadyTracked')) : ''}</span></span><span class="chev">${svg(inUse(c.id) ? ICONS.chev : ICONS.plus)}</span></button></li>`).join('')}</ul>` : `<p class="hint">${esc(t('partNone'))}</p>`) : ''}
   ${groups.map(([s, k]) => { const ps = parts.filter(p => p.s === s); return ps.length ? `<h2 class="grp-h">${esc(t(k))} <span class="count">${ps.length}</span></h2><ul class="list">${ps.map(row).join('')}</ul>` : ''; }).join('')}
-  <button class="btn quiet wide" data-act="browseParts" style="margin-top:14px">${esc(t('browseAll', CATALOGUE.filter(c => catFits(c, v)).length))}</button>
+  <h2 class="grp-h">${esc(t('byGroup'))}</h2>
+  <div class="groups">${Object.keys(CATALOGUE_GROUPS).filter(g => CATALOGUE.some(c => c.g === g && catFits(c, v))).map(g => `<button class="grp-t" data-act="browseParts" data-g="${g}"><span class="grp-ic">${svg(ICONS[CATALOGUE_GROUPS[g]] || ICONS.wrench)}</span><span>${esc(t('catg_' + g))}</span></button>`).join('')}</div>
   <p class="hint" style="margin-top:12px">${esc(t('healthNote'))}</p>`;
 }
 
@@ -808,10 +815,28 @@ function pickPart(id) {
   trackForm(kind);
 }
 
-function browseParts() {
+// Search the catalogue: every word typed must match the start of a word in the part's name (or a common
+// other name), and the closest matches come first.
+const PART_ALIASES = { shocks: 'shock absorbers', shock: 'shock absorbers', aircon: 'air conditioning', ac: 'air conditioning', gearbox: 'transmission gearbox', clutch: 'clutch', belt: 'belt', tyre: 'tyres tyre', tire: 'tyres tyre', battery: 'battery', bulb: 'lights', oil: 'oil', filter: 'filter', plug: 'spark plugs' };
+const POPULAR = ['engine-timing-belt', 'tyres-shock-absorbers', 'brakes-brake-discs-rotors', 'tyres-wheel-balancing', 'tyres-wheel-bearings', 'drivetrain-clutch-plate', 'fluids-automatic-transmission-fluid-atf', 'engine-engine-belts-accessory-serpentine', 'filters-fuel-filter-petrol', 'filters-fuel-filter-diesel', 'tyres-tyre-rotation', 'moto-chain-and-sprockets'];
+function searchParts(q, v) {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean).map(w => PART_ALIASES[w] ? PART_ALIASES[w].split(' ') : [w]);
+  return CATALOGUE.filter(c => catFits(c, v)).map(c => {
+    const name = t('cat_' + c.id + '_name').toLowerCase(), hay = (name + ' ' + t('catg_' + c.g).toLowerCase()).split(/[^a-z0-9]+/);
+    let score = 0;
+    for (const alts of words) {
+      const hit = alts.map(w => name.startsWith(w) ? 0 : hay.some(h => h.startsWith(w)) ? 1 : name.includes(w) ? 2 : 9).reduce((a, b) => Math.min(a, b), 9);
+      if (hit === 9) return null; score += hit;
+    }
+    // parts with a typical interval, built-in parts and popular parts are the likely ones, so they come first
+    return { c, score: score * 100 + name.length - (c.core ? 40 : 0) - (POPULAR.includes(c.id) ? 25 : 0) - (c.km || c.months ? 10 : 0) };
+  }).filter(Boolean).sort((a, b) => a.score - b.score).map(x => x.c);
+}
+
+function browseParts(only) {
   const v = veh(), byG = {};
-  CATALOGUE.filter(c => catFits(c, v)).forEach(c => (byG[c.g] = byG[c.g] || []).push(c));
-  infoSheet(t('browseTitle'), `<p class="hint">${esc(t('browseSub'))}</p>${Object.keys(byG).map(g => `<details class="grp"><summary>${svg(ICONS[CATALOGUE_GROUPS[g]] || ICONS.wrench)}<span>${esc(t('catg_' + g))}</span><span class="count">${byG[g].length}</span></summary><ul class="list mini">${byG[g].map(c => { const on = c.core ? maintKinds(v).includes(c.core) : !!trackOf(v, 'c:' + c.id); return `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span>${on ? `<span class="s">${esc(t('alreadyTracked'))}</span>` : ''}</span><span class="chev">${svg(on ? ICONS.chev : ICONS.plus)}</span></button></li>`; }).join('')}</ul></details>`).join('')}`);
+  CATALOGUE.filter(c => catFits(c, v) && (!only || c.g === only)).forEach(c => (byG[c.g] = byG[c.g] || []).push(c));
+  infoSheet(only ? t('catg_' + only) : t('browseTitle'), `<p class="hint">${esc(t('browseSub'))}</p>${Object.keys(byG).map(g => `<details class="grp" ${only ? 'open' : ''}><summary>${svg(ICONS[CATALOGUE_GROUPS[g]] || ICONS.wrench)}<span>${esc(t('catg_' + g))}</span><span class="count">${byG[g].length}</span></summary><ul class="list mini">${byG[g].map(c => { const on = c.core ? maintKinds(v).includes(c.core) : !!trackOf(v, 'c:' + c.id); return `<li><button class="item" data-act="pickPart" data-id="${esc(c.id)}"><span class="it"><span class="t">${esc(t('cat_' + c.id + '_name'))}</span>${on ? `<span class="s">${esc(t('alreadyTracked'))}</span>` : ''}</span><span class="chev">${svg(on ? ICONS.chev : ICONS.plus)}</span></button></li>`; }).join('')}</ul></details>`).join('')}`);
 }
 
 // Start tracking a part, or change its reminder. Works for built-in parts too (a reminder date only).
@@ -856,7 +881,6 @@ function viewCar(v) {
   <h2>${esc(t('vaultTitle'))}</h2>
   <div class="vault">${vt('warrantyList', 'ribbon', 'vaultWarranties', nWar)}${vt('serviceList', 'wrench', 'vaultService', nSvcAll)}${vt('partsList', 'gear', 'vaultParts', nParts)}</div>
   <ul class="list" style="margin-top:12px"><li><button class="item" data-tab="health"><span class="ic plain">${svg(ICONS.health)}</span><span class="it"><span class="t">${esc(t('healthTitle'))}</span><span class="s">${esc(tracked.length ? t('healthSub', okN, tracked.length) : t('healthEmpty'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
-    <li><button class="item" data-tab="money"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('menuFuelMoney'))}</span><span class="s">${esc(t('nFillups', mine(db.fuel, v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li>
     <li><button class="item" data-act="alertList"><span class="ic plain">${svg('<path d="M12 4l9 16H3z"/><path d="M12 10v4.5M12 17v.1"/>')}</span><span class="it"><span class="t">${esc(t('lightHistory'))}</span><span class="s">${esc(t('nRecords', alertsOf(v).length))}</span></span><span class="chev">${svg(ICONS.chev)}</span></button></li></ul>
   ${acts.length ? `<h2>${esc(t('recentActivity'))}</h2><ul class="list activity">${acts.map(x => `<li><button class="item" ${x.act}>${x.light ? lightArt(x.light) : `<span class="ic plain">${svg(ICONS[x.ic] || ICONS.doc)}</span>`}<span class="it"><span class="t">${esc(x.t)}</span><span class="s">${esc(fmtD(x.date))} · ${esc(x.s)}</span></span>${x.amt ? `<span class="amt">− ${esc(t('rs', n0(x.amt)))}</span>` : ''}</button></li>`).join('')}</ul>` : ''}
   <h2>${esc(t('settings'))}</h2>
@@ -1274,7 +1298,7 @@ document.addEventListener('click', e => {
     case 'serviceList': return serviceList();
     case 'track': return trackForm(el.dataset.comp);
     case 'pickPart': return pickPart(el.dataset.id);
-    case 'browseParts': return browseParts();
+    case 'browseParts': return browseParts(el.dataset.g);
     case 'helpMech': { tab = 'ask'; const qs = questions(v); chat.push({ role: 'user', text: t('sugMechanic') }, { role: 'assistant', text: t('mechIntro') + '\n' + qs.map(q => '• ' + q[0]).join('\n'), list: qs, src: 'local' }); render(); return scrollChat(); }
     case 'partsList': return serviceList(true);
     case 'warrantyList': return warrantyList();

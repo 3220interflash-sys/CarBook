@@ -646,3 +646,39 @@ details.grp summary::-webkit-details-marker { display: none; }
 details.grp summary svg { width: 20px; height: 20px; color: var(--green-ink); }
 details.grp summary .count { margin-left: auto; }
 details.grp .list { margin: 0 8px 8px; }
+
+/* ---------- Calm light finish (November 2026) ----------
+   The owner found the black page modern but too stark for an app that is a helper and assistant.
+   Soft mint-grey page, white cards, near-black text; the logo's black and mint stay in the fuel card,
+   the buttons and the highlights. Dashboard light symbols keep their dark tile so they look like a real dashboard.
+   Contrast checked: muted text 5.3:1 on the page, red and amber text 4.5:1 or better on their tints. */
+:root {
+  --bg: #EEF3F0; --surface: #FFFFFF; --surface-2: #F1F5F3; --line: #DFE7E3;
+  --fg: #0E1512; --mut: #5A6761;
+  --green: #007A51; --green-ink: #006E47; --green-tint: #E2F4EB; --on-green: #FFFFFF;
+  --yellow: #00C47F; --yellow-tint: #E3F7EE; --on-yellow: #04120C;
+  --red: #B42318; --red-tint: #FDECEA; --amber: #A85400; --amber-tint: #FFF2DF;
+  --red-text: #B42318; --amber-text: #A85400;
+  --lift: 0 1px 2px rgba(16, 32, 25, .05), 0 8px 22px -12px rgba(16, 32, 25, .18);
+  color-scheme: light;
+}
+body { background: var(--bg); color: var(--fg); }
+.health { background: radial-gradient(260px 200px at 100% 0%, rgba(0, 196, 127, .10), transparent 70%), var(--surface); box-shadow: var(--lift); }
+.part-ic, .attn-ic { background: var(--green-tint); }
+.life { background: #E3EAE6; }
+.part.none .part-ic, .attn-i .attn-ic { color: var(--green-ink); }
+.attn-i.bad .attn-ic { background: var(--red-tint); } .attn-i.warn .attn-ic { background: var(--amber-tint); }
+.attn-i.bad { box-shadow: inset 0 0 0 1px rgba(180, 35, 24, .25); } .attn-i.warn { box-shadow: inset 0 0 0 1px rgba(168, 84, 0, .25); }
+.hero.bad, .hero.warn, .hero.ok { box-shadow: 0 0 0 1px var(--line), var(--lift); }
+.alert-card.red { box-shadow: 0 0 0 1px rgba(180, 35, 24, .25) !important; } .alert-card.amber { box-shadow: 0 0 0 1px rgba(168, 84, 0, .25) !important; }
+#tabs { box-shadow: 0 -6px 24px -14px rgba(16, 32, 25, .25); }
+.chipbtn { background: var(--surface); }
+
+/* Health: popular parts and the breakdown by group */
+.chips-h { margin: 16px 0 8px; font-size: 13.5px; font-weight: 700; color: var(--mut); }
+.chips-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.chips-row .chipbtn { min-height: 44px; }
+.groups { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.grp-t { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border: 0; border-radius: 16px; background: var(--surface); box-shadow: var(--lift); color: var(--fg); font: inherit; font-weight: 700; font-size: 14px; text-align: left; line-height: 1.25; }
+.grp-ic { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--green-tint); color: var(--green-ink); }
+.grp-ic svg { width: 19px; height: 19px; }
