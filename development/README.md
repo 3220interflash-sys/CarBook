@@ -13,6 +13,7 @@ The public website is in `website/` (live at https://3220interflash-sys.github.i
 ## Tools
 | Tool | What it does |
 |---|---|
+| `tools/build-catalogue.py` | Rebuilds the parts catalogue (`catalogue.js` and its wording in `strings.js`) from `research/maintenance-checklist/items.json`. Run `python3 development/tools/build-catalogue.py`, then bump `VERSION` in `sw.js`. |
 | `tools/app-screenshots.js` | Retakes the six app screenshots the website shows. Start the app with `python3 -m http.server 8080`, then run `node development/tools/app-screenshots.js`. |
 
 New development notes, scripts and technical plans (for example the photo-reading server or the Play Store packaging) go in this folder.

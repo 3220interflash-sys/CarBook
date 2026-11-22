@@ -7,6 +7,7 @@ New research, studies, business cases, reports and source notes go in this folde
 |---|---|
 | Road safety business case (vehicle fitness tests, accident figures, the opportunity) | `business-case/motorpal-road-safety-business-case.pdf` |
 | Project summary: what we have built, the problem, features, work in progress | `project-summary/motorpal-project-summary.pdf` |
+| Vehicle maintenance master checklist (the owner's research, about 230 parts with check and replacement guidance; the source of the app's parts catalogue) | `maintenance-checklist/vehicle-maintenance-master-checklist.docx` and `maintenance-checklist/items.json` |
 | Product, competitor report and plan | https://claude.ai/artifact/P66hWg1TfqZk8zWL5yR8L2 (private until shared) |
 | Project and marketing plan: research to do, Sri Lankan competitors, SWOT, organic marketing | https://claude.ai/artifact/4ZKbRaFN2wMHqvpRDL3r5y (private until shared) |
 
