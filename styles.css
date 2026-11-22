@@ -784,19 +784,22 @@ body { background: var(--bg); color: var(--fg); }
 @media (max-width: 360px) { .eq { grid-template-columns: 1fr 1fr 1fr; } .eq-op { display: none; } }
 
 /* ---------- Deep green background (November 2026, a setting: Background > Deep green / Light) ----------
-   A darker page in the logo's colours: deep green-black with a soft mint glow at the top. Cards stay white,
-   so everything inside them keeps the light finish's colours; only what sits straight on the page turns light.
-   Contrast: #EAF2EE on #0D241B is 14:1, the muted #A7C1B5 is 8:1, mint links #3EE0A4 are 9:1. */
+   A darker page in the logo's colours: deep green-black with a soft mint glow at the top. The owner found white
+   cards too bright on it, so cards are a soft green one step lighter than the page, with light text.
+   The logo's black tiles (Car health, wallet card, km/L) and mint actions stay as they are.
+   Contrast (checked): text #EAF2EE on cards #173B2E 11:1, muted #A9C4B8 6.6:1, mint #3EE0A4 7.3:1,
+   red text #FF9B90 6.5:1 and amber #FFC070 7:1 on their tints. */
 :root[data-bg="deep"] {
-  --bg: #0D241B; --fg: #EAF2EE; --mut: #A7C1B5; --line: rgba(255, 255, 255, .12);
-  --green-ink: #3EE0A4; color-scheme: light;
+  --bg: #0D241B; --surface: #173B2E; --surface-2: #1F4638; --line: rgba(234, 242, 238, .10);
+  --fg: #EAF2EE; --mut: #A9C4B8;
+  --green: #00C47F; --green-ink: #3EE0A4; --green-tint: #1E4C3B; --on-green: #04120C;
+  --yellow: #00C47F; --yellow-tint: #1E4C3B; --on-yellow: #04120C;
+  --red-tint: #4A2622; --amber-tint: #47391F; --red-text: #FF9B90; --amber-text: #FFC070;
+  --lift: inset 0 1px 0 rgba(255, 255, 255, .05), 0 10px 24px -14px rgba(0, 0, 0, .55);
+  color-scheme: dark;
 }
 :root[data-bg="deep"] body { background: radial-gradient(520px 320px at 85% -60px, rgba(0, 196, 127, .22), transparent 70%) no-repeat, var(--bg); }
-:root[data-bg="deep"] :is(.list, .stat, .mini, .chart-card, .light-tile, .alert-card, .light-cta, .glance, .q, .nudge, .perf, .anal, .help-card,
-  .health:not(.compact), .grp-t, .vault-t, .chipbtn, .setup-card, #dlg, .search, .pill-select, .range input, .empty, .composer, .msg.bot .bubble, .hero, .w-card, .warranty, .seg, .results) {
-  --fg: #0E1512; --mut: #5A6761; --line: #DFE7E3; --green-ink: #006E47; color: var(--fg);
-}
-:root[data-bg="deep"] .pill-select { background-color: var(--surface); }
+:root[data-bg="deep"] .pill-select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23EAF2EE' stroke-width='2.2' stroke-linecap='round'%3E%3Cpath d='M7 10l5 5 5-5'/%3E%3C/svg%3E"); }
 :root[data-bg="deep"] .health.compact { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18), 0 14px 30px -18px rgba(0, 0, 0, .6); }
 :root[data-bg="deep"] .hero-num { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18); }
 :root[data-bg="deep"] .qa .c { background: #050505; box-shadow: 0 0 0 1px rgba(0, 196, 127, .22); }
@@ -804,7 +807,13 @@ body { background: var(--bg); color: var(--fg); }
 :root[data-bg="deep"] .fab { box-shadow: 0 0 0 1px rgba(0, 196, 127, .35), 0 10px 24px -10px rgba(0, 0, 0, .6); }
 :root[data-bg="deep"] #tabs { box-shadow: 0 0 0 1px rgba(0, 196, 127, .14), 0 -6px 24px -14px rgba(0, 0, 0, .6); }
 :root[data-bg="deep"] .car-card { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18); }
-:root[data-bg="deep"] .btn.quiet { color: #006E47; }
 :root[data-bg="deep"] .health.compact .btn.quiet { color: #04120C; }
 :root[data-bg="deep"] #menu { background: #0A1C15; color: var(--fg); }
-:root[data-bg="deep"] #menu .m-car { --fg: #0E1512; --mut: #5A6761; color: var(--fg); }
+:root[data-bg="deep"] .life, :root[data-bg="deep"] .seg { background: var(--surface-2); }
+:root[data-bg="deep"] .chart .line.k { stroke: #EAF2EE; }
+:root[data-bg="deep"] .chart .pt.k { fill: #EAF2EE; stroke: var(--surface); }
+:root[data-bg="deep"] .chart .pt { stroke: var(--surface); }
+:root[data-bg="deep"] .sw.ln { background: #EAF2EE; }
+:root[data-bg="deep"] .chart .bar { opacity: .5; }
+:root[data-bg="deep"] #dlg input:not([type=file]), :root[data-bg="deep"] #dlg select { background: var(--surface-2); color: var(--fg); }
+:root[data-bg="deep"] #dlg input:focus, :root[data-bg="deep"] #dlg select:focus { background: #24503F; }
