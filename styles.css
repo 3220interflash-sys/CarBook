@@ -682,3 +682,35 @@ body { background: var(--bg); color: var(--fg); }
 .grp-t { display: flex; align-items: center; gap: 10px; min-height: 56px; padding: 8px 12px; border: 0; border-radius: 16px; background: var(--surface); box-shadow: var(--lift); color: var(--fg); font: inherit; font-weight: 700; font-size: 14px; text-align: left; line-height: 1.25; }
 .grp-ic { flex: none; width: 34px; height: 34px; border-radius: 11px; display: grid; place-items: center; background: var(--green-tint); color: var(--green-ink); }
 .grp-ic svg { width: 19px; height: 19px; }
+
+/* ---------- Logo accents (November 2026) ----------
+   The calm light page, with the logo's black and mint in a few places: the Car health card on Home
+   (a black tile with a mint ring, like the logo), the bottom tab bar, the quick buttons, the + button
+   and the assistant's avatar. Mint #00C47F on black is 8.9:1; the grey labels on black are 7:1. */
+.health.compact { background: radial-gradient(280px 220px at 100% 0%, rgba(0, 196, 127, .20), transparent 70%), #050505; color: #F1F5F3; box-shadow: 0 14px 30px -18px rgba(5, 5, 5, .55); }
+.health.compact .health-t p { color: #A9B3AF; }
+.health.compact .ring-bg { stroke: #26302C; }
+.health.compact .ring-fg { stroke: #00C47F; }
+.health.compact .attn-i { background: #141A17; color: #F1F5F3; }
+.health.compact .attn-ic { background: #0B100E; color: #3EE0A4; }
+.health.compact .attn-i.bad .attn-ic { background: #0B100E; color: #F28B80; }
+.health.compact .attn-i.warn .attn-ic { background: #0B100E; color: #E8B46A; }
+.health.compact .attn-i.bad { box-shadow: inset 0 0 0 1px rgba(242, 139, 128, .35); }
+.health.compact .attn-i.warn { box-shadow: inset 0 0 0 1px rgba(232, 180, 106, .30); }
+.health.compact .attn-s { color: #A9B3AF; }
+.health.compact .all-ok { background: rgba(0, 196, 127, .14); color: #3EE0A4; }
+.health.compact .btn.quiet { background: #00C47F; color: #04120C; border-color: #00C47F; }
+
+#tabs { background: #050505; box-shadow: 0 -6px 24px -14px rgba(5, 5, 5, .5); }
+#tabs button { color: #9AA6A0; }
+#tabs button[aria-current="page"] { color: #F1F5F3; }
+#tabs button[aria-current="page"] svg { background: rgba(0, 196, 127, .18); color: #00C47F; }
+
+.qa .c { background: #050505; color: #00C47F; box-shadow: 0 8px 18px -12px rgba(5, 5, 5, .6); }
+.qa:first-child .c { background: #00C47F; color: #04120C; }
+.fab { background: #050505; color: #00C47F; box-shadow: 0 10px 24px -10px rgba(5, 5, 5, .55); }
+.help-av { background: #050505; color: #00C47F; }
+.car-card { background: #050505; color: #F1F5F3; }
+.car-card .car-sub { color: #A9B3AF; }
+.car-card .car-ic { background: #00C47F; color: #04120C; }
+.car-card .link-btn { color: #3EE0A4; }
