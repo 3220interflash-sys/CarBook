@@ -751,3 +751,34 @@ body { background: var(--bg); color: var(--fg); }
 .perf-arrow svg { width: 20px; height: 20px; color: var(--mut); }
 .perf-res { margin: 12px 0 6px; text-align: center; font-weight: 800; font-size: 17px; }
 .perf-wait { margin-top: 10px; }
+
+/* ---------- Money as an analysis page: cost vs performance ---------- */
+.hero-sub { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255, 255, 255, .14); color: rgba(255, 255, 255, .75); font-size: 14px; }
+.hero-sub b { color: #fff; font-weight: 800; font-variant-numeric: tabular-nums; }
+.anal { margin-top: 16px; padding: 16px 14px 12px; border-radius: 22px; background: var(--surface); box-shadow: var(--lift); }
+.anal h2 { margin: 0 2px 12px; }
+.eq { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr; align-items: stretch; gap: 4px; }
+.eq-c { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 10px 8px; border-radius: 14px; background: var(--surface-2); }
+.eq-c .l { font-size: 12.5px; font-weight: 700; color: var(--mut); }
+.eq-c .n { font-size: clamp(17px, 5vw, 21px); font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.eq-c .cmp { font-size: 12.5px; }
+.eq-c.key { background: #050505; color: #fff; }
+.eq-c.key .n { color: #00C47F; }
+.eq-c.key .l, .eq-c.key .cmp { color: rgba(255, 255, 255, .72); }
+.eq-c.key .chg.up { color: #7BE3B0; } .eq-c.key .chg.down { color: #FFD27A; }
+.eq-c.res { background: var(--green-tint, #E3F4EC); }
+.eq-op { align-self: center; color: var(--mut); font-weight: 800; font-size: 18px; }
+.insight { margin: 12px 2px 6px; font-size: 14.5px; line-height: 1.5; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 4px 6px; color: var(--mut); font-size: 13px; font-weight: 700; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { display: inline-block; width: 12px; height: 12px; border-radius: 3px; }
+.sw.bar { background: var(--green); opacity: .45; }
+.sw.ln { height: 3px; border-radius: 2px; background: #050505; }
+.anal .readout { border-bottom: 0; padding: 6px 4px; border-radius: 10px; background: var(--surface-2); }
+.readout .k { color: var(--fg); }
+.chart .line.k { stroke: #050505; stroke-width: 2.5; }
+.chart .pt.k { fill: #050505; stroke: #fff; }
+.chart .ax.k { fill: var(--fg); font-weight: 700; }
+.chart .area { fill: var(--green); opacity: .1; stroke: none; }
+.anal .chart-h { margin-top: 14px; }
+@media (max-width: 360px) { .eq { grid-template-columns: 1fr 1fr 1fr; } .eq-op { display: none; } }

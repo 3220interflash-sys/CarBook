@@ -341,14 +341,16 @@ function fuelStats(v, start, end) {
   const spent = rows.reduce((s, x) => s + x.total, 0), litres = rows.reduce((s, x) => s + x.litres, 0), k = rows.filter(x => x.kpl);
   const km = k.reduce((s, x) => s + x.dist, 0), kl = k.reduce((s, x) => s + x.litres, 0);
   // km per litre = distance driven between fill-ups / litres pumped (needs a full tank each time)
-  return { fills: rows.length, spent, litres, km, price: litres ? spent / litres : null, kpl: kl ? km / kl : null };
+  const price = litres ? spent / litres : null, kpl = kl ? km / kl : null;
+  // cost of each km driven = price per litre ÷ km per litre
+  return { fills: rows.length, spent, litres, km, price, kpl, ckm: price && kpl ? price / kpl : null };
 }
 function periodData(v, p) {
   const bs = buckets(p), start = bs[0].start, end = bs.at(-1).end;
   const span = daysTo(end) - daysTo(start), prevStart = addDaysISO(start, -span);
   // Only compare when the records reach back far enough to cover the whole earlier period.
   const first = mine(db.fuel, v).map(x => x.date).sort()[0], covered = first && daysTo(first) <= daysTo(prevStart) + 20;
-  const prev = covered ? fuelStats(v, prevStart, start) : { fills: 0, spent: 0, litres: 0, km: 0, price: null, kpl: null };
+  const prev = covered ? fuelStats(v, prevStart, start) : { fills: 0, spent: 0, litres: 0, km: 0, price: null, kpl: null, ckm: null };
   return { bs: bs.map(b => ({ ...b, ...fuelStats(v, b.start, b.end) })), cur: fuelStats(v, start, end), prev };
 }
 
@@ -981,72 +983,100 @@ function delta(cur, prev, goodWhenUp, per) {
   return `<span class="cmp"><span class="chg ${good ? 'up' : 'down'}">${pct > 0 ? '↑' : '↓'} ${Math.abs(r)}%</span> ${esc(t('vsPrev', t('prev_' + per)))}</span>`;
 }
 
+const fillRow = x => `<li><button class="item" data-act="fuelDetail" data-id="${x.id}"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('rs', n0(x.total)))}</span><span class="s">${fmtD(x.date)}</span></span><span class="side">${x.kpl ? esc(t('kpl', n1(x.kpl))) : ''}${x.dist ? `<small>${esc(t('kmShort', n0(x.dist)))}</small>` : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`;
+function allFills() {
+  const rows = fuelRows(veh()).reverse();
+  infoSheet(t('allFillsTitle'), `<ul class="list mini">${rows.map(fillRow).join('')}</ul>`, `<button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button>`);
+}
+const pctOf = (cur, prev) => cur != null && prev ? (cur - prev) / prev * 100 : null;
+// One cell of the cost equation: price per litre ÷ km per litre = cost per km.
+function eqCell(cls, label, val, pct, goodWhenUp) {
+  const chg = pct == null ? '' : Math.abs(pct) < 1 ? `<span class="cmp">${esc(t('flat'))}</span>`
+    : `<span class="cmp"><span class="chg ${(pct > 0) === goodWhenUp ? 'up' : 'down'}">${pct > 0 ? '↑' : '↓'} ${Math.abs(Math.round(pct))}%</span></span>`;
+  return `<div class="eq-c ${cls}"><span class="l">${esc(label)}</span><span class="n">${val}</span>${chg}</div>`;
+}
 function viewMoney(v) {
   const rows = fuelRows(v).reverse();
   const yearAgo = addDaysISO(todayISO(), -365), svcSpent = mine(db.service, v).filter(s => s.date >= yearAgo).reduce((s, x) => s + (x.cost || 0), 0);
   if (!rows.length) return `${header(v)}<div class="empty"><b>${esc(t('noFuelTitle'))}</b>${esc(t('noFuelText'))}</div><div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div>`;
   const d = periodData(v, period), c = d.cur, p = d.prev, nudge = fuelNudge(v);
+  const pp = pctOf(c.price, p.price), kp = pctOf(c.kpl, p.kpl), cp = pctOf(c.ckm, p.ckm);
+  // Plain-words reading of the numbers: what moved the cost of each km.
+  let insight = c.ckm ? t('insCkm', n1(c.ckm)) : t('insNoKpl');
+  if (cp != null && pp != null && kp != null) insight = t('insCkmChg', n1(c.ckm), Math.abs(Math.round(cp)), cp < 0, Math.abs(cp) < 1, t('prev_' + period)) + ' ' + t('insWhy', Math.abs(Math.round(pp)), pp > 0, Math.abs(pp) < 1, Math.abs(Math.round(kp)), kp > 0, Math.abs(kp) < 1);
+  const best = d.bs.filter(x => x.kpl).sort((x, y) => y.kpl - x.kpl)[0];
+  if (best && d.bs.filter(x => x.kpl).length > 2) insight += ' ' + t('insBest', best.label, n1(best.kpl));
   return `${header(v)}
   ${nudge ? nudgeCard(nudge) : ''}
   <div class="period"><label for="periodSel">${esc(t('periodLabel'))}</label><select id="periodSel" class="pill-select">${PERIODS.map(k => `<option value="${k}" ${k === period ? 'selected' : ''}>${esc(t('pl_' + k))}</option>`).join('')}</select></div>
   ${period === 'C' ? `<div class="two range"><div><label for="cFrom">${esc(t('fromDate'))}</label><input type="date" id="cFrom" value="${cFrom}" max="${cTo}"></div><div><label for="cTo">${esc(t('toDate'))}</label><input type="date" id="cTo" value="${cTo}" min="${cFrom}" max="${todayISO()}"></div></div>` : ''}
-  <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period, fmtD(cFrom), fmtD(cTo))))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}</section>
-  <div class="stats">
-    <div class="stat key"><span class="n">${c.kpl ? n1(c.kpl) : '–'}</span><span class="l">${esc(t('kplUnit'))}</span>${c.kpl && p.kpl ? delta(c.kpl, p.kpl, true, period) : ''}</div>
-    <div class="stat"><span class="n">${c.km ? n0(c.km) : '–'}</span><span class="l">${esc(t('kmDriven'))}</span></div>
-    <div class="stat"><span class="n">${n0(c.litres)}</span><span class="l">${esc(t('litresWord'))}</span></div>
-    <div class="stat"><span class="n">${c.price ? esc(t('rs', n0(c.price))) : '–'}</span><span class="l">${esc(t('perLitre'))}</span></div>
-  </div>
-  <p class="hint kpl-how">${esc(t('kplHow'))}</p>
-  ${perfCard(v)}
-  <section class="chart-card">
+  <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period, fmtD(cFrom), fmtD(cTo))))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}
+    <div class="hero-sub"><span><b>${n0(c.km)}</b> ${esc(t('km'))}</span><span><b>${n0(c.litres)}</b> ${esc(t('litreUnit'))}</span><span><b>${c.fills}</b> ${esc(t('colFills').toLowerCase())}</span></div></section>
+  <section class="anal">
+    <h2>${esc(t('costVsPerf'))}</h2>
+    <div class="eq">
+      ${eqCell('', t('perLitre'), c.price ? esc(t('rs', n0(c.price))) : '–', pp, false)}<span class="eq-op">÷</span>
+      ${eqCell('key', t('kplUnit'), c.kpl ? n1(c.kpl) : '–', kp, true)}<span class="eq-op">=</span>
+      ${eqCell('res', t('rsPerKm'), c.ckm ? esc(t('rs', n1(c.ckm))) : '–', cp, false)}
+    </div>
+    <p class="insight">${esc(insight)}</p>
+    <div class="legend"><span><i class="sw bar"></i>${esc(t('legSpent'))}</span><span><i class="sw ln"></i>${esc(t('legKpl'))}</span></div>
     <div class="readout" id="readout" aria-live="polite"></div>
-    <p class="chart-h">${esc(t('chartSpent'))}</p><div class="chart" id="ch-spent"></div>
-    <p class="chart-h">${esc(t('chartPrice'))}</p><div class="chart" id="ch-price"></div>
-    <details class="tbl"><summary>${esc(t('seeNumbers'))}</summary><div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('colPrice'))}</th><th>${esc(t('colFills'))}</th></tr></thead>
-      <tbody>${d.bs.slice().reverse().map(b => `<tr><td>${esc(b.label)}</td><td>${b.fills ? esc(t('rs', n0(b.spent))) : '–'}</td><td>${b.price ? esc(t('rs', n1(b.price))) : '–'}</td><td>${b.fills}</td></tr>`).join('')}</tbody></table></div></details>
+    <div class="chart" id="ch-combo"></div>
+    <p class="chart-h">${esc(t('chartCkm'))}</p><div class="chart" id="ch-ckm"></div>
+    <details class="tbl"><summary>${esc(t('seeNumbers'))}</summary><div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('kplUnit'))}</th><th>${esc(t('colCkm'))}</th><th>${esc(t('colPrice'))}</th></tr></thead>
+      <tbody>${d.bs.slice().reverse().map(b => `<tr><td>${esc(b.label)}</td><td>${b.fills ? esc(t('rs', n0(b.spent))) : '–'}</td><td>${b.kpl ? n1(b.kpl) : '–'}</td><td>${b.ckm ? n1(b.ckm) : '–'}</td><td>${b.price ? n0(b.price) : '–'}</td></tr>`).join('')}</tbody></table></div></details>
+    <p class="hint kpl-how">${esc(t('kplHow'))}</p>
   </section>
+  ${perfCard(v)}
   <div class="stats one"><div class="stat"><span class="n">${esc(t('rs', n0(svcSpent)))}</span><span class="l">${esc(t('svcSpent12'))}</span></div></div>
-  <h2>${esc(t('fillUps'))}</h2>
-  <ul class="list">${rows.slice(0, 20).map(x => `<li><button class="item" data-act="fuelDetail" data-id="${x.id}"><span class="ic plain">${svg(ICONS.fuel)}</span><span class="it"><span class="t">${esc(t('rs', n0(x.total)))}</span><span class="s">${fmtD(x.date)}</span></span><span class="side">${x.kpl ? esc(t('kpl', n1(x.kpl))) : ''}${x.dist ? `<small>${esc(t('kmShort', n0(x.dist)))}</small>` : ''}</span><span class="chev">${svg(ICONS.chev)}</span></button></li>`).join('')}</ul>
-  ${rows.length > 20 ? `<p class="hint">${esc(t('showingRecent', 20, rows.length))}</p>` : ''}
-  <p class="hint">${esc(t('fillAssumption'))}</p>
-  <p class="hint">${esc(t('stationNote'))}</p>`;
+  <div class="sec-h"><h2>${esc(t('recentFills'))}</h2>${rows.length > 5 ? `<button class="link-btn" data-act="allFills">${esc(t('seeAllFills', rows.length))}</button>` : ''}</div>
+  <ul class="list">${rows.slice(0, 5).map(fillRow).join('')}</ul>
+  <p class="hint">${esc(t('fillAssumption'))} ${esc(t('stationNote'))}</p>`;
 }
 
 // ---------- charts (hand-drawn SVG, works offline) ----------
 const compact = n => n >= 1e6 ? n1(n / 1e6) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n0(n);
 function niceMax(m) { if (!(m > 0)) return 1; const p = 10 ** Math.floor(Math.log10(m)), f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
 function drawFuelCharts(v) {
-  const sp = $('#ch-spent'), pr = $('#ch-price'); if (!sp || !pr) return;
+  const cb = $('#ch-combo'), ck = $('#ch-ckm'); if (!cb || !ck) return;
   const d = periodData(v, period), bs = d.bs, n = bs.length;
   if (fsel == null || fsel >= n) fsel = n - 1;
-  const W = Math.max(260, sp.clientWidth), H = 140, L = 44, Rr = 8, T = 10, B = 26, iw = W - L - Rr, ih = H - T - B, slot = iw / n;
-  const every = Math.ceil(n / Math.max(3, Math.floor(iw / 52)));
-  const xLabels = bs.map((b, i) => (i % every === (n - 1) % every) ? `<text class="ax" x="${L + slot * i + slot / 2}" y="${H - 8}" text-anchor="middle">${esc(b.label)}</text>` : '').join('');
-  const hits = bs.map((b, i) => `<rect class="hit" data-i="${i}" x="${L + slot * i}" y="${T}" width="${slot}" height="${ih}" tabindex="0" aria-label="${esc(b.label)}"></rect>`).join('');
-  const sMax = niceMax(Math.max(...bs.map(b => b.spent)));
-  const yS = val => T + ih - val / sMax * ih, bw = Math.min(24, Math.max(3, slot - 2));
-  const grid = (max, fmt) => [0, 0.5, 1].map(f => `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${T + ih - f * ih}" y2="${T + ih - f * ih}"></line><text class="ax" x="${L - 6}" y="${T + ih - f * ih + 4}" text-anchor="end">${esc(fmt(max * f))}</text>`).join('');
-  const bars = bs.map((b, i) => { if (!b.spent) return ''; const x = L + slot * i + (slot - bw) / 2, y = yS(b.spent), h = T + ih - y, r = Math.min(4, bw / 2, h);
-    return `<path class="bar ${i === fsel ? 'sel' : ''}" data-b="${i}" d="M${x} ${T + ih}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${T + ih}Z"></path>`; }).join('');
-  sp.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chartSpent'))}">${grid(sMax, compact)}${bars}${xLabels}${hits}</svg>`;
-  const ps = bs.map(b => b.price).filter(Boolean);
-  if (!ps.length) pr.innerHTML = `<p class="hint">${esc(t('noFuelInPeriod'))}</p>`;
+  const W = Math.max(260, cb.clientWidth), L = 40, T = 12, B = 24;
+  const every = Math.ceil(n / Math.max(3, Math.floor((W - 80) / 52)));
+  const frame = (H, R) => { const iw = W - L - R, ih = H - T - B, slot = iw / n; return { H, R, iw, ih, slot, cx: i => L + slot * i + slot / 2 }; };
+  const xLabels = f => bs.map((b, i) => (i % every === (n - 1) % every) ? `<text class="ax" x="${f.cx(i)}" y="${f.H - 6}" text-anchor="middle">${esc(b.label)}</text>` : '').join('');
+  const hits = f => bs.map((b, i) => `<rect class="hit" data-i="${i}" x="${L + f.slot * i}" y="${T}" width="${f.slot}" height="${f.ih}" tabindex="0" aria-label="${esc(b.label)}"></rect>`).join('');
+  // a padded range for a line, so small changes are visible but not exaggerated
+  const span = (vals, step) => { let lo = Math.min(...vals), hi = Math.max(...vals); const pad = Math.max(step, (hi - lo) * 0.3); return [Math.max(0, Math.floor((lo - pad) / step) * step), Math.ceil((hi + pad) / step) * step]; };
+  const linePath = (f, key, y) => { let path = '', pen = false; bs.forEach((b, i) => { if (!b[key]) { pen = false; return; } path += `${pen ? 'L' : 'M'}${f.cx(i)} ${y(b[key])}`; pen = true; }); return path; };
+  const dots = (f, key, y, cls) => bs.map((b, i) => b[key] ? `<circle class="pt ${cls} ${i === fsel ? 'sel' : ''}" data-b="${i}" cx="${f.cx(i)}" cy="${y(b[key])}" r="${i === fsel ? 5 : (n > 24 ? 0 : 3)}"></circle>` : '').join('');
+  const cross = (f, id) => `<line class="cross" id="${id}" x1="0" x2="0" y1="${T}" y2="${T + f.ih}"></line>`;
+
+  // 1. Spend (bars, left axis) against km per litre (line, right axis)
+  const f1 = frame(180, 34), sMax = niceMax(Math.max(...bs.map(b => b.spent)));
+  const yS = val => T + f1.ih - val / sMax * f1.ih, bw = Math.min(22, Math.max(3, f1.slot - 3));
+  const ks = bs.map(b => b.kpl).filter(Boolean), [kLo, kHi] = ks.length ? span(ks, 0.5) : [0, 1], yK = val => T + f1.ih - (val - kLo) / (kHi - kLo) * f1.ih;
+  const grid1 = [0, 0.5, 1].map(q => `<line class="grid" x1="${L}" x2="${W - f1.R}" y1="${T + f1.ih - q * f1.ih}" y2="${T + f1.ih - q * f1.ih}"></line><text class="ax" x="${L - 6}" y="${T + f1.ih - q * f1.ih + 4}" text-anchor="end">${esc(compact(sMax * q))}</text>${ks.length ? `<text class="ax k" x="${W - f1.R + 6}" y="${T + f1.ih - q * f1.ih + 4}">${esc(n1(kLo + (kHi - kLo) * q))}</text>` : ''}`).join('');
+  const bars = bs.map((b, i) => { if (!b.spent) return ''; const x = L + f1.slot * i + (f1.slot - bw) / 2, y = yS(b.spent), h = T + f1.ih - y, r = Math.min(4, bw / 2, h);
+    return `<path class="bar ${i === fsel ? 'sel' : ''}" data-b="${i}" d="M${x} ${T + f1.ih}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${T + f1.ih}Z"></path>`; }).join('');
+  cb.innerHTML = `<svg width="${W}" height="${f1.H}" viewBox="0 0 ${W} ${f1.H}" role="img" aria-label="${esc(t('chartCombo'))}">${grid1}${bars}${cross(f1, 'cross1')}<path class="line k" d="${linePath(f1, 'kpl', yK)}"></path>${dots(f1, 'kpl', yK, 'k')}${xLabels(f1)}${hits(f1)}</svg>`;
+
+  // 2. What each km cost (price per litre ÷ km per litre)
+  const f2 = frame(130, 10), cs = bs.map(b => b.ckm).filter(Boolean);
+  if (!cs.length) ck.innerHTML = `<p class="hint">${esc(t('noFuelInPeriod'))}</p>`;
   else {
-    let lo = Math.min(...ps), hi = Math.max(...ps); const pad = Math.max(5, (hi - lo) * 0.25); lo = Math.max(0, Math.floor((lo - pad) / 10) * 10); hi = Math.ceil((hi + pad) / 10) * 10;
-    const yP = val => T + ih - (val - lo) / (hi - lo) * ih;
-    let path = '', pen = false;
-    bs.forEach((b, i) => { if (!b.price) { pen = false; return; } path += `${pen ? 'L' : 'M'}${L + slot * i + slot / 2} ${yP(b.price)}`; pen = true; });
-    const pgrid = [0, 0.5, 1].map(f => { const val = lo + (hi - lo) * f; return `<line class="grid" x1="${L}" x2="${W - Rr}" y1="${yP(val)}" y2="${yP(val)}"></line><text class="ax" x="${L - 6}" y="${yP(val) + 4}" text-anchor="end">${esc(n0(val))}</text>`; }).join('');
-    const dots = bs.map((b, i) => b.price ? `<circle class="pt ${i === fsel ? 'sel' : ''}" data-b="${i}" cx="${L + slot * i + slot / 2}" cy="${yP(b.price)}" r="${i === fsel ? 5 : (n > 24 ? 0 : 3.5)}"></circle>` : '').join('');
-    pr.innerHTML = `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(t('chartPrice'))}">${pgrid}<line class="cross" id="cross" x1="0" x2="0" y1="${T}" y2="${T + ih}"></line><path class="line" d="${path}"></path>${dots}${xLabels}${hits}</svg>`;
+    const [cLo, cHi] = span(cs, 1), yC = val => T + f2.ih - (val - cLo) / (cHi - cLo) * f2.ih, path = linePath(f2, 'ckm', yC);
+    const pts = bs.map((b, i) => b.ckm ? [f2.cx(i), yC(b.ckm)] : null).filter(Boolean);
+    const area = pts.length > 1 ? `<path class="area" d="M${pts[0][0]} ${T + f2.ih}${pts.map(q => `L${q[0]} ${q[1]}`).join('')}L${pts.at(-1)[0]} ${T + f2.ih}Z"></path>` : '';
+    const grid2 = [0, 0.5, 1].map(q => { const val = cLo + (cHi - cLo) * q; return `<line class="grid" x1="${L}" x2="${W - f2.R}" y1="${yC(val)}" y2="${yC(val)}"></line><text class="ax" x="${L - 6}" y="${yC(val) + 4}" text-anchor="end">${esc(n1(val))}</text>`; }).join('');
+    ck.innerHTML = `<svg width="${W}" height="${f2.H}" viewBox="0 0 ${W} ${f2.H}" role="img" aria-label="${esc(t('chartCkm'))}">${grid2}${area}${cross(f2, 'cross2')}<path class="line" d="${path}"></path>${dots(f2, 'ckm', yC, '')}${xLabels(f2)}${hits(f2)}</svg>`;
   }
   const select = i => {
     fsel = i; const b = bs[i];
-    $('#readout').innerHTML = `<b>${esc(b.label)}</b><span>${esc(b.fills ? t('rs', n0(b.spent)) : t('noFills'))}</span>${b.price ? `<span>${esc(t('perLitreVal', n1(b.price)))}</span>` : ''}<span class="mut">${esc(t('fillsCount', b.fills))}</span>`;
-    document.querySelectorAll('#ch-spent .bar, #ch-price .pt').forEach(el => { const on = +el.dataset.b === i; el.classList.toggle('sel', on); if (el.tagName === 'circle') el.setAttribute('r', on ? 5 : (n > 24 ? 0 : 3.5)); });
-    const cr = $('#cross'); if (cr) { const x = L + slot * i + slot / 2; cr.setAttribute('x1', x); cr.setAttribute('x2', x); }
+    $('#readout').innerHTML = `<b>${esc(b.label)}</b><span>${esc(b.fills ? t('rs', n0(b.spent)) : t('noFills'))}</span>${b.kpl ? `<span class="k">${esc(t('kpl', n1(b.kpl)))}</span>` : ''}${b.ckm ? `<span>${esc(t('ckmVal', n1(b.ckm)))}</span>` : ''}<span class="mut">${esc(t('fillsCount', b.fills))}</span>`;
+    document.querySelectorAll('#ch-combo .bar, .chart .pt').forEach(el => { const on = +el.dataset.b === i; el.classList.toggle('sel', on); if (el.tagName === 'circle') el.setAttribute('r', on ? 5 : (n > 24 ? 0 : 3)); });
+    [['#cross1', f1], ['#cross2', f2]].forEach(([id, f]) => { const cr = $(id); if (cr) { cr.setAttribute('x1', f.cx(i)); cr.setAttribute('x2', f.cx(i)); } });
   };
   document.querySelectorAll('.chart .hit').forEach(h => { const i = +h.dataset.i; h.addEventListener('pointerenter', () => select(i)); h.addEventListener('click', () => select(i)); h.addEventListener('focus', () => select(i)); });
   select(fsel);
@@ -1387,6 +1417,7 @@ document.addEventListener('click', e => {
     case 'detail': return itemDetail(el.dataset.key);
     case 'svcDetail': return serviceDetail(id);
     case 'fuelDetail': return fuelDetail(id);
+    case 'allFills': return allFills();
     case 'serviceList': return serviceList();
     case 'track': return trackForm(el.dataset.comp);
     case 'pickPart': return pickPart(el.dataset.id);
