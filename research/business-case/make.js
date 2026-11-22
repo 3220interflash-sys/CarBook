@@ -1,4 +1,4 @@
-// Turns business-case.html into motorpal-road-safety-business-case.pdf (A4). Run from the repo root: node docs/business-case/make.js
+// Turns business-case.html into motorpal-road-safety-business-case.pdf (A4). Run from the repo root: node research/business-case/make.js
 const { chromium } = require('playwright');
 const path = require('path');
 (async () => {

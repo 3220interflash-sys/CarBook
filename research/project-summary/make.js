@@ -1,4 +1,4 @@
-// Turns summary.html into motorpal-project-summary.pdf (A4). Run from the repo root: node docs/summary/make.js
+// Turns summary.html into motorpal-project-summary.pdf (A4). Run from the repo root: node research/project-summary/make.js
 const { chromium } = require('playwright');
 const path = require('path');
 (async () => {
