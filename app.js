@@ -81,6 +81,7 @@ const INTERVALS = {
   plugs: { km: 30000 },
   alignment: { km: 10000, months: 12 },
   // more parts tracked in Car health (defaults only; the owner's manual comes first)
+  tuneup: { km: 20000, months: 12 },
   airFilter: { km: 15000, months: 12 },
   cabin: { km: 15000, months: 12 },
   brakeFluid: { km: 40000, months: 24 },
@@ -89,9 +90,10 @@ const INTERVALS = {
   wipers: { months: 12 }
 };
 // Parts checked by distance and/or time, with the vehicles they apply to.
-const TIMED_PARTS = [['Air filter', 'airFilter'], ['AC filter', 'cabin'], ['Brake fluid', 'brakeFluid'], ['Coolant', 'coolant'], ['Gearbox oil', 'gearbox'], ['Wiper blades', 'wipers']];
+const TIMED_PARTS = [['Engine tune-up', 'tuneup'], ['Air filter', 'airFilter'], ['AC filter', 'cabin'], ['Brake fluid', 'brakeFluid'], ['Coolant', 'coolant'], ['Gearbox oil', 'gearbox'], ['Wiper blades', 'wipers']];
 const partFits = (kind, v) => {
   const bike = v.type === 'Motorbike', ev = v.fuel === 'Electric';
+  if (kind === 'Engine tune-up') return !ev;
   if (kind === 'Air filter' || kind === 'Gearbox oil') return !ev && !bike;
   if (kind === 'AC filter') return v.type === 'Car' || v.type === 'Van' || !v.type;
   if (kind === 'Wiper blades' || kind === 'Coolant') return !bike;
@@ -102,7 +104,7 @@ const DOC_KINDS = ['emission', 'insurance', 'revenue', 'driving', 'warranty', 'o
 const HINTED = ['emission', 'insurance', 'revenue'];
 const VEHICLE_TYPES = ['Car', 'Motorbike', 'Three-wheeler', 'Van'];
 const FUELS = ['Petrol', 'Diesel', 'Hybrid', 'Electric'];
-const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Wheel alignment', 'Battery', 'Spark plugs', 'Air filter', 'AC filter', 'Brake fluid', 'Coolant', 'Gearbox oil', 'Wiper blades', 'Other'];
+const SERVICE_KINDS = ['Oil change', 'Brake pads', 'Tyres', 'Wheel alignment', 'Battery', 'Spark plugs', 'Engine tune-up', 'Air filter', 'AC filter', 'Brake fluid', 'Coolant', 'Gearbox oil', 'Wiper blades', 'Other'];
 const PARTS = ['Genuine', 'Aftermarket', 'Used'];
 const FILTERS = ['Changed', 'Not changed'];
 
@@ -322,6 +324,7 @@ function periodData(v, p) {
 let tab = 'home', asked = null, mech = false, period = '6M', fsel = null, showYear = false;
 const svg = p => `<svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg>`;
 const ICONS = {
+  tuneup: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M12.5 9.5l-2 3.2h2.6l-2 3.3"/>',
   filter: '<rect x="4" y="6" width="16" height="12" rx="2"/><path d="M7 6v12M10 6v12M13 6v12M16 6v12"/>',
   fan: '<circle cx="12" cy="12" r="1.6"/><path d="M12 10.4C11 6 13.5 3.8 16 5.5c1.6 1.2.4 4.3-4 4.9M13.6 12c4.4-1 6.6 1.5 4.9 4-1.2 1.6-4.3.4-4.9-4M12 13.6c1 4.4-1.5 6.6-4 4.9-1.6-1.2-.4-4.3 4-4.9M10.4 12C6 13 3.8 10.5 5.5 8c1.2-1.6 4.3-.4 4.9 4"/>',
   drop: '<path d="M12 3.5C9 7.5 6.5 10.4 6.5 13.8a5.5 5.5 0 0 0 11 0c0-3.4-2.5-6.3-5.5-10.3z"/><path d="M9.5 14.5a2.6 2.6 0 0 0 2.5 2.5"/>',
@@ -611,6 +614,7 @@ function addExample() {
   svc('Tyres', -640, 35100, 76000);
   svc('Spark plugs', -980, 24800, 6400);
   svc('Wheel alignment', -300, 43700, 3500, { part: '' });
+  svc('Engine tune-up', -240, 45100, 9500, { part: '' });
   svc('Air filter', -240, 45100, 2800); svc('AC filter', -240, 45100, 2400);
   svc('Brake fluid', -610, 36300, 3900, { part: '' }); svc('Coolant', -420, 40900, 4600, { part: '' });
   svc('Wiper blades', -200, 46000, 3200, { part: 'Aftermarket' });
@@ -620,8 +624,8 @@ function addExample() {
 }
 
 // ---------- items: one list of everything to keep on track ----------
-const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment', 'Air filter': 'airfilter', 'AC filter': 'cabin', 'Brake fluid': 'brakefluid', 'Coolant': 'coolantpart', 'Gearbox oil': 'gearboxoil', 'Wiper blades': 'wipers' };
-const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align', 'Air filter': 'filter', 'AC filter': 'fan', 'Brake fluid': 'drop', 'Coolant': 'therm', 'Gearbox oil': 'gear', 'Wiper blades': 'wiper' };
+const KIND_INFO = { 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brakes', 'Tyres': 'tyres', 'Spark plugs': 'plugs', 'Wheel alignment': 'alignment', 'Engine tune-up': 'tuneup', 'Air filter': 'airfilter', 'AC filter': 'cabin', 'Brake fluid': 'brakefluid', 'Coolant': 'coolantpart', 'Gearbox oil': 'gearboxoil', 'Wiper blades': 'wipers' };
+const KIND_ICON = { emission: 'smoke', insurance: 'shield', revenue: 'disc', driving: 'idcard', other: 'doc', warranty: 'ribbon', 'Oil change': 'oil', 'Battery': 'battery', 'Brake pads': 'brake', 'Tyres': 'tyre', 'Spark plugs': 'plug', 'Wheel alignment': 'align', 'Engine tune-up': 'tuneup', 'Air filter': 'filter', 'AC filter': 'fan', 'Brake fluid': 'drop', 'Coolant': 'therm', 'Gearbox oil': 'gear', 'Wiper blades': 'wiper' };
 const iconOf = x => svg(ICONS[KIND_ICON[x.kind] || 'doc']);
 const maintKinds = v => ['Oil change', 'Battery', 'Brake pads', 'Tyres', 'Wheel alignment', 'Spark plugs', ...TIMED_PARTS.map(p => p[0])].filter(k => !(k === 'Oil change' && v.fuel === 'Electric') && !(k === 'Spark plugs' && (v.fuel === 'Electric' || v.fuel === 'Diesel')) && partFits(k, v));
 
