@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>MotorPal: project summary</title>
+<!-- Project summary for the owner. make.js turns this into motorpal-project-summary.pdf (A4). -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --ink: #0B0F0D; --mut: #55605B; --line: #E3E8E5; --mint: #00A86B; --deep: #006E47; --tint: #E6F7EF; --black: #050505; --soft: #F4F6F5; --honey: #B7791F; }
+body { font-family: "Plus Jakarta Sans", Arial, sans-serif; color: var(--ink); font-size: 9.9pt; line-height: 1.48; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; overflow: hidden; padding: 15mm 17mm 16mm; page-break-after: always; position: relative; }
+.page:last-child { page-break-after: auto; }
+.foot { position: absolute; left: 18mm; right: 18mm; bottom: 9mm; display: flex; justify-content: space-between; font-size: 8pt; color: var(--mut); border-top: 1px solid var(--line); padding-top: 3mm; }
+h1 { font-size: 30pt; line-height: 1.05; letter-spacing: -0.03em; font-weight: 800; }
+h2 { font-size: 17pt; letter-spacing: -0.02em; font-weight: 800; margin-bottom: 3mm; }
+h2 .n { color: var(--mint); margin-right: 3mm; }
+h3 { font-size: 11.5pt; font-weight: 800; margin: 5mm 0 1.5mm; }
+p { margin-bottom: 2.6mm; }
+ul, ol { margin: 0 0 3mm 5mm; } li { margin-bottom: 1.2mm; }
+.lead { font-size: 11pt; color: #2A332F; }
+.mut { color: var(--mut); }
+.pill { display: inline-block; padding: 1mm 3mm; border-radius: 99px; background: var(--tint); color: var(--deep); font-weight: 700; font-size: 8.5pt; }
+.pill.wip { background: #FFF3DC; color: #8A5A12; }
+.pill.done { background: var(--tint); color: var(--deep); }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; }
+.card { border: 1px solid var(--line); border-radius: 4mm; padding: 3.5mm 4.5mm; background: #fff; break-inside: avoid; }
+.card h3 { margin-top: 0; }
+.card.dark { background: var(--black); color: #E9EEEC; border-color: var(--black); }
+.card.dark h3 { color: #fff; } .card.dark .mut { color: #A9B3AF; }
+.card.tint { background: var(--tint); border-color: #CDEBDC; }
+table { width: 100%; border-collapse: collapse; font-size: 9.1pt; margin: 2mm 0 4mm; }
+th, td { text-align: left; padding: 1.5mm 2.2mm; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.compact { font-size: 8.8pt; } table.compact th, table.compact td { padding: 1.3mm 2mm; }
+th { font-size: 8.6pt; color: var(--mut); font-weight: 700; background: var(--soft); }
+.shots { display: flex; gap: 4mm; justify-content: space-between; margin: 3mm 0; }
+.shots figure { flex: 1; text-align: center; }
+.shots img { width: 100%; border-radius: 3.5mm; border: 1px solid #222; display: block; }
+figcaption { font-size: 8pt; color: var(--mut); margin-top: 1.5mm; }
+img.wide { width: 100%; border-radius: 3mm; border: 1px solid var(--line); display: block; }
+.cover { background: var(--black); color: #fff; display: flex; flex-direction: column; justify-content: space-between; height: 297mm; overflow: hidden; }
+.cover .brand { display: flex; align-items: center; gap: 4mm; font-size: 20pt; font-weight: 800; }
+.cover .brand img { width: 16mm; height: 16mm; }
+.cover .brand b { color: #00C47F; }
+.cover h1 { font-size: 40pt; margin-top: 10mm; }
+.cover h1 em { font-style: normal; color: #00C47F; }
+.cover .lead { color: #C8D1CD; max-width: 150mm; margin-top: 6mm; }
+.cover .meta { display: flex; gap: 10mm; font-size: 9.5pt; color: #A9B3AF; }
+.cover .meta b { display: block; color: #fff; font-size: 11pt; }
+.cover .circle { position: absolute; right: -75mm; bottom: -70mm; width: 150mm; height: 150mm; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #1FD394, #00A86B 58%, #006E47); opacity: .9; }
+.cover .inner { position: relative; z-index: 1; }
+.toc { columns: 2; column-gap: 10mm; margin-top: 3mm; }
+.toc div { break-inside: avoid; padding: 2mm 0; border-bottom: 1px solid var(--line); font-weight: 600; }
+.toc span { color: var(--mint); font-weight: 800; margin-right: 3mm; }
+.kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4mm; margin: 4mm 0 2mm; }
+.kpi { background: var(--soft); border-radius: 3mm; padding: 3.5mm 4mm; }
+.kpi b { display: block; font-size: 20pt; font-weight: 800; letter-spacing: -0.02em; color: var(--deep); }
+.kpi span { font-size: 8.6pt; color: var(--mut); }
+.timeline { border-left: 2px solid var(--mint); margin-left: 2mm; padding-left: 5mm; }
+.timeline div { position: relative; margin-bottom: 3mm; }
+.timeline div::before { content: ""; position: absolute; left: -6.6mm; top: 1.6mm; width: 3mm; height: 3mm; border-radius: 50%; background: var(--mint); }
+.timeline b { display: block; }
+.check li::marker { content: "✓  "; color: var(--mint); font-weight: 800; }
+.todo li::marker { content: "○  "; color: var(--honey); font-weight: 800; }
+.note { font-size: 9pt; color: var(--mut); border-left: 3px solid var(--line); padding-left: 3mm; }
+</style></head>
+<body>
+
+<!-- 1 · cover -->
+<section class="page cover">
+  <div class="circle"></div>
+  <div class="inner">
+    <div class="brand"><img src="img/icon.svg" alt=""><span>Motor<b>Pal</b></span></div>
+    <h1>Project summary:<br>what we have built,<br>and <em>what comes next.</em></h1>
+    <p class="lead">A vehicle ownership companion for Sri Lanka, first built as “CarBook” and now becoming MotorPal. This document explains the problem we are solving, the app and website as they stand today, the brand, the marketing material, the business plan, and everything that is still work in progress.</p>
+  </div>
+  <div class="inner meta">
+    <div><b>Status</b>Working prototype · work in progress</div>
+    <div><b>Date</b>22 November 2026</div>
+    <div><b>Prepared for</b>The founder</div>
+  </div>
+</section>
+
+<!-- 2 · contents and at a glance -->
+<section class="page">
+  <h2>At a glance</h2>
+  <p class="lead">MotorPal keeps a Sri Lankan vehicle’s health, deadlines and records in one place, explains warning lights and mechanic talk in plain words, and tells the owner what to ask at the garage. It is built for owners who are not vehicle experts but want to know they are doing everything right.</p>
+  <div class="kpis">
+    <div class="kpi"><b>12</b><span>parts tracked in Car health</span></div>
+    <div class="kpi"><b>45</b><span>dashboard lights explained</span></div>
+    <div class="kpi"><b>4</b><span>vehicle types: car, van, motorbike, three-wheeler</span></div>
+    <div class="kpi"><b>54</b><span>saved versions of the code on GitHub</span></div>
+  </div>
+  <div class="cols" style="margin-top:4mm">
+    <div class="card tint"><h3>Built and working</h3><ul class="check">
+      <li>The app: Car health, reminders, records, lights guide, Ask, fuel and spending</li>
+      <li>Works offline, no sign-up, installable on a phone</li>
+      <li>Public website, branded MotorPal</li>
+      <li>MotorPal logo (final) and colours</li>
+      <li>Investor deck, executive summary, project and marketing plan</li>
+      <li>Instagram posts in English, Sinhala and Tamil; three short videos; one-pagers</li></ul></div>
+    <div class="card"><h3>Still in progress</h3><ul class="todo">
+      <li>The app itself still says “CarBook”: rename to MotorPal</li>
+      <li>Sinhala and Tamil inside the app</li>
+      <li>Phone notifications for deadlines</li>
+      <li>Reading photos automatically (needs a small server)</li>
+      <li>Accounts and cloud backup; real AI everywhere</li>
+      <li>Play Store launch; older marketing in the old colours</li></ul></div>
+  </div>
+  <h3 style="margin-top:7mm">Contents</h3>
+  <div class="toc">
+    <div><span>1</span>The problem we are solving</div><div><span>2</span>Who it is for</div>
+    <div><span>3</span>What the app does today</div><div><span>4</span>Car health in detail</div>
+    <div><span>5</span>Deadlines, reminders and records</div><div><span>6</span>Warning lights and Ask</div>
+    <div><span>7</span>Fuel and spending</div><div><span>8</span>How it is built (plain words)</div>
+    <div><span>9</span>Design journey</div><div><span>10</span>Brand: name, logo, colours</div>
+    <div><span>11</span>The website</div><div><span>12</span>Marketing material</div>
+    <div><span>13</span>Business model and phases</div><div><span>14</span>Work in progress and next steps</div>
+    <div><span>15</span>Known limits and things to check</div><div><span>16</span>Timeline and links</div>
+  </div>
+  <div class="foot"><span>MotorPal · project summary</span><span>2</span></div>
+</section>
+
+<!-- 3 · problem and audience -->
+<section class="page">
+  <h2><span class="n">1</span>The problem we are solving</h2>
+  <p class="lead">Owning a vehicle in Sri Lanka still runs on memory, paper and trust. Most owners are not mechanics, and they feel it.</p>
+  <div class="cols">
+    <div class="card"><h3>Dates that depend on each other</h3><p>The revenue licence can only be renewed with a valid emission test and insurance. Miss one date and the whole chain stalls, usually discovered at the worst moment. Electric and hybrid vehicles skip the emission test, which adds to the confusion.</p></div>
+    <div class="card"><h3>A vehicle has thousands of parts</h3><p>Oil, battery, brake pads, tyres, filters, fluids and wipers all wear out on different schedules, by distance or by time. Nobody can keep track of them in their head.</p></div>
+    <div class="card"><h3>Lights and mechanic talk</h3><p>An orange light comes on and owners panic, ignore it, or search online at midnight. At the garage, phrases like “bushes are finished” leave them unable to judge what they are paying for.</p></div>
+    <div class="card"><h3>Records that disappear</h3><p>Service history sits in a glovebox book or the garage’s memory. Warranties and receipts get lost. That costs money at resale and when claiming a warranty.</p></div>
+  </div>
+  <p style="margin-top:3mm">MotorPal’s promise: <b>one place that keeps your vehicle on track, explains what it is telling you, and helps you ask the right questions.</b> It suggests and explains; it never diagnoses. Brakes and tyres always point to a professional check.</p>
+
+  <h2 style="margin-top:7mm"><span class="n">2</span>Who it is for</h2>
+  <table>
+    <tr><th style="width:32%">Who</th><th>What they need</th></tr>
+    <tr><td><b>Everyday owners who are not car people</b></td><td>To know they are doing everything right, without learning mechanics. One clear next step, plain words, details only when asked.</td></tr>
+    <tr><td><b>New owners</b></td><td>Over 360,000 vehicles were newly registered in 2025 after imports reopened (reported figure, to be confirmed). Fresh owners, fresh records.</td></tr>
+    <tr><td><b>Women who manage their own vehicle</b></td><td>Confidence at the garage without depending on a brother, husband or father. A theme in the marketing.</td></tr>
+    <tr><td><b>Car, van, motorbike and three-wheeler owners</b></td><td>The app adapts: parts and lights that do not apply to a vehicle are hidden.</td></tr>
+    <tr><td><b>Sinhala, Tamil and English speakers</b></td><td>All wording sits in one file, ready for translation (in progress).</td></tr>
+  </table>
+  <p class="note">Market size used so far: about 8.5 million registered vehicles in Sri Lanka (mid-2025), from Department of Motor Traffic and Central Bank figures as reported in the press. These need confirming against official statistics before investors see them.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>3</span></div>
+</section>
+
+<!-- 4 · the app today -->
+<section class="page">
+  <h2><span class="n">3</span>What the app does today</h2>
+  <p>The app has four tabs and a side menu. Its look is like a modern money app, in the MotorPal colours: a near-black page, dark grey cards, mint for actions.</p>
+  <div class="shots">
+    <figure><img src="img/app-home.jpg" alt=""><figcaption>Home: Car health first</figcaption></figure>
+    <figure><img src="img/app-oil.jpg" alt=""><figcaption>Tap a part: what it is, what to do</figcaption></figure>
+    <figure><img src="img/app-money.jpg" alt=""><figcaption>Money: fuel and spending</figcaption></figure>
+    <figure><img src="img/app-ask.jpg" alt=""><figcaption>Ask: chat about your records</figcaption></figure>
+  </div>
+  <table>
+    <tr><th style="width:24%">Area</th><th>What it does</th></tr>
+    <tr><td><b>Home</b></td><td>Top to bottom: Car health, the single most urgent item, Coming up, quick actions (fill-up, service, document, light, odometer), Your records, Recent activity.</td></tr>
+    <tr><td><b>My car</b></td><td>Vehicle details, papers (emission test, insurance, revenue licence, driving licence, warranties), maintenance, record lists, settings, export and import.</td></tr>
+    <tr><td><b>Money</b></td><td>Fuel spent like a bank balance, price per litre, km per litre, charts from 1 month to 5 years compared with the period before, and service spending.</td></tr>
+    <tr><td><b>Ask</b></td><td>A chat about the owner’s records (“When is my next oil change?”), quick-question chips, and “Questions for my mechanic”.</td></tr>
+    <tr><td><b>Side menu</b></td><td>Every area in one list, including the dashboard lights guide, quick adds and settings.</td></tr>
+    <tr><td><b>Everywhere</b></td><td>One + button adds anything. Works offline, no sign-up, data stays on the phone, several vehicles per owner, an example vehicle to try it.</td></tr>
+  </table>
+  <div class="foot"><span>MotorPal · project summary</span><span>4</span></div>
+</section>
+
+<!-- 5 · car health -->
+<section class="page">
+  <h2><span class="n">4</span>Car health in detail</h2>
+  <div style="display:grid;grid-template-columns:62mm 1fr;gap:7mm">
+    <img src="img/app-health.jpg" alt="" style="width:100%;border-radius:3.5mm;border:1px solid #222">
+    <div>
+      <p class="lead">Car health is the heart of the app and the first thing on Home. It answers: “Is my vehicle OK, and what needs doing next?”</p>
+      <h3>How it works</h3>
+      <ul>
+        <li>A tile for every part that wears out, with a life bar, a percentage left and a plain line such as “720 km to go” or “In 4 months”.</li>
+        <li>A ring at the top shows how many parts are on track, for example 8 of 11.</li>
+        <li>Life is worked out from the last time the part was done and a default interval, by distance, by time, or whichever comes first.</li>
+        <li>Mileage comes from fill-ups, services and odometer updates. The app estimates future dates from the owner’s own average km per day over the last year, always labelled “estimated”.</li>
+        <li>Parts that do not apply are hidden: an electric car has no engine oil or spark plugs; a motorbike has no AC filter or wipers.</li>
+        <li>Tap a part for what it is, what to do, the last time it was done and its full history, with one clear button to log it.</li>
+      </ul>
+      <h3>The 12 parts and default intervals</h3>
+      <table class="compact">
+        <tr><th>Part</th><th>Default</th><th>Part</th><th>Default</th></tr>
+        <tr><td>Engine oil</td><td>5,000 km or 6 months</td><td>Air filter</td><td>15,000 km or 12 months</td></tr>
+        <tr><td>Battery</td><td>test from 3 yrs, replace ~4.5 yrs</td><td>AC filter</td><td>15,000 km or 12 months</td></tr>
+        <tr><td>Brake pads</td><td>30,000 km</td><td>Brake fluid</td><td>40,000 km or 2 years</td></tr>
+        <tr><td>Tyres</td><td>40,000 km or 5 years</td><td>Coolant</td><td>40,000 km or 2 years</td></tr>
+        <tr><td>Wheel alignment</td><td>10,000 km or 12 months</td><td>Gearbox oil</td><td>60,000 km or 4 years</td></tr>
+        <tr><td>Spark plugs</td><td>30,000 km</td><td>Wiper blades</td><td>12 months</td></tr>
+      </table>
+      <p class="note">These are defaults only. Every part’s page says the owner’s manual comes first. Gearbox oil intervals vary a lot, so its page tells owners to ask at their service.</p>
+    </div>
+  </div>
+  <div class="foot"><span>MotorPal · project summary</span><span>5</span></div>
+</section>
+
+<!-- 6 · deadlines, records -->
+<section class="page">
+  <h2><span class="n">5</span>Deadlines, reminders and records</h2>
+  <div class="cols">
+    <div>
+      <h3>The deadline chain</h3>
+      <p>Emission test, then insurance, then revenue licence. The app knows the order, counts each date down, shows what to book next and keeps every past renewal in the document’s history. Electric and hybrid vehicles are exempt from the emission test automatically.</p>
+      <h3>The urgent card</h3>
+      <p>The single most urgent item sits in a big card on Home. After several rounds with the founder, “needs attention now” became a plain dark card with no red at all, marked only by a larger caution triangle that blinks like hazard lights, so the warning fits the black and mint look. “Coming up soon” and “on track” show a soft honey or mint dot and outline.</p>
+      <h3>Coming up</h3>
+      <p>Swipeable cards for the next reminders, and a year-ahead plan with estimated service dates.</p>
+    </div>
+    <div>
+      <h3>Your records</h3>
+      <p>One place for the vehicle’s paperwork history, shown on Home as three tiles:</p>
+      <ul><li><b>Warranties</b>: battery, tyre or vehicle warranties and when each ends.</li>
+        <li><b>Service records</b>: every service with date, mileage, cost, garage, oil grade and an optional photo.</li>
+        <li><b>Part changes</b>: every part replaced, newest first.</li></ul>
+      <p>Records are never silently overwritten: edits keep a “last changed” time and renewals keep the old expiry. Every record already carries what later sharing needs (a vehicle id, a source and a private-by-default setting).</p>
+    </div>
+  </div>
+  <div class="shots" style="margin-top:4mm">
+    <figure><img src="img/app-parts-list.jpg" alt=""><figcaption>Part changes</figcaption></figure>
+    <figure><img src="img/app-warranty-list.jpg" alt=""><figcaption>Warranties</figcaption></figure>
+    <figure><img src="img/app-fill-form.jpg" alt=""><figcaption>Fill-up: dashboard photo first</figcaption></figure>
+  </div>
+  <div class="foot"><span>MotorPal · project summary</span><span>6</span></div>
+</section>
+
+<!-- 7 · lights, ask, fuel -->
+<section class="page">
+  <h2><span class="n">6</span>Warning lights and Ask</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:5mm;align-items:start">
+    <img src="img/app-lights.jpg" alt="" style="width:100%;border-radius:3.5mm;border:1px solid #222">
+    <img src="img/app-light-detail.jpg" alt="" style="width:100%;border-radius:3.5mm;border:1px solid #222">
+    <div>
+      <h3 style="margin-top:0">Dashboard lights guide: 45 lights</h3>
+      <p>Each light has its symbol in its real colour, how urgent it is (red: stop safely; amber: check soon; green or blue: information), what it usually means, what to do now and what to ask the mechanic, plus “check your owner’s manual”.</p>
+      <p>It covers cars, vans, motorbikes and three-wheelers, and diesel, hybrid and electric vehicles. Each owner sees the lights for their vehicle first; the rest appear when they search or filter.</p>
+      <p>Owners can record a light the moment it comes on. It then shows on Home until marked fixed, and feeds the mechanic questions and the Ask chat.</p>
+    </div>
+  </div>
+  <h3>Ask</h3>
+  <p>A chat about the owner’s own records: deadlines, services, fuel and spending. Today it answers common questions with simple rules on the phone. Inside the claude.ai preview it gives real AI answers. “Questions for my mechanic” turns the records into questions, each showing the record it is based on. Real AI for everyone needs the small server planned in step 4 of the plan.</p>
+
+  <h2 style="margin-top:6mm"><span class="n">7</span>Fuel and spending</h2>
+  <p>Fuel is a smaller feature now, kept in the Money tab rather than on Home. Every fill-up asks for a photo of the dashboard first, so the odometer reading is kept with it: that mileage keeps Car health up to date. Money shows fuel spent like a bank balance, price per litre, km per litre, charts for 1 month to 5 years compared with the period before, and what was spent on servicing. Comparisons only show when the records cover the whole earlier period, so numbers are never misleading.</p>
+  <p class="note">Fuel economy assumes the tank is filled each time. Reading numbers from photos automatically is planned; for now owners type them in.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>7</span></div>
+</section>
+
+<!-- 8 · how built, design journey -->
+<section class="page">
+  <h2><span class="n">8</span>How it is built, in plain words</h2>
+  <table>
+    <tr><th style="width:28%">Question</th><th>Answer</th></tr>
+    <tr><td><b>What is it?</b></td><td>A web app that installs like a phone app (a “progressive web app”). Plain HTML, CSS and JavaScript, no build step, so it is simple to change.</td></tr>
+    <tr><td><b>Where is the data?</b></td><td>Only on the owner’s phone. No account, no server. Owners can export a backup file and import it again. Clearing browser data erases it, so cloud backup is planned.</td></tr>
+    <tr><td><b>Does it work offline?</b></td><td>Yes. An offline helper keeps a copy on the phone and fetches updates when online.</td></tr>
+    <tr><td><b>How does it know what is due?</b></td><td>A “rules engine”: plain rules for each part and document (default intervals, the deadline chain, km per day). AI will word things, but due dates always come from the rules.</td></tr>
+    <tr><td><b>Where is the wording?</b></td><td>Every word sits in one file (<i>strings.js</i>) with English, Sinhala and Tamil sections, so translators work in one place.</td></tr>
+    <tr><td><b>Where is it hosted?</b></td><td>Free on GitHub Pages from the repository 3220interflash-sys/CarBook. Every change is saved as a version with a note.</td></tr>
+  </table>
+
+  <h2 style="margin-top:6mm"><span class="n">9</span>Design journey</h2>
+  <div class="timeline">
+    <div><b>First prototype</b>Bordered lists on white; worked, but felt plain and “AI-built”.</div>
+    <div><b>Friendlier and simpler</b>White background, green and goldfish yellow, red for urgent and amber for soon; less text, details on tap; a big banner with an icon for the most urgent item; a proper chat screen for Ask.</div>
+    <div><b>Fintech finish</b>Soft grey page with floating white cards, a wallet card for fuel, round quick actions, recent activity like bank transactions.</div>
+    <div><b>MotorPal colours</b>Black and mint from the new logo, then an always-dark app: near-black page, dark grey cards, light text.</div>
+    <div><b>Calmer warnings</b>The solid red banner became a dark card with a soft glow, then hazard stripes, and finally no red at all: a larger blinking caution triangle.</div>
+    <div><b>Car health first</b>Home rebuilt around a part tracker; fuel moved to the Money tab; Your records added.</div>
+  </div>
+  <div class="foot"><span>MotorPal · project summary</span><span>8</span></div>
+</section>
+
+<!-- 9 · brand and website -->
+<section class="page">
+  <h2><span class="n">10</span>Brand: name, logo and colours</h2>
+  <div style="display:grid;grid-template-columns:1fr 70mm;gap:6mm;align-items:center">
+    <div>
+      <p><b>Name.</b> The app began as CarBook. MotorPal was chosen because “motor” covers cars, bikes, three-wheelers and vans and already feels official in Sri Lanka. Alternatives considered: Vahana, MotorMithra, Machan Motors, PitStop.</p>
+      <p><b>Logo, “Four pillars”.</b> A gauge whose dial is four segments, standing for reminders, service records, fuel and costs, and warranties, with the needle in the green. Chosen after exploring a pulse line, a talking gauge, a gauge with a face and clock hands.</p>
+      <p><b>Colours.</b> Black #050505, deep mint #00A86B, white. <b>Font:</b> Plus Jakarta Sans.</p>
+      <p><b>Files.</b> Icon, logo on white and on black, mark only: as SVG, PNG and Canva-ready PDF, plus a Logo Studio page to try colours.</p>
+    </div>
+    <img src="img/logo-white.png" alt="MotorPal logo" style="width:100%">
+  </div>
+  <p class="note">Before launch: check the name on the trademark register (National Intellectual Property Office), the Play Store, the web address and social handles. An unrelated fuel-price app called “Motorpal” exists on Apple’s App Store.</p>
+
+  <h2 style="margin-top:6mm"><span class="n">11</span>The website</h2>
+  <img class="wide" src="img/website-top.jpg" alt="">
+  <p style="margin-top:3mm">One page, now branded MotorPal with the new logo, in the same black and mint. It explains who we are and why the app is a must-have: “It reminds you. It also tells you what your car is trying to say.” Sections cover the deadline chain, what the app does (with real app screenshots), the dashboard lights, mechanic talk explained, who fixes what, safety, about us and questions. A sleek glossy black car drives across under the menu bar.</p>
+  <p class="note">The website promises two guides that are not yet in the app: “Mechanic talk, explained” and “Who fixes what”. It does not yet describe Car health. Both are on the to-do list.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>9</span></div>
+</section>
+
+<!-- 10 · marketing -->
+<section class="page">
+  <h2><span class="n">12</span>Marketing material</h2>
+  <table>
+    <tr><th style="width:30%">Item</th><th>What it is</th><th style="width:16%">Status</th></tr>
+    <tr><td><b>Investor deck</b></td><td>20 slides in the style of a modern app pitch deck: the problem, three reasons to download, free Phase 1 versus premium Phase 2, pricing tiers, market, roadmap, team and the raise. Figures the founder must fill are left in [brackets].</td><td><span class="pill wip">Old colours</span></td></tr>
+    <tr><td><b>Executive summary</b></td><td>One to two pages, designed like the deck.</td><td><span class="pill wip">Old colours</span></td></tr>
+    <tr><td><b>Project and marketing plan</b></td><td>Where to start, what to research, Sri Lankan competitors, a SWOT analysis, and an organic plan using social media and print only.</td><td><span class="pill done">Done</span></td></tr>
+    <tr><td><b>Instagram posts</b></td><td>16 English posts (useful, funny, no selling; F1, car-wash myths, floods, beach parking, confident women drivers, cricket and politics), 16 in Sinhala, and 10 Tamil posts with their own Tamil-cinema theme.</td><td><span class="pill wip">Needs review</span></td></tr>
+    <tr><td><b>Short videos</b></td><td>Three 20-second vertical videos for Reels, Facebook and WhatsApp Status (the date chain, the orange light, mechanic talk) and a 60-second cut.</td><td><span class="pill wip">Old name</span></td></tr>
+    <tr><td><b>One-pagers</b></td><td>A shareable one-page artwork: “Your car, all in one place”, with reminders, service records, fuel and costs, and warranties. A CarBook version and a MotorPal version.</td><td><span class="pill done">MotorPal ready</span></td></tr>
+  </table>
+  <div class="cols" style="align-items:start">
+    <img class="wide" src="img/insta-en.jpg" alt="English Instagram posts">
+    <img class="wide" src="img/one-pager.jpg" alt="MotorPal one-pager" style="max-height:110mm;width:auto;margin:0 auto">
+  </div>
+  <p class="note" style="margin-top:3mm">The Sinhala and Tamil text are drafts and need a native speaker. Every Tamil post should carry a clearer Tamil-movie reference (noted for later). All facts in the posts are hedged and should be checked once more before posting.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>10</span></div>
+</section>
+
+<!-- 11 · business model -->
+<section class="page">
+  <h2><span class="n">13</span>Business model and phases</h2>
+  <p class="lead">The owner app stays free so that records keep growing. Money comes from convenience and trust, once owners rely on MotorPal.</p>
+  <div class="cols">
+    <div class="card tint"><h3>Phase 1 · Free (now)</h3><ul>
+      <li>Car health and part tracker</li><li>Deadline chain with countdowns</li><li>Service, part-change and warranty records</li>
+      <li>Fuel and spending trends</li><li>Dashboard lights guide</li><li>Questions for the mechanic</li><li>Offline, in Sinhala, Tamil and English</li></ul></div>
+    <div class="card dark"><h3>Phase 2 · MotorPal Plus (later)</h3><ul>
+      <li>An AI assistant that reviews the owner’s history and recommends checks and questions, each with its basis</li>
+      <li>Photo reading: pump display, odometer, documents, dashboard lights</li>
+      <li>Accounts, cloud backup, switching phones</li>
+      <li>More vehicles and family sharing</li>
+      <li>A resale-ready history report and garage-confirmed records</li></ul></div>
+  </div>
+  <table style="margin-top:5mm">
+    <tr><th>Tier</th><th>Price</th><th>What it includes</th></tr>
+    <tr><td><b>Free</b></td><td>Rs 0</td><td>Everything in Phase 1</td></tr>
+    <tr><td><b>Plus</b></td><td>[to be tested]</td><td>AI assistant, photo reading, cloud backup</td></tr>
+    <tr><td><b>Family</b></td><td>[to be tested]</td><td>Plus for several vehicles and family members</td></tr>
+    <tr><td><b>Partners</b></td><td>Per use</td><td>Garages confirm records, buyers pay for history reports, insurers get renewals only when the owner chooses</td></tr>
+  </table>
+  <p class="note">Prices are not set. They should be tested with real owners and garages before launch. Sharing and accounts wait for a check against Sri Lanka’s Personal Data Protection Act.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>11</span></div>
+</section>
+
+<!-- 12 · WIP -->
+<section class="page">
+  <h2><span class="n">14</span>Work in progress and next steps</h2>
+  <h3>Next in the app, in order</h3>
+  <ol>
+    <li><b>Rename the app to MotorPal</b> and switch its icon to the new logo, then retake the website and store screenshots.</li>
+    <li><b>Sinhala and Tamil</b> in the app, checked by native speakers (including the 29 newest warning lights and the six newest parts).</li>
+    <li><b>Phone notifications</b> before deadlines, with earlier warnings for the deadline chain.</li>
+    <li><b>Bring the website’s two guides into the app</b>: “Mechanic talk, explained” and “Who fixes what”, linked from each part’s page.</li>
+    <li><b>A small MotorPal server</b> for photo reading (pump, odometer, documents, warning lights). API keys must never sit inside the app.</li>
+    <li><b>Accounts and cloud backup</b>, after checking Sri Lankan data protection rules.</li>
+    <li><b>Real AI for Ask</b> on that server, still using the rules for due dates.</li>
+    <li><b>Play Store</b> once real users have tested it.</li>
+  </ol>
+  <h3>Open decisions and tasks for the founder</h3>
+  <ul class="todo">
+    <li>Confirm MotorPal after the trademark, Play Store, web address and social-handle checks.</li>
+    <li>Create a Google Play developer account; add a contact email to the privacy page and website footer.</li>
+    <li>Fill the deck’s blanks: prices, market sizing, team, raise amount, contact details.</li>
+    <li>Confirm the vehicle statistics against official figures.</li>
+    <li>Find native Sinhala and Tamil reviewers, and someone who knows vehicles well to check the lights and parts wording.</li>
+    <li>Decide whether to add more parts (for example a timing belt or a motorbike drive chain) and more lights once users show what they search for.</li>
+  </ul>
+  <h3>Material still in the old CarBook look</h3>
+  <p>The app’s name and icon, the investor deck, the executive summary, the three videos, the original one-pager and the Play Store screenshots. The website and the MotorPal one-pager are already updated.</p>
+  <div class="foot"><span>MotorPal · project summary</span><span>12</span></div>
+</section>
+
+<!-- 13 · limits, timeline, links -->
+<section class="page">
+  <h2><span class="n">15</span>Known limits and things to check</h2>
+  <ul>
+    <li>Data lives only on the phone until cloud backup exists; owners should export regularly.</li>
+    <li>No automatic photo reading yet; numbers are typed by hand.</li>
+    <li>Part intervals and the warning-light wording are general defaults, not specifications for any one vehicle. The app always says the owner’s manual comes first, and it never diagnoses.</li>
+    <li>Fuel economy assumes the tank is filled each time.</li>
+    <li>Real AI answers in Ask only work inside the claude.ai preview for now.</li>
+    <li>“All possible” warning lights cannot be covered: makers have their own symbols. The 45 cover the common ones across vehicle types and fuels; truck- and bus-only lights are not included.</li>
+  </ul>
+
+  <h2 style="margin-top:6mm"><span class="n">16</span>Timeline and links</h2>
+  <div class="timeline">
+    <div><b>7 Nov 2026</b>First prototype online; privacy page and Play Store listing drafted; reminders, fuel charts and Ask added.</div>
+    <div><b>Early to mid Nov</b>Redesigns; investor deck and executive summary; project and marketing plan; website; dashboard lights guide; side menu.</div>
+    <div><b>Mid Nov</b>Instagram posts in three languages; three short videos; one-pager; name and logo exploration ending in MotorPal “Four pillars”.</div>
+    <div><b>15 to 16 Nov</b>App and website moved to black and mint; app made always-dark; calmer urgent card; lights guide grown to 45; website renamed MotorPal with a new car animation.</div>
+    <div><b>16 Nov</b>Car health becomes the heart of Home; Your records; fuel moved to Money.</div>
+  </div>
+  <table style="margin-top:4mm">
+    <tr><th style="width:28%">What</th><th>Where</th></tr>
+    <tr><td>The app</td><td>https://3220interflash-sys.github.io/CarBook/</td></tr>
+    <tr><td>The website</td><td>https://3220interflash-sys.github.io/CarBook/website/</td></tr>
+    <tr><td>Code and all files</td><td>github.com/3220interflash-sys/CarBook (logo in marketing/logo/final, posts in marketing/instagram, videos in marketing/video, one-pagers in marketing/one-pager)</td></tr>
+    <tr><td>Investor deck</td><td>claude.ai/artifact/EZeDmWJobdKvvpjmXynyx5 (private until shared)</td></tr>
+  </table>
+  <div class="foot"><span>MotorPal · project summary · work in progress</span><span>13</span></div>
+</section>
+</body></html>
