@@ -799,7 +799,7 @@ function header(v) {
 // Page background: deep brand green (default) or the calm light finish. A setting for this phone only.
 const BGS = ['deep', 'light'];
 let bg = (() => { try { return localStorage.getItem('carbook.bg') || 'deep'; } catch (e) { return 'deep'; } })();
-function applyBg() { document.documentElement.dataset.bg = bg; document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg === 'deep' ? '#0D241B' : '#EEF3F0'); }
+function applyBg() { document.documentElement.dataset.bg = bg; document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg === 'deep' ? '#06150F' : '#EEF3F0'); }
 applyBg();
 const bgPicker = () => `<h2>${esc(t('bgTitle'))}</h2><div class="actions" style="margin-top:0">${BGS.map(k => `<button class="btn ${k === bg ? '' : 'quiet'}" data-act="bg" data-bg="${k}" ${k === bg ? 'aria-pressed="true"' : ''}>${esc(t('bg_' + k))}</button>`).join('')}</div>`;
 function langPicker() {
