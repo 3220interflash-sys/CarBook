@@ -782,3 +782,29 @@ body { background: var(--bg); color: var(--fg); }
 .chart .area { fill: var(--green); opacity: .1; stroke: none; }
 .anal .chart-h { margin-top: 14px; }
 @media (max-width: 360px) { .eq { grid-template-columns: 1fr 1fr 1fr; } .eq-op { display: none; } }
+
+/* ---------- Deep green background (November 2026, a setting: Background > Deep green / Light) ----------
+   A darker page in the logo's colours: deep green-black with a soft mint glow at the top. Cards stay white,
+   so everything inside them keeps the light finish's colours; only what sits straight on the page turns light.
+   Contrast: #EAF2EE on #0D241B is 14:1, the muted #A7C1B5 is 8:1, mint links #3EE0A4 are 9:1. */
+:root[data-bg="deep"] {
+  --bg: #0D241B; --fg: #EAF2EE; --mut: #A7C1B5; --line: rgba(255, 255, 255, .12);
+  --green-ink: #3EE0A4; color-scheme: light;
+}
+:root[data-bg="deep"] body { background: radial-gradient(520px 320px at 85% -60px, rgba(0, 196, 127, .22), transparent 70%) no-repeat, var(--bg); }
+:root[data-bg="deep"] :is(.list, .stat, .mini, .chart-card, .light-tile, .alert-card, .light-cta, .glance, .q, .nudge, .perf, .anal, .help-card,
+  .health:not(.compact), .grp-t, .vault-t, .chipbtn, .setup-card, #dlg, .search, .pill-select, .range input, .empty, .composer, .msg.bot .bubble, .hero, .w-card, .warranty, .seg, .results) {
+  --fg: #0E1512; --mut: #5A6761; --line: #DFE7E3; --green-ink: #006E47; color: var(--fg);
+}
+:root[data-bg="deep"] .pill-select { background-color: var(--surface); }
+:root[data-bg="deep"] .health.compact { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18), 0 14px 30px -18px rgba(0, 0, 0, .6); }
+:root[data-bg="deep"] .hero-num { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18); }
+:root[data-bg="deep"] .qa .c { background: #050505; box-shadow: 0 0 0 1px rgba(0, 196, 127, .22); }
+:root[data-bg="deep"] .qa:first-child .c { background: #00C47F; }
+:root[data-bg="deep"] .fab { box-shadow: 0 0 0 1px rgba(0, 196, 127, .35), 0 10px 24px -10px rgba(0, 0, 0, .6); }
+:root[data-bg="deep"] #tabs { box-shadow: 0 0 0 1px rgba(0, 196, 127, .14), 0 -6px 24px -14px rgba(0, 0, 0, .6); }
+:root[data-bg="deep"] .car-card { box-shadow: 0 0 0 1px rgba(0, 196, 127, .18); }
+:root[data-bg="deep"] .btn.quiet { color: #006E47; }
+:root[data-bg="deep"] .health.compact .btn.quiet { color: #04120C; }
+:root[data-bg="deep"] #menu { background: #0A1C15; color: var(--fg); }
+:root[data-bg="deep"] #menu .m-car { --fg: #0E1512; --mut: #5A6761; color: var(--fg); }

@@ -384,7 +384,10 @@ function perfSince(v, s) {
   const b = sum(before), a = sum(after);
   return { nB: before.length, nA: after.length, before: b, after: a, pct: b && a && before.length >= 2 && after.length >= 2 ? (a - b) / b * 100 : null };
 }
-const perfList = v => mine(db.service, v).filter(s => s.date >= addDaysISO(todayISO(), -1100)).sort((a, b) => b.date.localeCompare(a.date) || b.odo - a.odo);
+// Catalogue parts that can also change fuel economy (fuel system, ignition, air intake, tyres, exhaust).
+const PERF_CAT = ['engine-spark-plugs-standard', 'engine-spark-plugs-iridium-platinum', 'engine-ignition-coils', 'engine-fuel-injectors', 'engine-throttle-body', 'fuel-petrol-throttle-body', 'diagnostics-throttle-body-cleaning', 'engine-pcv-valve', 'engine-air-filter', 'filters-engine-air-filter', 'engine-engine-oil', 'fluids-engine-oil-for-motorcycles', 'filters-fuel-filter-petrol', 'filters-fuel-filter-diesel', 'fuel-fuel-filter', 'fuel-injector-seals', 'fuel-diesel-egr-valve', 'fuel-diesel-dpf', 'tyres-tyre-pressure', 'tyres-wheel-alignment'];
+const perfKind = k => PERF_KINDS.includes(k) || (k.startsWith('c:') && PERF_CAT.includes(k.slice(2)));
+const perfList = v => mine(db.service, v).filter(s => perfKind(s.kind) && s.date >= addDaysISO(todayISO(), -1100)).sort((a, b) => b.date.localeCompare(a.date) || b.odo - a.odo);
 // The app offers the comparison itself once a recent service has enough fill-ups after it.
 function perfPrompt(v) {
   const seen = v.perfSeen || [], since = addDaysISO(todayISO(), -270);
@@ -395,7 +398,7 @@ function perfPrompt(v) {
 function perfDone(v, id) { const s = db.service.find(x => x.id === id); v.perfSeen = [...(v.perfSeen || []), ...mine(db.service, v).filter(x => x.id === id || (s && x.date === s.date)).map(x => x.id)]; save(); }
 function perfCard(v) {
   const list = perfList(v); if (!list.length) return '';
-  const s = list.find(x => x.id === perfSvc) || list.find(x => PERF_KINDS.includes(x.kind)) || list[0], r = perfSince(v, s);
+  const s = list.find(x => x.id === perfSvc) || list[0], r = perfSince(v, s);
   const opts = list.map(x => `<option value="${x.id}" ${x === s ? 'selected' : ''}>${esc(label('svc_', x.kind))} · ${esc(fmtD(x.date))}</option>`).join('');
   let body;
   if (r.pct == null) body = `<p class="hint perf-wait">${esc(r.nA < 2 ? t('perfNeedAfter', 2 - r.nA) : t('perfNeedBefore'))}</p>`;
@@ -407,7 +410,7 @@ function perfCard(v) {
       <p class="perf-res"><span class="chg ${same ? '' : up ? 'up' : 'down'}">${same ? esc(t('perfSame')) : `${up ? '↑' : '↓'} ${Math.abs(Math.round(r.pct))}% ${esc(t(up ? 'perfBetter' : 'perfWorse'))}`}</span></p>
       <p class="hint">${esc(t('perfBasis', r.nB, r.nA))} ${esc(t(!same && !up && r.pct < -5 ? 'perfAskMech' : 'perfOther'))}</p>`;
   }
-  return `<section class="perf" id="perf"><h2>${esc(t('perfTitle'))}</h2><p class="hint">${esc(t('perfSub'))}</p>
+  return `<section class="perf" id="perf"><h2>${esc(t(s === list[0] ? 'perfTitleLast' : 'perfTitle'))}</h2><p class="hint">${esc(t('perfSub'))}</p>
     <label class="sr" for="perfSel">${esc(t('perfPick'))}</label><select id="perfSel" class="pill-select">${opts}</select>${body}</section>`;
 }
 
@@ -793,6 +796,12 @@ function header(v) {
 }
 
 // Shown only once a second language has a translation started in strings.js.
+// Page background: deep brand green (default) or the calm light finish. A setting for this phone only.
+const BGS = ['deep', 'light'];
+let bg = (() => { try { return localStorage.getItem('carbook.bg') || 'deep'; } catch (e) { return 'deep'; } })();
+function applyBg() { document.documentElement.dataset.bg = bg; document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg === 'deep' ? '#0D241B' : '#EEF3F0'); }
+applyBg();
+const bgPicker = () => `<h2>${esc(t('bgTitle'))}</h2><div class="actions" style="margin-top:0">${BGS.map(k => `<button class="btn ${k === bg ? '' : 'quiet'}" data-act="bg" data-bg="${k}" ${k === bg ? 'aria-pressed="true"' : ''}>${esc(t('bg_' + k))}</button>`).join('')}</div>`;
 function langPicker() {
   const ls = languages(); if (ls.length < 2) return '';
   return `<h2>${esc(t('language'))}</h2><div class="actions" style="margin-top:0">${ls.map(l => `<button class="btn ${l === lang ? '' : 'quiet'}" data-act="lang" data-lang="${l}" lang="${l}" ${l === lang ? 'aria-pressed="true"' : ''}>${esc(STRINGS[l].langName)}</button>`).join('')}</div>`;
@@ -971,6 +980,7 @@ function viewCar(v) {
     <li><button class="item" data-act="import"><span class="ic plain">${svg('<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>')}</span><span class="it"><span class="t">${esc(t('import'))}</span></span></button></li>
     <li><a class="item" href="privacy.html"><span class="ic plain">${svg(ICONS.shield)}</span><span class="it"><span class="t">${esc(t('privacyPolicy'))}</span></span><span class="chev">${svg(ICONS.chev)}</span></a></li>
   </ul>
+  ${bgPicker()}
   ${langPicker()}`;
 }
 
@@ -1023,7 +1033,6 @@ function viewMoney(v) {
     <div class="legend"><span><i class="sw bar"></i>${esc(t('legSpent'))}</span><span><i class="sw ln"></i>${esc(t('legKpl'))}</span></div>
     <div class="readout" id="readout" aria-live="polite"></div>
     <div class="chart" id="ch-combo"></div>
-    <p class="chart-h">${esc(t('chartCkm'))}</p><div class="chart" id="ch-ckm"></div>
     <details class="tbl"><summary>${esc(t('seeNumbers'))}</summary><div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('kplUnit'))}</th><th>${esc(t('colCkm'))}</th><th>${esc(t('colPrice'))}</th></tr></thead>
       <tbody>${d.bs.slice().reverse().map(b => `<tr><td>${esc(b.label)}</td><td>${b.fills ? esc(t('rs', n0(b.spent))) : '–'}</td><td>${b.kpl ? n1(b.kpl) : '–'}</td><td>${b.ckm ? n1(b.ckm) : '–'}</td><td>${b.price ? n0(b.price) : '–'}</td></tr>`).join('')}</tbody></table></div></details>
     <p class="hint kpl-how">${esc(t('kplHow'))}</p>
@@ -1039,7 +1048,7 @@ function viewMoney(v) {
 const compact = n => n >= 1e6 ? n1(n / 1e6) + 'M' : n >= 1e4 ? Math.round(n / 1e3) + 'K' : n0(n);
 function niceMax(m) { if (!(m > 0)) return 1; const p = 10 ** Math.floor(Math.log10(m)), f = m / p; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p; }
 function drawFuelCharts(v) {
-  const cb = $('#ch-combo'), ck = $('#ch-ckm'); if (!cb || !ck) return;
+  const cb = $('#ch-combo'); if (!cb) return;
   const d = periodData(v, period), bs = d.bs, n = bs.length;
   if (fsel == null || fsel >= n) fsel = n - 1;
   const W = Math.max(260, cb.clientWidth), L = 40, T = 12, B = 24;
@@ -1049,12 +1058,16 @@ function drawFuelCharts(v) {
   const hits = f => bs.map((b, i) => `<rect class="hit" data-i="${i}" x="${L + f.slot * i}" y="${T}" width="${f.slot}" height="${f.ih}" tabindex="0" aria-label="${esc(b.label)}"></rect>`).join('');
   // a padded range for a line, so small changes are visible but not exaggerated
   const span = (vals, step) => { let lo = Math.min(...vals), hi = Math.max(...vals); const pad = Math.max(step, (hi - lo) * 0.3); return [Math.max(0, Math.floor((lo - pad) / step) * step), Math.ceil((hi + pad) / step) * step]; };
-  const linePath = (f, key, y) => { let path = '', pen = false; bs.forEach((b, i) => { if (!b[key]) { pen = false; return; } path += `${pen ? 'L' : 'M'}${f.cx(i)} ${y(b[key])}`; pen = true; }); return path; };
+  const linePath = (f, key, y) => {
+    const runs = [[]]; bs.forEach((b, i) => b[key] ? runs.at(-1).push([f.cx(i), y(b[key])]) : runs.at(-1).length && runs.push([]));
+    return runs.filter(r => r.length).map(p => `M${p[0][0]} ${p[0][1]}` + p.slice(1).map((q, j) => { const p0 = p[j - 1] || p[j], p1 = p[j], p3 = p[j + 2] || q;
+      return `C${p1[0] + (q[0] - p0[0]) / 6} ${p1[1] + (q[1] - p0[1]) / 6} ${q[0] - (p3[0] - p1[0]) / 6} ${q[1] - (p3[1] - p1[1]) / 6} ${q[0]} ${q[1]}`; }).join('')).join('');
+  };
   const dots = (f, key, y, cls) => bs.map((b, i) => b[key] ? `<circle class="pt ${cls} ${i === fsel ? 'sel' : ''}" data-b="${i}" cx="${f.cx(i)}" cy="${y(b[key])}" r="${i === fsel ? 5 : (n > 24 ? 0 : 3)}"></circle>` : '').join('');
   const cross = (f, id) => `<line class="cross" id="${id}" x1="0" x2="0" y1="${T}" y2="${T + f.ih}"></line>`;
 
   // 1. Spend (bars, left axis) against km per litre (line, right axis)
-  const f1 = frame(180, 34), sMax = niceMax(Math.max(...bs.map(b => b.spent)));
+  const f1 = frame(210, 34), sMax = niceMax(Math.max(...bs.map(b => b.spent)));
   const yS = val => T + f1.ih - val / sMax * f1.ih, bw = Math.min(22, Math.max(3, f1.slot - 3));
   const ks = bs.map(b => b.kpl).filter(Boolean), [kLo, kHi] = ks.length ? span(ks, 0.5) : [0, 1], yK = val => T + f1.ih - (val - kLo) / (kHi - kLo) * f1.ih;
   const grid1 = [0, 0.5, 1].map(q => `<line class="grid" x1="${L}" x2="${W - f1.R}" y1="${T + f1.ih - q * f1.ih}" y2="${T + f1.ih - q * f1.ih}"></line><text class="ax" x="${L - 6}" y="${T + f1.ih - q * f1.ih + 4}" text-anchor="end">${esc(compact(sMax * q))}</text>${ks.length ? `<text class="ax k" x="${W - f1.R + 6}" y="${T + f1.ih - q * f1.ih + 4}">${esc(n1(kLo + (kHi - kLo) * q))}</text>` : ''}`).join('');
@@ -1062,21 +1075,11 @@ function drawFuelCharts(v) {
     return `<path class="bar ${i === fsel ? 'sel' : ''}" data-b="${i}" d="M${x} ${T + f1.ih}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${T + f1.ih}Z"></path>`; }).join('');
   cb.innerHTML = `<svg width="${W}" height="${f1.H}" viewBox="0 0 ${W} ${f1.H}" role="img" aria-label="${esc(t('chartCombo'))}">${grid1}${bars}${cross(f1, 'cross1')}<path class="line k" d="${linePath(f1, 'kpl', yK)}"></path>${dots(f1, 'kpl', yK, 'k')}${xLabels(f1)}${hits(f1)}</svg>`;
 
-  // 2. What each km cost (price per litre ÷ km per litre)
-  const f2 = frame(130, 10), cs = bs.map(b => b.ckm).filter(Boolean);
-  if (!cs.length) ck.innerHTML = `<p class="hint">${esc(t('noFuelInPeriod'))}</p>`;
-  else {
-    const [cLo, cHi] = span(cs, 1), yC = val => T + f2.ih - (val - cLo) / (cHi - cLo) * f2.ih, path = linePath(f2, 'ckm', yC);
-    const pts = bs.map((b, i) => b.ckm ? [f2.cx(i), yC(b.ckm)] : null).filter(Boolean);
-    const area = pts.length > 1 ? `<path class="area" d="M${pts[0][0]} ${T + f2.ih}${pts.map(q => `L${q[0]} ${q[1]}`).join('')}L${pts.at(-1)[0]} ${T + f2.ih}Z"></path>` : '';
-    const grid2 = [0, 0.5, 1].map(q => { const val = cLo + (cHi - cLo) * q; return `<line class="grid" x1="${L}" x2="${W - f2.R}" y1="${yC(val)}" y2="${yC(val)}"></line><text class="ax" x="${L - 6}" y="${yC(val) + 4}" text-anchor="end">${esc(n1(val))}</text>`; }).join('');
-    ck.innerHTML = `<svg width="${W}" height="${f2.H}" viewBox="0 0 ${W} ${f2.H}" role="img" aria-label="${esc(t('chartCkm'))}">${grid2}${area}${cross(f2, 'cross2')}<path class="line" d="${path}"></path>${dots(f2, 'ckm', yC, '')}${xLabels(f2)}${hits(f2)}</svg>`;
-  }
   const select = i => {
     fsel = i; const b = bs[i];
     $('#readout').innerHTML = `<b>${esc(b.label)}</b><span>${esc(b.fills ? t('rs', n0(b.spent)) : t('noFills'))}</span>${b.kpl ? `<span class="k">${esc(t('kpl', n1(b.kpl)))}</span>` : ''}${b.ckm ? `<span>${esc(t('ckmVal', n1(b.ckm)))}</span>` : ''}<span class="mut">${esc(t('fillsCount', b.fills))}</span>`;
     document.querySelectorAll('#ch-combo .bar, .chart .pt').forEach(el => { const on = +el.dataset.b === i; el.classList.toggle('sel', on); if (el.tagName === 'circle') el.setAttribute('r', on ? 5 : (n > 24 ? 0 : 3)); });
-    [['#cross1', f1], ['#cross2', f2]].forEach(([id, f]) => { const cr = $(id); if (cr) { cr.setAttribute('x1', f.cx(i)); cr.setAttribute('x2', f.cx(i)); } });
+    [['#cross1', f1]].forEach(([id, f]) => { const cr = $(id); if (cr) { cr.setAttribute('x1', f.cx(i)); cr.setAttribute('x2', f.cx(i)); } });
   };
   document.querySelectorAll('.chart .hit').forEach(h => { const i = +h.dataset.i; h.addEventListener('pointerenter', () => select(i)); h.addEventListener('click', () => select(i)); h.addEventListener('focus', () => select(i)); });
   select(fsel);
@@ -1418,6 +1421,7 @@ document.addEventListener('click', e => {
     case 'svcDetail': return serviceDetail(id);
     case 'fuelDetail': return fuelDetail(id);
     case 'allFills': return allFills();
+    case 'bg': bg = el.dataset.bg; try { localStorage.setItem('carbook.bg', bg); } catch (e) {} applyBg(); return render();
     case 'serviceList': return serviceList();
     case 'track': return trackForm(el.dataset.comp);
     case 'pickPart': return pickPart(el.dataset.id);
