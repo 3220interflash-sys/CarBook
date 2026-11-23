@@ -1089,6 +1089,7 @@ const STRINGS = {
     noPrevious: 'Nothing to compare with yet',
     perfTitleLast: "Since the last service",
     bgTitle: "Background",
+    bg_glow: "Glow",
     bg_deep: "Deep green",
     bg_light: "Light",
     costVsPerf: "Cost vs performance",

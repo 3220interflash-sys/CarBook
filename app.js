@@ -797,9 +797,9 @@ function header(v) {
 
 // Shown only once a second language has a translation started in strings.js.
 // Page background: deep brand green (default) or the calm light finish. A setting for this phone only.
-const BGS = ['deep', 'light'];
-let bg = (() => { try { return localStorage.getItem('carbook.bg') || 'deep'; } catch (e) { return 'deep'; } })();
-function applyBg() { document.documentElement.dataset.bg = bg; document.querySelector('meta[name=theme-color]')?.setAttribute('content', bg === 'deep' ? '#06150F' : '#EEF3F0'); }
+const BGS = ['glow', 'deep', 'light'];
+let bg = (() => { try { return localStorage.getItem('carbook.bg') || 'glow'; } catch (e) { return 'glow'; } })();
+function applyBg() { document.documentElement.dataset.bg = bg; document.querySelector('meta[name=theme-color]')?.setAttribute('content', ({ glow: '#030B08', deep: '#06150F' })[bg] || '#EEF3F0'); }
 applyBg();
 const bgPicker = () => `<h2>${esc(t('bgTitle'))}</h2><div class="actions" style="margin-top:0">${BGS.map(k => `<button class="btn ${k === bg ? '' : 'quiet'}" data-act="bg" data-bg="${k}" ${k === bg ? 'aria-pressed="true"' : ''}>${esc(t('bg_' + k))}</button>`).join('')}</div>`;
 function langPicker() {
@@ -1021,7 +1021,7 @@ function viewMoney(v) {
   <div class="period"><label for="periodSel">${esc(t('periodLabel'))}</label><select id="periodSel" class="pill-select">${PERIODS.map(k => `<option value="${k}" ${k === period ? 'selected' : ''}>${esc(t('pl_' + k))}</option>`).join('')}</select></div>
   ${period === 'C' ? `<div class="two range"><div><label for="cFrom">${esc(t('fromDate'))}</label><input type="date" id="cFrom" value="${cFrom}" max="${cTo}"></div><div><label for="cTo">${esc(t('toDate'))}</label><input type="date" id="cTo" value="${cTo}" min="${cFrom}" max="${todayISO()}"></div></div>` : ''}
   <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period, fmtD(cFrom), fmtD(cTo))))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}
-    <div class="hero-sub"><span><b>${n0(c.km)}</b> ${esc(t('km'))}</span><span><b>${n0(c.litres)}</b> ${esc(t('litreUnit'))}</span><span><b>${c.fills}</b> ${esc(t('colFills').toLowerCase())}</span></div></section>
+    <div class="hero-sub"><span><i class="hs-ic">${svg(ICONS.gauge)}</i><span><b>${n0(c.km)}</b>${esc(t('kmDriven'))}</span></span><span><i class="hs-ic">${svg(ICONS.drop)}</i><span><b>${n0(c.litres)}</b>${esc(t('litresWord'))}</span></span><span><i class="hs-ic">${svg(ICONS.fuel)}</i><span><b>${c.fills}</b>${esc(t('colFills').toLowerCase())}</span></span></div></section>
   <section class="anal">
     <h2>${esc(t('costVsPerf'))}</h2>
     <div class="eq">
@@ -1058,10 +1058,11 @@ function drawFuelCharts(v) {
   const hits = f => bs.map((b, i) => `<rect class="hit" data-i="${i}" x="${L + f.slot * i}" y="${T}" width="${f.slot}" height="${f.ih}" tabindex="0" aria-label="${esc(b.label)}"></rect>`).join('');
   // a padded range for a line, so small changes are visible but not exaggerated
   const span = (vals, step) => { let lo = Math.min(...vals), hi = Math.max(...vals); const pad = Math.max(step, (hi - lo) * 0.3); return [Math.max(0, Math.floor((lo - pad) / step) * step), Math.ceil((hi + pad) / step) * step]; };
-  const linePath = (f, key, y) => {
+  const linePath = (f, key, y, base) => {
     const runs = [[]]; bs.forEach((b, i) => b[key] ? runs.at(-1).push([f.cx(i), y(b[key])]) : runs.at(-1).length && runs.push([]));
     return runs.filter(r => r.length).map(p => `M${p[0][0]} ${p[0][1]}` + p.slice(1).map((q, j) => { const p0 = p[j - 1] || p[j], p1 = p[j], p3 = p[j + 2] || q;
-      return `C${p1[0] + (q[0] - p0[0]) / 6} ${p1[1] + (q[1] - p0[1]) / 6} ${q[0] - (p3[0] - p1[0]) / 6} ${q[1] - (p3[1] - p1[1]) / 6} ${q[0]} ${q[1]}`; }).join('')).join('');
+      return `C${p1[0] + (q[0] - p0[0]) / 6} ${p1[1] + (q[1] - p0[1]) / 6} ${q[0] - (p3[0] - p1[0]) / 6} ${q[1] - (p3[1] - p1[1]) / 6} ${q[0]} ${q[1]}`; }).join('')
+      + (base != null && p.length > 1 ? `L${p.at(-1)[0]} ${base}L${p[0][0]} ${base}Z` : '')).join('');
   };
   const dots = (f, key, y, cls) => bs.map((b, i) => b[key] ? `<circle class="pt ${cls} ${i === fsel ? 'sel' : ''}" data-b="${i}" cx="${f.cx(i)}" cy="${y(b[key])}" r="${i === fsel ? 5 : (n > 24 ? 0 : 3)}"></circle>` : '').join('');
   const cross = (f, id) => `<line class="cross" id="${id}" x1="0" x2="0" y1="${T}" y2="${T + f.ih}"></line>`;
@@ -1073,7 +1074,7 @@ function drawFuelCharts(v) {
   const grid1 = [0, 0.5, 1].map(q => `<line class="grid" x1="${L}" x2="${W - f1.R}" y1="${T + f1.ih - q * f1.ih}" y2="${T + f1.ih - q * f1.ih}"></line><text class="ax" x="${L - 6}" y="${T + f1.ih - q * f1.ih + 4}" text-anchor="end">${esc(compact(sMax * q))}</text>${ks.length ? `<text class="ax k" x="${W - f1.R + 6}" y="${T + f1.ih - q * f1.ih + 4}">${esc(n1(kLo + (kHi - kLo) * q))}</text>` : ''}`).join('');
   const bars = bs.map((b, i) => { if (!b.spent) return ''; const x = L + f1.slot * i + (f1.slot - bw) / 2, y = yS(b.spent), h = T + f1.ih - y, r = Math.min(4, bw / 2, h);
     return `<path class="bar ${i === fsel ? 'sel' : ''}" data-b="${i}" d="M${x} ${T + f1.ih}V${y + r}Q${x} ${y} ${x + r} ${y}H${x + bw - r}Q${x + bw} ${y} ${x + bw} ${y + r}V${T + f1.ih}Z"></path>`; }).join('');
-  cb.innerHTML = `<svg width="${W}" height="${f1.H}" viewBox="0 0 ${W} ${f1.H}" role="img" aria-label="${esc(t('chartCombo'))}">${grid1}${bars}${cross(f1, 'cross1')}<path class="line k" d="${linePath(f1, 'kpl', yK)}"></path>${dots(f1, 'kpl', yK, 'k')}${xLabels(f1)}${hits(f1)}</svg>`;
+  cb.innerHTML = `<svg width="${W}" height="${f1.H}" viewBox="0 0 ${W} ${f1.H}" role="img" aria-label="${esc(t('chartCombo'))}"><defs><linearGradient id="kfade" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="kf0"></stop><stop offset="1" class="kf1"></stop></linearGradient></defs>${grid1}${bars}<path class="karea" d="${linePath(f1, 'kpl', yK, T + f1.ih)}"></path>${cross(f1, 'cross1')}<path class="line k" d="${linePath(f1, 'kpl', yK)}"></path>${dots(f1, 'kpl', yK, 'k')}${xLabels(f1)}${hits(f1)}</svg>`;
 
   const select = i => {
     fsel = i; const b = bs[i];
