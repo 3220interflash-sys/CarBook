@@ -1007,41 +1007,40 @@ function eqCell(cls, label, val, pct, goodWhenUp) {
 }
 function viewMoney(v) {
   const rows = fuelRows(v).reverse();
-  const yearAgo = addDaysISO(todayISO(), -365), svcSpent = mine(db.service, v).filter(s => s.date >= yearAgo).reduce((s, x) => s + (x.cost || 0), 0);
   if (!rows.length) return `${header(v)}<div class="empty"><b>${esc(t('noFuelTitle'))}</b>${esc(t('noFuelText'))}</div><div class="actions"><button class="btn wide" data-act="addFuel">${esc(t('addFuelTitle'))}</button></div>`;
   const d = periodData(v, period), c = d.cur, p = d.prev, nudge = fuelNudge(v);
-  const pp = pctOf(c.price, p.price), kp = pctOf(c.kpl, p.kpl), cp = pctOf(c.ckm, p.ckm);
-  // Plain-words reading of the numbers: what moved the cost of each km.
-  let insight = c.ckm ? t('insCkm', n1(c.ckm)) : t('insNoKpl');
-  if (cp != null && pp != null && kp != null) insight = t('insCkmChg', n1(c.ckm), Math.abs(Math.round(cp)), cp < 0, Math.abs(cp) < 1, t('prev_' + period)) + ' ' + t('insWhy', Math.abs(Math.round(pp)), pp > 0, Math.abs(pp) < 1, Math.abs(Math.round(kp)), kp > 0, Math.abs(kp) < 1);
-  const best = d.bs.filter(x => x.kpl).sort((x, y) => y.kpl - x.kpl)[0];
-  if (best && d.bs.filter(x => x.kpl).length > 2) insight += ' ' + t('insBest', best.label, n1(best.kpl));
+  const kp = pctOf(c.kpl, p.kpl), cp = pctOf(c.ckm, p.ckm);
+  // Two numbers that matter, each with one plain-words change, and one sentence that sums them up.
+  const chg = (pct, goodUp, upK, downK) => pct == null ? '' : Math.abs(pct) < 2 ? `<span class="duo-c same">${esc(t('chgSame'))}</span>`
+    : `<span class="duo-c ${(pct > 0) === goodUp ? 'good' : 'bad'}">${esc(t(pct > 0 ? upK : downK, Math.abs(Math.round(pct))))}</span>`;
+  const dir = pct => pct == null ? null : Math.abs(pct) < 2 ? 0 : Math.sign(pct);
+  const say = kp == null || cp == null ? t(c.kpl ? 'sayNoPrev' : 'insNoKpl') : t('saySum', dir(kp), dir(cp));
   return `${header(v)}
   ${nudge ? nudgeCard(nudge) : ''}
   <div class="period"><label for="periodSel">${esc(t('periodLabel'))}</label><select id="periodSel" class="pill-select">${PERIODS.map(k => `<option value="${k}" ${k === period ? 'selected' : ''}>${esc(t('pl_' + k))}</option>`).join('')}</select></div>
   ${period === 'C' ? `<div class="two range"><div><label for="cFrom">${esc(t('fromDate'))}</label><input type="date" id="cFrom" value="${cFrom}" max="${cTo}"></div><div><label for="cTo">${esc(t('toDate'))}</label><input type="date" id="cTo" value="${cTo}" min="${cFrom}" max="${todayISO()}"></div></div>` : ''}
   <section class="hero-num"><p class="l">${esc(t('spentIn', t('per_' + period, fmtD(cFrom), fmtD(cTo))))}</p><p class="n">${esc(t('rs', n0(c.spent)))}</p>${delta(c.spent, p.spent, false, period)}
     <div class="hero-sub"><span><i class="hs-ic">${svg(ICONS.gauge)}</i><span><b>${n0(c.km)}</b>${esc(t('kmDriven'))}</span></span><span><i class="hs-ic">${svg(ICONS.drop)}</i><span><b>${n0(c.litres)}</b>${esc(t('litresWord'))}</span></span><span><i class="hs-ic">${svg(ICONS.fuel)}</i><span><b>${c.fills}</b>${esc(t('colFills').toLowerCase())}</span></span></div></section>
+  <h2>${esc(t('howDoing'))}</h2>
+  <div class="duo">
+    <div class="duo-t key"><span class="l">${esc(t('kplTileL'))}</span><span class="n">${c.kpl ? n1(c.kpl) : '–'}</span><span class="u">${esc(t('kplTileU'))}</span>${chg(kp, true, 'chgBetter', 'chgLower')}</div>
+    <div class="duo-t"><span class="l">${esc(t('ckmTileL'))}</span><span class="n">${c.ckm ? esc(t('rs', n1(c.ckm))) : '–'}</span><span class="u">${esc(t('ckmTileU'))}</span>${chg(cp, false, 'chgDearer', 'chgCheaper')}</div>
+  </div>
+  <p class="say">${esc(say)}</p>
   <section class="anal">
-    <h2>${esc(t('costVsPerf'))}</h2>
-    <div class="eq">
-      ${eqCell('', t('perLitre'), c.price ? esc(t('rs', n0(c.price))) : '–', pp, false)}<span class="eq-op">÷</span>
-      ${eqCell('key', t('kplUnit'), c.kpl ? n1(c.kpl) : '–', kp, true)}<span class="eq-op">=</span>
-      ${eqCell('res', t('rsPerKm'), c.ckm ? esc(t('rs', n1(c.ckm))) : '–', cp, false)}
-    </div>
-    <p class="insight">${esc(insight)}</p>
+    <h2>${esc(t('monthByMonth'))}</h2>
     <div class="legend"><span><i class="sw bar"></i>${esc(t('legSpent'))}</span><span><i class="sw ln"></i>${esc(t('legKpl'))}</span></div>
     <div class="readout" id="readout" aria-live="polite"></div>
     <div class="chart" id="ch-combo"></div>
-    <details class="tbl"><summary>${esc(t('seeNumbers'))}</summary><div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('kplUnit'))}</th><th>${esc(t('colCkm'))}</th><th>${esc(t('colPrice'))}</th></tr></thead>
+    <details class="tbl"><summary>${esc(t('howWorked'))}</summary>
+      <p class="hint">${esc(t('kplHow'))} ${esc(t('ckmHow', c.price ? n0(c.price) : '–'))} ${esc(t('fillAssumption'))}</p>
+      <div class="tbl-wrap"><table><thead><tr><th>${esc(t('colPeriod'))}</th><th>${esc(t('colSpent'))}</th><th>${esc(t('kplUnit'))}</th><th>${esc(t('colCkm'))}</th><th>${esc(t('colPrice'))}</th></tr></thead>
       <tbody>${d.bs.slice().reverse().map(b => `<tr><td>${esc(b.label)}</td><td>${b.fills ? esc(t('rs', n0(b.spent))) : '–'}</td><td>${b.kpl ? n1(b.kpl) : '–'}</td><td>${b.ckm ? n1(b.ckm) : '–'}</td><td>${b.price ? n0(b.price) : '–'}</td></tr>`).join('')}</tbody></table></div></details>
-    <p class="hint kpl-how">${esc(t('kplHow'))}</p>
   </section>
   ${perfCard(v)}
-  <div class="stats one"><div class="stat"><span class="n">${esc(t('rs', n0(svcSpent)))}</span><span class="l">${esc(t('svcSpent12'))}</span></div></div>
   <div class="sec-h"><h2>${esc(t('recentFills'))}</h2>${rows.length > 5 ? `<button class="link-btn" data-act="allFills">${esc(t('seeAllFills', rows.length))}</button>` : ''}</div>
   <ul class="list">${rows.slice(0, 5).map(fillRow).join('')}</ul>
-  <p class="hint">${esc(t('fillAssumption'))} ${esc(t('stationNote'))}</p>`;
+  <p class="hint">${esc(t('stationNote'))}</p>`;
 }
 
 // ---------- charts (hand-drawn SVG, works offline) ----------

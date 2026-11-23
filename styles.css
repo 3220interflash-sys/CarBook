@@ -890,3 +890,24 @@ body { background: var(--bg); color: var(--fg); }
 :root[data-bg="glow"] .sw.bar { background: #EAF2EE; opacity: .25; }
 :root[data-bg="glow"] #dlg { box-shadow: 0 -1px 0 rgba(0, 196, 127, .35), 0 -20px 50px -20px rgba(0, 196, 127, .35); }
 :root[data-bg="glow"] #dlg input[type=file] { background: rgba(0, 196, 127, .05); border-color: rgba(0, 196, 127, .30); color: var(--mut); }
+
+/* ---------- Money, simpler (November 2026): two numbers that matter, one sentence ---------- */
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.duo-t { display: flex; flex-direction: column; gap: 2px; min-width: 0; padding: 16px 14px; border-radius: 20px; background: var(--surface); box-shadow: var(--lift); }
+.duo-t .l { font-size: 13.5px; font-weight: 700; color: var(--mut); }
+.duo-t .n { font-size: clamp(28px, 9vw, 36px); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-top: 4px; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.duo-t .u { font-size: 13px; color: var(--mut); }
+.duo-c { align-self: flex-start; margin-top: 10px; padding: 5px 10px; border-radius: 999px; font-size: 12.5px; font-weight: 800; line-height: 1.3; }
+.duo-c.good { background: var(--green-tint); color: var(--green-ink); }
+.duo-c.bad { background: var(--amber-tint); color: var(--amber-text); }
+.duo-c.same { background: var(--surface-2); color: var(--mut); }
+.duo-t.key { background: #050505; color: #fff; }
+.duo-t.key .n { color: #00C47F; }
+.duo-t.key .l, .duo-t.key .u { color: rgba(255, 255, 255, .72); }
+.duo-t.key .duo-c.good { background: rgba(0, 196, 127, .16); color: #3EE0A4; }
+.duo-t.key .duo-c.bad { background: rgba(255, 192, 112, .16); color: #FFC070; }
+.duo-t.key .duo-c.same { background: rgba(255, 255, 255, .10); color: rgba(255, 255, 255, .8); }
+.say { margin: 12px 4px 0; font-size: 15px; line-height: 1.5; }
+.tbl .hint { margin: 4px 0 10px; }
+:root[data-bg="glow"] .duo-t.key { background: rgba(0, 196, 127, .07); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .45), 0 0 30px -12px rgba(0, 196, 127, .8); }
+:root[data-bg="glow"] .duo-t.key .n { color: #3EE0A4; text-shadow: 0 0 24px rgba(0, 196, 127, .45); }

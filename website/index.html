@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light only">
+<meta name="color-scheme" content="dark only">
 <title>MotorPal: your vehicle, sorted</title>
 <meta name="description" content="MotorPal reminds you of every renewal and service, and helps you understand what your vehicle is trying to tell you: warning lights, mechanic talk, and who fixes what. Free, private, made for Sri Lankan drivers.">
 <meta property="og:title" content="MotorPal: your vehicle, sorted">
 <meta property="og:description" content="It reminds you. It also tells you what your car is trying to say. A free, private app made for Sri Lankan drivers.">
 <meta property="og:image" content="img/home.jpg">
-<meta name="theme-color" content="#FFFFFF">
+<meta name="theme-color" content="#030B08">
 <link rel="icon" href="img/motorpal-icon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
@@ -286,6 +286,68 @@ body { background: var(--bg); }
 .wf-note { margin-top: 6px; font-size: 11px; color: var(--yellow); font-weight: 700; }
 .final-card { box-shadow: 0 24px 48px -24px rgba(17, 26, 22, .35); }
 @media (max-width: 900px) { .wallet-float { right: 0; top: 6px; width: 200px; padding: 14px 16px; } .wf-big { font-size: 26px; } }
+
+/* ---------- Glow finish (November 2026): same look as the app's Glow ----------
+   Near-black green page with a faint mint grid, dark panels outlined in mint at low strength,
+   icons in outlined glowing circles, mint glows instead of fills. Text #EAF2EE on #08150F is 16:1, muted #A9C4B8 10:1. */
+:root {
+  --bg: #030B08; --soft: #08150F; --ink: #EAF2EE; --mut: #A9C4B8; --line: rgba(0, 196, 127, .16);
+  --green: #00C47F; --green-ink: #3EE0A4; --green-tint: rgba(0, 196, 127, .10); --deep: #040C09;
+  --yellow: #00C47F; --yellow-tint: rgba(0, 196, 127, .12); --on-yellow: #04120C;
+  --red: #FF9B90; --red-tint: rgba(255, 155, 144, .10); --amber: #FFC070; --amber-tint: rgba(255, 192, 112, .10);
+  --edge: rgba(0, 196, 127, .22);
+  --lift: 0 0 0 1px var(--edge), inset 0 1px 0 rgba(255, 255, 255, .03), 0 24px 48px -28px rgba(0, 0, 0, .9);
+  --glow: 0 0 22px -8px rgba(0, 196, 127, .8);
+  color-scheme: dark;
+}
+body {
+  background:
+    radial-gradient(900px 520px at 85% -120px, rgba(0, 196, 127, .20), transparent 70%) no-repeat,
+    linear-gradient(rgba(0, 196, 127, .035) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(0, 196, 127, .035) 1px, transparent 1px) 0 0 / 40px 40px,
+    var(--bg);
+  color: var(--ink);
+}
+body::before { background: var(--bg); }
+.nav { background: rgba(3, 11, 8, .82); border-bottom: 1px solid var(--edge); }
+.band.soft { background: rgba(0, 196, 127, .025); border-block: 1px solid rgba(0, 196, 127, .10); }
+.dark { background: transparent; }
+.dark .lead, .dark-cols .steps-list span, .legend { color: var(--mut); }
+.step, .pain, .promise, .person, .how, .say, .fx, .lis, .value, .feature .shot, .badge-float, .dl {
+  background: #08150F !important; box-shadow: var(--lift) !important; border: 0 !important; color: var(--ink); }
+.step.last { background: radial-gradient(260px 180px at 100% 0%, rgba(0, 196, 127, .25), transparent 70%), #040C09 !important; box-shadow: 0 0 0 1px rgba(0, 196, 127, .45), var(--glow) !important; }
+.step.last p { color: var(--mut); }
+.feature .shot { background: radial-gradient(320px 240px at 50% 0%, rgba(0, 196, 127, .14), transparent 70%), #08150F !important; }
+/* icons in outlined, softly glowing circles */
+.pain .ic, .promise .ic, .person .ic, .fx .ic, .lis .ic, .value .ic, .points .pi, .badge-float .dot, .step .num {
+  border-radius: 50% !important; background: rgba(0, 196, 127, .06) !important; color: var(--green-ink) !important;
+  box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .35), 0 0 18px -8px rgba(0, 196, 127, .8); }
+.step .num { color: var(--green-ink); }
+.badge-float.one .dot { color: var(--red) !important; box-shadow: inset 0 0 0 1px rgba(255, 155, 144, .4), 0 0 18px -8px rgba(255, 155, 144, .8); }
+.pain .fix { border-top-color: var(--line); }
+.say .a, .covered { background: rgba(0, 196, 127, .07); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .25); color: var(--green-ink); }
+.chain-note { background: var(--red-tint); color: #FFC9C2; box-shadow: inset 0 0 0 1px rgba(255, 155, 144, .25); }
+.hello span { background: rgba(0, 196, 127, .08); color: var(--green-ink); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .28); }
+.eyebrow { color: var(--green-ink); }
+.hero h1 em, .how .n { color: var(--green); text-shadow: 0 0 30px rgba(0, 196, 127, .35); }
+.btn.primary, .btn.yellow { background: var(--green); color: #04120C; box-shadow: var(--glow); }
+.btn.primary:hover { background: #3EE0A4; }
+.btn.ghost { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .4); }
+.btn.ghost:hover { box-shadow: inset 0 0 0 1px var(--green), var(--glow); }
+.links a { color: var(--mut); } .links a:hover, footer a:hover { color: var(--ink); }
+.logo { color: var(--ink); } .logo .pal { color: var(--green); }
+.phone { background: #000; box-shadow: 0 0 0 1px rgba(0, 196, 127, .30), 0 30px 70px -24px rgba(0, 0, 0, .9), 0 0 60px -30px rgba(0, 196, 127, .6); }
+.wallet-float { background: radial-gradient(180px 140px at 100% 0%, rgba(0, 196, 127, .3), transparent 70%), linear-gradient(rgba(0, 196, 127, .06) 1px, transparent 1px) 0 0 / 20px 20px, linear-gradient(90deg, rgba(0, 196, 127, .06) 1px, transparent 1px) 0 0 / 20px 20px, #040C09;
+  box-shadow: 0 0 0 1px rgba(0, 196, 127, .35), 0 20px 40px -18px rgba(0, 0, 0, .8), var(--glow); }
+.faq details { border-color: var(--line); }
+.faq summary::after { background: rgba(0, 196, 127, .06); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .3); }
+.final-card { background: radial-gradient(420px 300px at 100% 0%, rgba(0, 196, 127, .28), transparent 70%), linear-gradient(rgba(0, 196, 127, .05) 1px, transparent 1px) 0 0 / 28px 28px, linear-gradient(90deg, rgba(0, 196, 127, .05) 1px, transparent 1px) 0 0 / 28px 28px, #040C09;
+  color: var(--ink); box-shadow: 0 0 0 1px rgba(0, 196, 127, .35), 0 0 80px -40px rgba(0, 196, 127, .7); }
+.final-card .btn.primary { background: var(--green); color: #04120C; }
+footer { border-top-color: var(--edge); }
+/* the black car on a near-black page: a mint rim light and a lit road line keep it visible */
+.lane { border-top-color: rgba(0, 196, 127, .25); }
+.car { filter: drop-shadow(0 0 1px rgba(234, 242, 238, .55)) drop-shadow(0 0 14px rgba(0, 196, 127, .35)); }
 </style>
 </head>
 <body>
