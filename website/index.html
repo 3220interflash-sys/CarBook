@@ -348,6 +348,21 @@ footer { border-top-color: var(--edge); }
 /* the black car on a near-black page: a mint rim light and a lit road line keep it visible */
 .lane { border-top-color: rgba(0, 196, 127, .25); }
 .car { filter: drop-shadow(0 0 1px rgba(234, 242, 238, .55)) drop-shadow(0 0 14px rgba(0, 196, 127, .35)); }
+
+/* ---------- Pulse line (November 2026): replaces the driving car ----------
+   A neon heart-monitor line across the top. The pulse blips like a monitor, traces a car's side profile in the
+   middle (the wheels light up as it passes), then carries on. Moved by a small script below. */
+.pulse { position: absolute; left: 0; right: 0; top: 4px; height: 112px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+.pulse svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.pulse path, .pulse circle { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.p-base { stroke: rgba(0, 196, 127, .14); stroke-width: 1.5; }
+.p-tail { stroke: rgba(0, 196, 127, .45); stroke-width: 2; }
+.p-head { stroke: #7CF5C8; stroke-width: 3; }
+.p-car { stroke: #00C47F; stroke-width: 2.6; opacity: 0; }
+.p-wheel { stroke: #00C47F; stroke-width: 2.4; opacity: 0; }
+@media (max-width: 700px) { .pulse { top: 26px; height: 70px; } }
+@media (prefers-reduced-motion: reduce) { .p-tail, .p-head { display: none; } .p-car, .p-wheel { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -388,39 +403,15 @@ footer { border-top-color: var(--edge); }
       <div class="wallet-float"><span class="wf-l">Spent on fuel this month</span><span class="wf-big">Rs 8,272</span><span class="wf-row"><span><b>52,480</b> km</span><span><b>13.4</b> km/L</span></span><span class="wf-note">Example vehicle</span></div>
     </div>
   </div>
-  <div class="road" aria-hidden="true">
-    <div class="lane"></div>
-    <div class="drive">
-      <svg class="car" viewBox="0 0 260 96" aria-hidden="true">
-        <defs>
-          <linearGradient id="paint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34403B"/><stop offset=".45" stop-color="#121816"/><stop offset="1" stop-color="#050706"/></linearGradient>
-          <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".55" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-          <linearGradient id="tint" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B4A45"/><stop offset=".6" stop-color="#121A17"/><stop offset="1" stop-color="#0A0F0D"/></linearGradient>
-          <radialGradient id="rim" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#F2F5F4"/><stop offset=".6" stop-color="#A9B3AF"/><stop offset="1" stop-color="#5E6865"/></radialGradient>
-          <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#EFFFF8" stop-opacity=".55"/><stop offset="1" stop-color="#EFFFF8" stop-opacity="0"/></linearGradient>
-          <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#00A86B" stop-opacity="0"/><stop offset="1" stop-color="#00A86B" stop-opacity=".45"/></linearGradient>
-          <filter id="blur" x="-20%" y="-200%" width="140%" height="500%"><feGaussianBlur stdDeviation="3"/></filter>
-        </defs>
-        <ellipse class="shadow" cx="132" cy="90" rx="118" ry="4.5" fill="#000" opacity=".28" filter="url(#blur)"/>
-        <g class="trail"><rect x="-60" y="50" width="72" height="1.6" rx=".8" fill="url(#trail)"/><rect x="-40" y="60" width="54" height="1.2" rx=".6" fill="url(#trail)"/></g>
-        <path class="beam" d="M246 54 L330 40 L330 74 Z" fill="url(#beam)"/>
-        <path d="M16 68 C14 62 15 54 20 51 L44 47 C56 45 64 42 74 36 C84 29 96 23 112 21.5 C134 20 156 21 170 27 C178 31 186 37 194 41 C208 43 228 45 238 48 C245 50 248 55 248 61 L247 67 C246 70 243 71 240 71 L222 71 A22 22 0 0 0 178 71 L84 71 A22 22 0 0 0 40 71 L22 71 C19 71 17 70 16 68 Z" fill="url(#paint)"/>
-        <path d="M16 68 C14 62 15 54 20 51 L44 47 C56 45 64 42 74 36 C84 29 96 23 112 21.5 C134 20 156 21 170 27 C178 31 186 37 194 41 C208 43 228 45 238 48 C245 50 248 55 248 61 L247 67 C246 70 243 71 240 71 L222 71 A22 22 0 0 0 178 71 L84 71 A22 22 0 0 0 40 71 L22 71 C19 71 17 70 16 68 Z" fill="url(#sheen)" opacity=".7"/>
-        <path d="M82 41 C90 32 100 25.5 113 24.5 C134 23.4 154 24 166 29.5 L183 41 Z" fill="url(#tint)" stroke="#AEB8B4" stroke-width="1.3" stroke-linejoin="round"/>
-        <path d="M127 23.6 L127 41" stroke="#050706" stroke-width="4"/>
-        <path d="M104 28 C116 26 134 25.6 152 26.6" stroke="#fff" stroke-opacity=".25" stroke-width="1.4" fill="none" stroke-linecap="round"/>
-        <path d="M24 52.5 C90 47.5 160 46.5 238 50" stroke="#fff" stroke-opacity=".28" stroke-width="1.3" fill="none"/>
-        <path d="M127 43 V68 M84 46 V68" stroke="#000" stroke-opacity=".45" stroke-width="1"/>
-        <rect x="112" y="47" width="9" height="2" rx="1" fill="#AEB8B4" opacity=".8"/><rect x="152" y="47" width="9" height="2" rx="1" fill="#AEB8B4" opacity=".8"/>
-        <path d="M174 37 L183 36 L184 40 L176 41 Z" fill="#0A0F0D" stroke="#AEB8B4" stroke-width=".8"/>
-        <path d="M88 66.5 H176" stroke="#00C47F" stroke-width="1.6" stroke-linecap="round" opacity=".85"/>
-        <path d="M233 49.5 L246 53.5 L245 57 L232 53.5 Z" fill="#E9FFF6"/>
-        <path d="M18 53.5 L25 52.5 L25 56.5 L18.5 57.5 Z" fill="#C2423A"/>
-        <path d="M222 66 H246" stroke="#000" stroke-opacity=".5" stroke-width="1.2"/>
-        <circle cx="62" cy="71" r="21.5" fill="#070908"/><circle cx="200" cy="71" r="21.5" fill="#070908"/><g class="wheel" style="transform-origin:62px 71px"><circle cx="62" cy="71" r="17.5" fill="#0A0C0B"/><circle cx="62" cy="71" r="17.5" fill="none" stroke="#1E2421" stroke-width="1.2"/><circle cx="62" cy="71" r="12.6" fill="url(#rim)"/><g class="spokes" fill="#2A302D"><path d="M65.20 71.00 L73.42 69.62 L73.42 72.38 Z"/><path d="M64.59 72.88 L72.05 76.60 L70.43 78.82 Z"/><path d="M62.99 74.04 L66.84 81.43 L64.22 82.28 Z"/><path d="M61.01 74.04 L59.78 82.28 L57.16 81.43 Z"/><path d="M59.41 72.88 L53.57 78.82 L51.95 76.60 Z"/><path d="M58.80 71.00 L50.58 72.38 L50.58 69.62 Z"/><path d="M59.41 69.12 L51.95 65.40 L53.57 63.18 Z"/><path d="M61.01 67.96 L57.16 60.57 L59.78 59.72 Z"/><path d="M62.99 67.96 L64.22 59.72 L66.84 60.57 Z"/><path d="M64.59 69.12 L70.43 63.18 L72.05 65.40 Z"/></g><circle cx="62" cy="71" r="3.4" fill="#1A1F1D" stroke="#9AA4A0" stroke-width=".8"/></g>
-        <g class="wheel" style="transform-origin:200px 71px"><circle cx="200" cy="71" r="17.5" fill="#0A0C0B"/><circle cx="200" cy="71" r="17.5" fill="none" stroke="#1E2421" stroke-width="1.2"/><circle cx="200" cy="71" r="12.6" fill="url(#rim)"/><g class="spokes" fill="#2A302D"><path d="M203.20 71.00 L211.42 69.62 L211.42 72.38 Z"/><path d="M202.59 72.88 L210.05 76.60 L208.43 78.82 Z"/><path d="M200.99 74.04 L204.84 81.43 L202.22 82.28 Z"/><path d="M199.01 74.04 L197.78 82.28 L195.16 81.43 Z"/><path d="M197.41 72.88 L191.57 78.82 L189.95 76.60 Z"/><path d="M196.80 71.00 L188.58 72.38 L188.58 69.62 Z"/><path d="M197.41 69.12 L189.95 65.40 L191.57 63.18 Z"/><path d="M199.01 67.96 L195.16 60.57 L197.78 59.72 Z"/><path d="M200.99 67.96 L202.22 59.72 L204.84 60.57 Z"/><path d="M202.59 69.12 L208.43 63.18 L210.05 65.40 Z"/></g><circle cx="200" cy="71" r="3.4" fill="#1A1F1D" stroke="#9AA4A0" stroke-width=".8"/></g>
-      </svg>
-    </div>
+  <div class="pulse" aria-hidden="true">
+    <svg viewBox="0 0 1920 120" preserveAspectRatio="xMidYMid slice">
+      <defs><filter id="pglow" x="-5%" y="-50%" width="110%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>
+      <path class="p-base" d="M-20 80 L140 80 q6 -7 12 0 L162 80 l5 7 l7 -44 l7 54 l6 -17 L196 80 q11 -12 22 0 L420 80 q6 -7 12 0 L442 80 l5 7 l7 -44 l7 54 l6 -17 L476 80 q11 -12 22 0 L640 80 q6 -7 12 0 L662 80 l5 7 l7 -44 l7 54 l6 -17 L696 80 q11 -12 22 0 L800 80 L806 80 L806 64 Q807 56 818 54 L858 52 L892 33 Q900 27 912 26 L992 26 Q1004 27 1014 33 L1052 51 L1106 55 Q1124 58 1126 66 L1127 80 L1260 80 q6 -7 12 0 L1282 80 l5 7 l7 -44 l7 54 l6 -17 L1316 80 q11 -12 22 0 L1500 80 q6 -7 12 0 L1522 80 l5 7 l7 -44 l7 54 l6 -17 L1556 80 q11 -12 22 0 L1730 80 q6 -7 12 0 L1752 80 l5 7 l7 -44 l7 54 l6 -17 L1786 80 q11 -12 22 0 L1940 80"/>
+      <path class="p-car" d="M800 80 L800 80 L806 80 L806 64 Q807 56 818 54 L858 52 L892 33 Q900 27 912 26 L992 26 Q1004 27 1014 33 L1052 51 L1106 55 Q1124 58 1126 66 L1127 80" filter="url(#pglow)"/>
+      <circle class="p-wheel" cx="862" cy="78" r="15" filter="url(#pglow)"/><circle class="p-wheel" cx="1068" cy="78" r="15" filter="url(#pglow)"/>
+      <path class="p-tail" d="M-20 80 L140 80 q6 -7 12 0 L162 80 l5 7 l7 -44 l7 54 l6 -17 L196 80 q11 -12 22 0 L420 80 q6 -7 12 0 L442 80 l5 7 l7 -44 l7 54 l6 -17 L476 80 q11 -12 22 0 L640 80 q6 -7 12 0 L662 80 l5 7 l7 -44 l7 54 l6 -17 L696 80 q11 -12 22 0 L800 80 L806 80 L806 64 Q807 56 818 54 L858 52 L892 33 Q900 27 912 26 L992 26 Q1004 27 1014 33 L1052 51 L1106 55 Q1124 58 1126 66 L1127 80 L1260 80 q6 -7 12 0 L1282 80 l5 7 l7 -44 l7 54 l6 -17 L1316 80 q11 -12 22 0 L1500 80 q6 -7 12 0 L1522 80 l5 7 l7 -44 l7 54 l6 -17 L1556 80 q11 -12 22 0 L1730 80 q6 -7 12 0 L1752 80 l5 7 l7 -44 l7 54 l6 -17 L1786 80 q11 -12 22 0 L1940 80"/>
+      <path class="p-head" d="M-20 80 L140 80 q6 -7 12 0 L162 80 l5 7 l7 -44 l7 54 l6 -17 L196 80 q11 -12 22 0 L420 80 q6 -7 12 0 L442 80 l5 7 l7 -44 l7 54 l6 -17 L476 80 q11 -12 22 0 L640 80 q6 -7 12 0 L662 80 l5 7 l7 -44 l7 54 l6 -17 L696 80 q11 -12 22 0 L800 80 L806 80 L806 64 Q807 56 818 54 L858 52 L892 33 Q900 27 912 26 L992 26 Q1004 27 1014 33 L1052 51 L1106 55 Q1124 58 1126 66 L1127 80 L1260 80 q6 -7 12 0 L1282 80 l5 7 l7 -44 l7 54 l6 -17 L1316 80 q11 -12 22 0 L1500 80 q6 -7 12 0 L1522 80 l5 7 l7 -44 l7 54 l6 -17 L1556 80 q11 -12 22 0 L1730 80 q6 -7 12 0 L1752 80 l5 7 l7 -44 l7 54 l6 -17 L1786 80 q11 -12 22 0 L1940 80" filter="url(#pglow)"/>
+    </svg>
   </div>
 </section>
 
@@ -702,5 +693,29 @@ footer { border-top-color: var(--edge); }
   </div>
 </footer>
 
+<script>
+// Pulse line: a bright head with a fading tail runs along the line; the car outline draws on as it passes.
+(function () {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var head = document.querySelector('.p-head'); if (!head || !head.animate) return;
+  var tail = document.querySelector('.p-tail'), car = document.querySelector('.p-car'), wheels = document.querySelectorAll('.p-wheel');
+  var len = head.getTotalLength(), carLen = car.getTotalLength(), T = 7000, TAIL = 340, HEAD = 70, run = len + TAIL;
+  // distance along the line where the car starts: the car path begins at x = 800
+  var lo = 0, hi = len; while (hi - lo > 1) { var m = (lo + hi) / 2; if (head.getPointAtLength(m).x < 800) lo = m; else hi = m; }
+  var p0 = lo / run, p1 = (lo + carLen) / run;
+  [[head, HEAD], [tail, TAIL]].forEach(function (x) {
+    x[0].style.strokeDasharray = x[1] + ' ' + (len + TAIL * 2);
+    x[0].animate([{ strokeDashoffset: x[1] }, { strokeDashoffset: x[1] - run }], { duration: T, iterations: Infinity });
+  });
+  car.style.strokeDasharray = carLen;
+  car.animate([{ strokeDashoffset: carLen, opacity: 1, offset: 0 }, { strokeDashoffset: carLen, opacity: 1, offset: p0 },
+    { strokeDashoffset: 0, opacity: 1, offset: p1 }, { strokeDashoffset: 0, opacity: 1, offset: .86 }, { strokeDashoffset: 0, opacity: 0, offset: .98 }, { strokeDashoffset: carLen, opacity: 0, offset: 1 }],
+    { duration: T, iterations: Infinity });
+  wheels.forEach(function (w, i) {
+    var at = p0 + (p1 - p0) * (i ? .8 : .3);
+    w.animate([{ opacity: 0, offset: 0 }, { opacity: 0, offset: at }, { opacity: 1, offset: at + .03 }, { opacity: 1, offset: .86 }, { opacity: 0, offset: .98 }, { opacity: 0, offset: 1 }], { duration: T, iterations: Infinity });
+  });
+})();
+</script>
 </body>
 </html>
