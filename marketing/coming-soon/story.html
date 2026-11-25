@@ -35,9 +35,9 @@ svg{position:absolute;inset:0}
   <path id="trace" fill="none" stroke="url(#fade)" stroke-width="3.4" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
   <path id="tailglow" fill="none" stroke="#00C47F" stroke-width="14" stroke-linejoin="round" stroke-linecap="round" filter="url(#soft)"/>
   <path id="head" fill="none" stroke="#C9FFE9" stroke-width="4.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
-  <circle id="dotHalo" r="34" fill="url(#dotg)"/><circle id="dot" r="7" fill="#F0FFF8"/>
 </svg>
 <div class="txt"><p class="name" id="name"></p><p class="soon" id="soon">Coming soon</p><p class="sub" id="sub">Your vehicle's whole life, in one place.</p></div>
+<svg id="fx" width="1080" height="1920" viewBox="0 0 1080 1920"><defs><radialGradient id="dotg2"><stop offset="0" stop-color="#7CF5C8" stop-opacity=".9"/><stop offset="1" stop-color="#00C47F" stop-opacity="0"/></radialGradient><filter id="glow2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs><g id="trail" filter="url(#glow2)"></g><circle id="dotHalo" r="34" fill="url(#dotg2)"/><circle id="dot" r="7" fill="#F0FFF8"/></svg>
 <script>
 const W = 1080, CY = 780, S = 1.25, X = x => W / 2 + (x - 256) * S, Y = y => CY + (y - 282) * S;
 const SEG = [
@@ -66,14 +66,44 @@ const k = (t, t0, t1) => cl((t - t0) / (t1 - t0));          // 0..1 progress bet
 const out = p => 1 - Math.pow(1 - p, 3);
 const back = p => 1 + 2.4 * Math.pow(p - 1, 3) + 1.4 * Math.pow(p - 1, 2);   // ease out with a small overshoot
 
-// The pulse head moves at a steady speed, slowing a little while it draws the dial.
+// The white dot: one run along the pulse (drawing the line and the dial), then it lifts off the line,
+// glides to the name and sweeps across it (each letter lights as it passes), then drops into the label.
+let Lend = L; while ($('head').getPointAtLength(Lend).x > W - 60) Lend -= 4;
+const T = { start: .5, dialIn: 1.9, dialOut: 3.3, lineEnd: 4.1, toName: 4.7, nameEnd: 5.7, toPill: 6.2 };
 function headAt(t) {
-  const t0 = .5, tA = 1.9, tB = 3.3, t1 = 4.3;          // reaches the dial at tA, leaves it at tB
-  if (t < t0) return -1;
-  if (t < tA) return a0 * k(t, t0, tA);
-  if (t < tB) return a0 + (a1 - a0) * k(t, tA, tB);
-  if (t < t1) return a1 + (L - a1) * k(t, tB, t1);
-  return L + 400;
+  if (t < T.start) return -1;
+  if (t < T.dialIn) return a0 * k(t, T.start, T.dialIn);
+  if (t < T.dialOut) return a0 + (a1 - a0) * k(t, T.dialIn, T.dialOut);
+  if (t < T.lineEnd) return a1 + (Lend - a1) * k(t, T.dialOut, T.lineEnd);
+  return Lend;
+}
+function geo() {   // where the name's letters and the label sit (offsets ignore the animation transforms)
+  const txt = document.querySelector('.txt'), nm = $('name'), pill = $('soon');
+  const ls = letters.map(el => ({ x0: txt.offsetLeft + nm.offsetLeft + el.offsetLeft, w: el.offsetWidth }));
+  return { ls, y: txt.offsetTop + nm.offsetTop + nm.offsetHeight * .56, x0: ls[0].x0 - 40, x1: ls.at(-1).x0 + ls.at(-1).w + 30,
+    px: txt.offsetLeft + pill.offsetLeft + pill.offsetWidth / 2, py: txt.offsetTop + pill.offsetTop + pill.offsetHeight / 2 };
+}
+const bez = (p, a, c, b) => (1 - p) * (1 - p) * a + 2 * (1 - p) * p * c + p * p * b;
+const ease = p => p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+function dotAt(t, G) {
+  if (t < T.start) return null;
+  if (t <= T.lineEnd) { const p = $('head').getPointAtLength(headAt(t)); return { x: p.x, y: p.y }; }
+  const e = $('head').getPointAtLength(Lend);
+  if (t <= T.toName) { const p = ease(k(t, T.lineEnd, T.toName)); return { x: bez(p, e.x, W - 40, G.x0), y: bez(p, e.y, G.y - 40, G.y) }; }
+  if (t <= T.nameEnd) { const p = ease(k(t, T.toName, T.nameEnd)); return { x: G.x0 + (G.x1 - G.x0) * p, y: G.y }; }
+  if (t <= T.toPill) { const p = ease(k(t, T.nameEnd, T.toPill)); return { x: bez(p, G.x1, G.x1 + 10, G.px), y: bez(p, G.y, G.py - 20, G.py), shrink: p }; }
+  return null;
+}
+// The needle climbs in small jerks, overshoots, settles, then twitches now and then like an idling engine.
+function needleAngle(t) {
+  const p = k(t, 3.1, 4.3);
+  let q = p + .06 * Math.sin(p * Math.PI * 7) * (1 - p);        // stop-start steps on the way up
+  q = cl(q, 0, 1.2);
+  let a = 135 + (332.5 - 135) * back(q);
+  const settle = k(t, 4.3, 5.2);
+  if (t > 4.3) a += 6 * Math.sin((t - 4.3) * 26) * Math.pow(1 - settle, 2);   // a quick shiver as it lands
+  if (t > 5.2) { const ph = (t - 5.2) % 1.7; if (ph < .35) a += 4 * Math.sin(ph / .35 * Math.PI) * Math.sin(ph * 60) * .6 + 3 * Math.sin(ph / .35 * Math.PI); }  // idle twitch
+  return a;
 }
 function setDash(id, len, at, op) {
   const el = $(id);
@@ -81,48 +111,66 @@ function setDash(id, len, at, op) {
   el.style.strokeDashoffset = len - at;
   el.style.opacity = op;
 }
+// a few fading copies of the dot behind it, for a light trail off the line
+const TRAIL = 22;
+$('trail').innerHTML = Array.from({ length: TRAIL }, () => '<line stroke="#9DF7D3" stroke-linecap="round"/>').join('');
+const segs = [...document.querySelectorAll('#trail line')];
 window.seek = function (t) {
+  const G = geo();
   $('grid').style.opacity = .25 + .75 * out(k(t, 0, 1));
   $('grid').style.transform = `translate(${-(t * 18) % 40}px, 0)`;          // the monitor slowly scrolls
   $('scan').style.top = (-240 + ((t * 260) % 2200)) + 'px';
-  // first pass draws the line and the dial outline; later passes run a bright head over it
-  const h1 = headAt(t), loop = t > 5.6 ? ((t - 5.6) % 2.6) / 2.6 : -1;
-  const h = h1 <= L ? h1 : loop >= 0 ? loop * (L + 300) : -999;
+  // the line stays drawn behind the dot; the bright head and glow only show while the dot is on the line
+  const h = headAt(t), onLine = h >= 0 && t < T.lineEnd;
   $('trace').style.strokeDasharray = `${L} ${L}`;
-  $('trace').style.strokeDashoffset = h1 < 0 ? L : L - Math.min(L, h1);
-  $('trace').style.opacity = h1 < 0 ? 0 : 1;
-  setDash('head', 90, h, h > -999 ? 1 : 0);
-  setDash('tailglow', 380, h, h > -999 ? .55 : 0);
-  if (h > 0 && h < L) { const p = $('head').getPointAtLength(h); $('dot').setAttribute('cx', p.x); $('dot').setAttribute('cy', p.y); $('dotHalo').setAttribute('cx', p.x); $('dotHalo').setAttribute('cy', p.y); }
-  const dotOn = h > 0 && h < L ? 1 : 0; $('dot').style.opacity = dotOn; $('dotHalo').style.opacity = dotOn;
-  // needle sweeps up from the bottom-left once the outline is drawn, lighting each segment as it passes
-  const sw = back(k(t, 3.1, 4.3)), ang = 135 + (332.5 - 135) * sw;
+  $('trace').style.strokeDashoffset = h < 0 ? L : L - (t >= T.lineEnd ? L : h);
+  $('trace').style.opacity = h < 0 ? 0 : 1;
+  const fadeHead = 1 - k(t, T.lineEnd - .05, T.lineEnd + .25);
+  setDash('head', 90, h, h >= 0 ? fadeHead : 0);
+  setDash('tailglow', 380, h, h >= 0 ? .55 * fadeHead : 0);
+  const d = dotAt(t, G);
+  const sc = d && d.shrink != null ? 1 - d.shrink * .6 : 1;
+  [['dot', 7], ['dotHalo', 34]].forEach(([id, r]) => { const el = $(id); el.style.opacity = d ? 1 : 0; if (d) { el.setAttribute('cx', d.x); el.setAttribute('cy', d.y); el.setAttribute('r', r * sc * (onLine ? 1 : 1.25)); } });
+  // a smooth fading streak behind the dot once it leaves the line
+  let prev = d;
+  segs.forEach((ln, i) => {
+    const p = !onLine && prev && dotAt(t - (i + 1) * .012, G);
+    if (!p || !prev) { ln.style.opacity = 0; return; }
+    const f = 1 - i / TRAIL;
+    ln.setAttribute('x1', prev.x); ln.setAttribute('y1', prev.y); ln.setAttribute('x2', p.x); ln.setAttribute('y2', p.y);
+    ln.setAttribute('stroke-width', 1 + 9 * f * sc); ln.style.opacity = .75 * f; prev = p;
+  });
+  // the needle and the segments
+  const ang = needleAngle(t);
   $('needle').setAttribute('transform', `rotate(${ang - 332.5} 256 282)`);
   const hubIn = out(k(t, 2.9, 3.3));
   $('needle').style.opacity = hubIn; $('hub').style.opacity = hubIn;
   $('hub').setAttribute('r', 26 * (.4 + .6 * back(k(t, 2.9, 3.4))));
   SEG.forEach((_, i) => {
     const target = SEG_ANGLE[i] < 135 ? SEG_ANGLE[i] + 360 : SEG_ANGLE[i];
-    const lit = ang >= target ? 1 : 0, at = lit ? k(t, 3.1 + i * .22, 3.45 + i * .22) : 0;
-    const outline = cl(k(t, 1.9, 3.3) * 4 - i);          // the outline appears as the pulse goes round
+    const at = t > 3.1 && ang >= target - 6 ? out(k(t, 3.1 + i * .25, 3.5 + i * .25)) : t > 4.4 ? 1 : 0;
+    const outline = cl(k(t, 1.9, 3.3) * 4 - i);
     const el = $('seg' + i);
     el.style.fill = `rgba(0,196,127,${.05 * outline + .5 * at})`;
     el.style.strokeOpacity = Math.max(outline * .7, at) + .04;
   });
-  // halo breathes after the dial is complete, and flashes when a later pulse passes through it
-  const pass = loop >= 0 ? Math.max(0, 1 - Math.abs(loop * (L + 300) - (a0 + a1) / 2) / 500) : 0;
-  $('halo').style.opacity = out(k(t, 3.3, 4.4)) * (.75 + .25 * Math.sin(t * 2.2)) + pass * .5;
-  // the name, letter by letter, then the label and the line under it
+  $('halo').style.opacity = out(k(t, 3.3, 4.4)) * (.75 + .25 * Math.sin(t * 2.2));
+  // each letter lights up as the dot passes over it
+  const dx = d && t > T.toName - .05 && t <= T.nameEnd + .1 ? d.x : t > T.nameEnd ? 1e9 : -1e9;
   letters.forEach((el, i) => {
-    const p = out(k(t, 4.4 + i * .07, 4.95 + i * .07));
-    el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 60}px)`; el.style.filter = `blur(${(1 - p) * 12}px)`;
+    const L0 = G.ls[i], p = out(cl((dx - L0.x0 + 10) / (L0.w * 1.4)));
+    el.style.opacity = p; el.style.filter = `blur(${(1 - p) * 10}px)`;
+    el.style.transform = `translateY(${(1 - p) * 18}px)`;
+    el.style.textShadow = p > 0 && p < 1 ? `0 0 30px rgba(124,245,200,${1 - p})` : 'none';
   });
-  $('name').style.textShadow = `0 0 ${30 + 20 * out(k(t, 5, 5.6))}px rgba(0,196,127,${.15 + .3 * out(k(t, 5, 5.6))})`;
-  const s = back(k(t, 5.4, 6));
-  $('soon').style.opacity = k(t, 5.4, 5.8); $('soon').style.transform = `scale(${.7 + .3 * s})`;
-  const glowPulse = t > 6 ? .55 + .35 * Math.sin((t - 6) * 3) : .55;
-  $('soon').style.boxShadow = `inset 0 0 0 2px rgba(0,196,127,.6), 0 0 ${30 + 20 * glowPulse}px -6px rgba(0,196,127,${glowPulse})`;
-  const sb = out(k(t, 6.2, 6.9)); $('sub').style.opacity = sb; $('sub').style.transform = `translateY(${(1 - sb) * 20}px)`;
+  $('name').style.textShadow = `0 0 ${30 + 20 * out(k(t, 5.6, 6.2))}px rgba(0,196,127,${.15 + .3 * out(k(t, 5.6, 6.2))})`;
+  // the dot drops into the label and it pops on
+  const s = back(k(t, T.toPill - .05, T.toPill + .5));
+  $('soon').style.opacity = k(t, T.toPill - .05, T.toPill + .25); $('soon').style.transform = `scale(${.6 + .4 * s})`;
+  const burst = Math.max(0, 1 - Math.abs(t - T.toPill - .1) / .4);
+  const glowPulse = t > 6.8 ? .55 + .35 * Math.sin((t - 6.8) * 3) : .55 + .45 * burst;
+  $('soon').style.boxShadow = `inset 0 0 0 2px rgba(0,196,127,.6), 0 0 ${30 + 40 * glowPulse}px -6px rgba(0,196,127,${glowPulse})`;
+  const sb = out(k(t, 6.7, 7.4)); $('sub').style.opacity = sb; $('sub').style.transform = `translateY(${(1 - sb) * 20}px)`;
 };
 seek(0);
 // play in real time when opened in a browser (render-story.js pauses this and steps frames itself)
