@@ -142,29 +142,34 @@ window.seek = function (t) {
   });
   $('halo').style.opacity = out(k(t, T.textIn, T.textOut + .3)) * (.8 + .2 * Math.sin(t * 2));
   // icons: revealed by the scan, a short hologram flicker, a rack focus from soft to sharp, then a slow float;
-  // the whole layer pushes in gently like a camera move, and far icons stay softer and dimmer
-  const push = 1.12 - .12 * out(k(t, 0, T.len));
+  // the whole layer keeps moving away from the viewer at a steady rate (shrinking toward the centre, softening
+  // and dimming a little), while the reveal, flare, beat and ripple stay the same; far icons stay softer and dimmer
+  const depth = t => 1.3 * Math.pow(.962, t), push = depth(t);
   $('icons').setAttribute('transform', `translate(540 960) scale(${push}) translate(-540 -960)`);
+  const recede = 1 - push / 1.3;
   icons.forEach(({ p, el, blur, arc, echo }, i) => {
     const [, x, y, d, far] = p;
-    const tr = SCAN[0][0] + (SCAN[0][1] - SCAN[0][0]) * ((y + 260) / 2400);   // when the first scan reaches this icon
+    // when the first scan reaches this icon, allowing for where the moving layer has put it on screen
+    const at = sy => SCAN[0][0] + (SCAN[0][1] - SCAN[0][0]) * ((sy + 260) / 2400);
+    let tr = at(y); tr = at(960 + (y - 960) * depth(tr)); tr = at(960 + (y - 960) * depth(tr));
+    const ys = 960 + (y - 960) * push;
     const age = t - tr;
     let op = 0;
     if (age > 0) {
       const flick = age < .45 ? [1, .25, .9, .15, .8, 1, .55, 1][Math.floor(age / .055)] ?? 1 : 1;
       const flare = .5 * Math.exp(-age / .55);                                  // bright as the scan passes, then settles
       op = ((far ? .28 : .48) + flare) * flick;
-      const s2 = scanY(t); if (s2 && s2.st < 1) op += .32 * Math.max(0, 1 - Math.abs(s2.y - y) / 200);   // flare again on the second scan
+      const s2 = scanY(t); if (s2 && s2.st < 1) op += .32 * Math.max(0, 1 - Math.abs(s2.y - ys) / 200);   // flare again on the second scan
     }
     // a heartbeat: lub-dub every 0.85 s once the icon has settled, slightly offset per icon
     const ph = ((t + i * .07) / .85) % 1, g = (c, w) => Math.exp(-Math.pow((ph - c) / w, 2));
     const beat = age > .9 ? g(.04, .055) + .7 * g(.24, .055) : 0;
     op += (far ? .14 : .34) * beat;
-    el.style.opacity = Math.min(op, 1);
+    el.style.opacity = Math.min(op, 1) * (1 - .35 * recede);
     // on each beat a ring ripples out from the icon and fades, like a monitor's pulse
     const rp = ((t + i * .07) / .85) % 1, rip = age > .9 ? rp : 0;
     echo.setAttribute('r', 30 + 16 * out(rip)); echo.style.opacity = age > .9 ? .6 * Math.pow(1 - rip, 2) : 0;
-    blur.setAttribute('stdDeviation', (far ? 2.4 : 0) + 7 * (1 - out(cl(age / 1.2))));
+    blur.setAttribute('stdDeviation', (far ? 2.4 : 0) + 7 * (1 - out(cl(age / 1.2))) + 3 * recede);
     const fx = x + 5 * Math.sin(t * .45 + i), fy = y - 6 * Math.sin(t * .5 + i * 1.7), scl = 1 + .1 * beat;
     el.setAttribute('transform', `translate(${fx} ${fy}) scale(${scl}) translate(${-x} ${-y})`);
     arc.setAttribute('transform', `rotate(${t * (i % 2 ? -14 : 18) + i * 60} 24 24)`);
