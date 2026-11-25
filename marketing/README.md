@@ -8,6 +8,7 @@ New artwork, posts, videos, decks and listing material go in this folder.
 | Logo (final, "Four pillars", deep mint on black) | `logo/final/` (SVG, PNG, Canva-ready PDF, how-to note) |
 | Logo explorations and the Logo Studio | `logo/` and https://claude.ai/artifact/3sof6fvxcFHr7bPCqZVqRo |
 | Instagram posts: English (16), Sinhala (16), Tamil (10) | `instagram/posts`, `instagram/posts-si`, `instagram/posts-ta`; captions in `instagram/posts-copy-english.md`, Tamil plan in `instagram/plan-tamil.md` |
+| Teaser clip (9 s, 1080 x 1920, no logo or name: the neon pulse traces the website car, faint neon icons drift in behind it, fades to black; meant to go before the "Coming soon" video) | `coming-soon/motorpal-teaser-car-clip.mp4`; made from `coming-soon/clip.html`, rebuild with `node marketing/coming-soon/render-clip.js` |
 | "Coming soon" story video (10 s, 1080 x 1920: one white dot runs the pulse and draws the gauge, the needle jerks up, then the dot glides off the line, lights the name letter by letter and drops into the label) | `coming-soon/motorpal-coming-soon-story.mp4`; made from `coming-soon/story.html`, rebuild with `node marketing/coming-soon/render-story.js` |
 | "Coming soon" still for all socials (neon pulse tracing the gauge, name, Coming soon): square, 4:5 portrait and 9:16 story | `coming-soon/`; rebuild with `node marketing/coming-soon/make.js` |
 | LinkedIn launch posts (5, with captions) | `linkedin/posts/`, captions in `linkedin/captions.md`; rebuild with `node marketing/linkedin/make.js` |
