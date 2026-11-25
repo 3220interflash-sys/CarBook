@@ -78,17 +78,18 @@ const PLACE = [['calendar', 70, 450, 400, 0], ['chart', 820, 270, 290, 0], ['eng
 const ring = i => `<circle cx="24" cy="24" r="30" class="r"/>` +
   [0, 90, 180, 270].map(a => `<path d="M24 -8.5v4.5" transform="rotate(${a} 24 24)" class="r"/>`).join('') +
   Array.from({ length: 36 }, (_, j) => `<path d="M24 -6v${j % 3 ? 1 : 2}" transform="rotate(${j * 10} 24 24)" class="r t"/>`).join('') +
-  `<path id="arc${i}" d="M24 -8 A32 32 0 0 1 51.7 8" class="arc"/>`;
+  `<path id="arc${i}" d="M24 -8 A32 32 0 0 1 51.7 8" class="arc"/><circle id="echo${i}" cx="24" cy="24" r="30" class="echo"/>`;
 $('icons').innerHTML = PLACE.map(([n, x, y, d], i) =>
   `<filter id="bl${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur id="blv${i}" stdDeviation="0"/></filter>` +
   `<g id="ic${i}" filter="url(#bl${i})"><g transform="translate(${x} ${y}) scale(${d / 64}) translate(-24 -24)" fill="none" stroke="#3EE0A4" stroke-linecap="round" stroke-linejoin="round">` +
   `<g class="ico" transform="translate(4.8 4.8) scale(.8)">${IC[n]}</g>${ring(i)}</g></g>`).join('');
-document.querySelectorAll('#icons path, #icons rect, #icons circle').forEach(e => { e.setAttribute('vector-effect', 'non-scaling-stroke'); e.setAttribute('stroke-width', e.classList.contains('t') ? .8 : e.classList.contains('r') ? 1 : 1.6); });
+document.querySelectorAll('#icons path, #icons rect, #icons circle').forEach(e => { e.setAttribute('vector-effect', 'non-scaling-stroke'); e.setAttribute('stroke-width', e.classList.contains('t') ? .8 : e.classList.contains('r') ? 1.1 : 1.9); });
 document.querySelectorAll('#icons .f').forEach(e => { e.setAttribute('fill', '#3EE0A4'); e.setAttribute('stroke', 'none'); });
 document.querySelectorAll('#icons .a').forEach(e => { e.setAttribute('fill', 'rgba(0,196,127,.12)'); e.setAttribute('stroke', 'none'); });
 document.querySelectorAll('#icons .r').forEach(e => e.setAttribute('opacity', e.classList.contains('t') ? .35 : .45));
+document.querySelectorAll('#icons .echo').forEach(e => { e.setAttribute('stroke', '#7CF5C8'); e.setAttribute('stroke-width', 1.4); e.setAttribute('vector-effect', 'non-scaling-stroke'); });
 document.querySelectorAll('#icons .arc').forEach(e => { e.setAttribute('stroke', '#7CF5C8'); e.setAttribute('stroke-width', 2); });
-const icons = PLACE.map((p, i) => ({ p, el: $('ic' + i), blur: $('blv' + i), arc: $('arc' + i) }));
+const icons = PLACE.map((p, i) => ({ p, el: $('ic' + i), blur: $('blv' + i), arc: $('arc' + i), echo: $('echo' + i) }));
 // one deliberate scan sweeps down while the car is drawn; a fainter one passes later
 const SCAN = [[1.3, 4.9, 1], [6.2, 8.4, .45]];
 const scanY = t => { for (const [a, b, st] of SCAN) if (t >= a && t <= b) return { y: -260 + 2400 * ((t - a) / (b - a)), st }; return null; };
@@ -132,7 +133,7 @@ window.seek = function (t) {
   // the whole layer pushes in gently like a camera move, and far icons stay softer and dimmer
   const push = 1.12 - .12 * out(k(t, 0, 9));
   $('icons').setAttribute('transform', `translate(540 960) scale(${push}) translate(-540 -960)`);
-  icons.forEach(({ p, el, blur, arc }, i) => {
+  icons.forEach(({ p, el, blur, arc, echo }, i) => {
     const [, x, y, d, far] = p;
     const tr = SCAN[0][0] + (SCAN[0][1] - SCAN[0][0]) * ((y + 260) / 2400);   // when the first scan reaches this icon
     const age = t - tr;
@@ -140,16 +141,19 @@ window.seek = function (t) {
     if (age > 0) {
       const flick = age < .45 ? [1, .25, .9, .15, .8, 1, .55, 1][Math.floor(age / .055)] ?? 1 : 1;
       const flare = .5 * Math.exp(-age / .55);                                  // bright as the scan passes, then settles
-      op = ((far ? .18 : .3) + flare) * flick;
+      op = ((far ? .28 : .48) + flare) * flick;
       const s2 = scanY(t); if (s2 && s2.st < 1) op += .32 * Math.max(0, 1 - Math.abs(s2.y - y) / 200);   // flare again on the second scan
     }
     // a heartbeat: lub-dub every 0.85 s once the icon has settled, slightly offset per icon
     const ph = ((t + i * .07) / .85) % 1, g = (c, w) => Math.exp(-Math.pow((ph - c) / w, 2));
-    const beat = age > .9 ? g(.04, .05) + .6 * g(.24, .05) : 0;
-    op += (far ? .06 : .14) * beat;
-    el.style.opacity = Math.min(op, .9);
+    const beat = age > .9 ? g(.04, .055) + .7 * g(.24, .055) : 0;
+    op += (far ? .14 : .34) * beat;
+    el.style.opacity = Math.min(op, 1);
+    // on each beat a ring ripples out from the icon and fades, like a monitor's pulse
+    const rp = ((t + i * .07) / .85) % 1, rip = age > .9 ? rp : 0;
+    echo.setAttribute('r', 30 + 16 * out(rip)); echo.style.opacity = age > .9 ? .6 * Math.pow(1 - rip, 2) : 0;
     blur.setAttribute('stdDeviation', (far ? 2.4 : 0) + 7 * (1 - out(cl(age / 1.2))));
-    const fx = x + 5 * Math.sin(t * .45 + i), fy = y - 6 * Math.sin(t * .5 + i * 1.7), scl = 1 + .045 * beat;
+    const fx = x + 5 * Math.sin(t * .45 + i), fy = y - 6 * Math.sin(t * .5 + i * 1.7), scl = 1 + .1 * beat;
     el.setAttribute('transform', `translate(${fx} ${fy}) scale(${scl}) translate(${-x} ${-y})`);
     arc.setAttribute('transform', `rotate(${t * (i % 2 ? -14 : 18) + i * 60} 24 24)`);
   });
