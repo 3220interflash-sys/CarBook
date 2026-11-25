@@ -12,7 +12,7 @@ const DIR = __dirname, FPS = 30, SECS = 9;
   await p.goto('file://' + path.join(DIR, 'clip.html') + '?still');
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(600);
   if (process.argv[2] === 'stills') {
-    for (const t of [2.0, 2.9, 3.6, 4.4, 5.6, 7.3]) {
+    for (const t of [2.4, 3.3, 4.3, 5.6, 5.75, 7.3]) {
       await p.evaluate(t => seek(t), t);
       await p.screenshot({ path: path.join(DIR, `check-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 80 });
     }
