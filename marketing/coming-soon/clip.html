@@ -1,8 +1,10 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
-<!-- MotorPal teaser clip, 1080 x 1920, 9 seconds: the website's neon pulse runs across and traces the car;
-     faint neon icons (calendar, chart, warning lights, fuel, battery) drift in behind it. No logo or name.
+<!-- MotorPal teaser clip, 1080 x 1920, 10 seconds: a scan line reveals neon instrument icons (calendar, chart,
+     warning lights, fuel, battery) that beat like a heartbeat; then the neon pulse runs across and lights up
+     "Coming soon" letter by letter. No logo or name.
      Every frame is drawn by seek(t); render-clip.js steps through it. Open in a browser to watch it play. -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#030B08}
@@ -29,12 +31,11 @@ svg{position:absolute;inset:0}
   <clipPath id="reveal"><rect id="revealRect" x="-200" y="-200" width="1480" height="0"/></clipPath>
   <g clip-path="url(#reveal)"><g id="icons"></g></g>
   <ellipse id="halo" cx="540" cy="960" rx="520" ry="300" fill="url(#halo)"/>
+  <clipPath id="textReveal"><rect id="textRect" x="0" y="0" width="0" height="1920"/></clipPath>
+  <filter id="tglow" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <g clip-path="url(#textReveal)"><text id="soon" x="540" y="984" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-weight="800" font-size="122" letter-spacing="-2" fill="rgba(0,196,127,.10)" stroke="#3EE0A4" stroke-width="2.2" stroke-linejoin="round" filter="url(#tglow)">Coming soon</text></g>
   <g id="world">
-    <path id="beam" d="M1127 62 L1178 50 L1178 78 Z" fill="url(#lamp)"/>
     <path id="trace" fill="none" stroke="#00C47F" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
-    <path id="carGlow" fill="none" stroke="#3EE0A4" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
-    <circle class="wheel" cx="862" cy="78" r="15" fill="none" stroke="#00C47F" stroke-width="1.5" filter="url(#glow)"/>
-    <circle class="wheel" cx="1068" cy="78" r="15" fill="none" stroke="#00C47F" stroke-width="1.5" filter="url(#glow)"/>
     <path id="tail" fill="none" stroke="#00C47F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
     <path id="head" fill="none" stroke="#C9FFE9" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
     <circle id="dotHalo" r="16" fill="url(#dotg)"/><circle id="dot" r="3.4" fill="#F0FFF8"/>
@@ -43,17 +44,14 @@ svg{position:absolute;inset:0}
 <div id="vig"></div><div id="black"></div>
 <script>
 const $ = id => document.getElementById(id);
-// The pulse in the website's own coordinates (baseline y = 80; the car runs from x = 800 to 1127), shown at 2x.
+// The pulse in the website's own coordinates (baseline y = 80), shown at 2x; "Coming soon" sits on its flat middle.
 const SC = 2, CX = 963.5, BASE = 80, SCREEN_Y = 1020;
 $('world').setAttribute('transform', `translate(${540 - CX * SC} ${SCREEN_Y - BASE * SC}) scale(${SC})`);
 const ecg = x => `L${x} ${BASE} q6 -7 12 0 L${x + 22} ${BASE} l5 7 l7 -44 l7 54 l6 -17 L${x + 56} ${BASE} q11 -12 22 0`;
-const CAR = `L800 ${BASE} L806 ${BASE} L806 64 Q807 56 818 54 L858 52 L892 33 Q900 27 912 26 L992 26 Q1004 27 1014 33 L1052 51 L1106 55 Q1124 58 1126 66 L1127 ${BASE}`;
-const D = `M640 ${BASE} ${ecg(694)} ${CAR} ${ecg(1148)} L1300 ${BASE}`;
+const D = `M640 ${BASE} ${ecg(694)} L1148 ${BASE} ${ecg(1148)} L1300 ${BASE}`;
 ['trace', 'tail', 'head'].forEach(id => $(id).setAttribute('d', D));
-$('carGlow').setAttribute('d', `M800 ${BASE} ${CAR}`);
-const L = $('head').getTotalLength(), CL = $('carGlow').getTotalLength();
-let c0 = 0; while ($('head').getPointAtLength(c0).x < 800) c0 += 1;
-const c1 = c0 + CL;
+const L = $('head').getTotalLength();
+const toScreen = wx => 540 + (wx - CX) * SC;
 
 // Background icons: fine hairline instrument graphics on a 48 grid, each inside a thin ring with tick marks
 // and a slowly turning arc, like a head-up display. Revealed by the scan line, then they flicker on and focus.
@@ -90,18 +88,21 @@ document.querySelectorAll('#icons .r').forEach(e => e.setAttribute('opacity', e.
 document.querySelectorAll('#icons .echo').forEach(e => { e.setAttribute('stroke', '#7CF5C8'); e.setAttribute('stroke-width', 1.4); e.setAttribute('vector-effect', 'non-scaling-stroke'); });
 document.querySelectorAll('#icons .arc').forEach(e => { e.setAttribute('stroke', '#7CF5C8'); e.setAttribute('stroke-width', 2); });
 const icons = PLACE.map((p, i) => ({ p, el: $('ic' + i), blur: $('blv' + i), arc: $('arc' + i), echo: $('echo' + i) }));
-// one deliberate scan sweeps down while the car is drawn; a fainter one passes later
-const SCAN = [[1.3, 4.9, 1], [6.2, 8.4, .45]];
+// one deliberate scan sweeps down and reveals the icons; a fainter one passes near the end
+const SCAN = [[1.0, 4.3, 1], [7.7, 9.5, .45]];
 const scanY = t => { for (const [a, b, st] of SCAN) if (t >= a && t <= b) return { y: -260 + 2400 * ((t - a) / (b - a)), st }; return null; };
 const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const k = (t, t0, t1) => cl((t - t0) / (t1 - t0));
 const out = p => 1 - Math.pow(1 - p, 3);
-const T = { start: .6, carIn: 1.7, carOut: 4.0, end: 5.0, fade: 8.3, len: 9 };
+// the pulse comes in after the icons are up: it runs across in one pass, slower under the words
+const T = { start: 4.5, textIn: 5.3, textOut: 6.9, end: 7.6, fade: 9.4, len: 10 };
+let w0 = 0; while ($('head').getPointAtLength(w0).x < 790) w0 += 1;
+let w1 = w0; while ($('head').getPointAtLength(w1).x < 1140) w1 += 1;
 function headAt(t) {
   if (t < T.start) return -1;
-  if (t < T.carIn) return c0 * k(t, T.start, T.carIn);
-  if (t < T.carOut) return c0 + CL * k(t, T.carIn, T.carOut);
-  if (t < T.end) return c1 + (L - c1) * k(t, T.carOut, T.end);
+  if (t < T.textIn) return w0 * k(t, T.start, T.textIn);
+  if (t < T.textOut) return w0 + (w1 - w0) * k(t, T.textIn, T.textOut);
+  if (t < T.end) return w1 + (L - w1) * k(t, T.textOut, T.end);
   return L + 200;
 }
 function dash(id, len, at, op) { const el = $(id); el.style.strokeDasharray = `${len} ${L * 3}`; el.style.strokeDashoffset = len - at; el.style.opacity = op; }
@@ -121,17 +122,17 @@ window.seek = function (t) {
   dash('head', 34, h, on ? 1 : 0); dash('tail', 170, h, on ? .6 : 0);
   if (on) { const p = $('head').getPointAtLength(Math.min(h, L - .1)); ['dot', 'dotHalo'].forEach(id => { $(id).setAttribute('cx', p.x); $(id).setAttribute('cy', p.y); }); }
   $('dot').style.opacity = on ? 1 : 0; $('dotHalo').style.opacity = on ? 1 : 0;
-  // the car brightens once its outline is drawn and then breathes gently; the wheels light as the dot passes
-  const carP = cl((h - c0) / CL);
-  $('carGlow').style.strokeDasharray = CL; $('carGlow').style.strokeDashoffset = CL * (1 - carP);
-  const breathe = t > T.carOut ? .82 + .18 * Math.sin((t - T.carOut) * 2.4) : 1;
-  $('carGlow').style.opacity = h < c0 ? 0 : breathe;
-  document.querySelectorAll('.wheel').forEach((w, i) => { const at = i ? .78 : .2; const p = out(cl((carP - at) / .12)); w.style.opacity = p * breathe; w.setAttribute('r', 15 * (.6 + .4 * p)); });
-  $('beam').style.opacity = .9 * out(k(t, 4.2, 5.2)) * breathe;
-  $('halo').style.opacity = out(k(t, 2.4, 4.6)) * (.8 + .2 * Math.sin(t * 2));
+  // "Coming soon" lights up letter by letter as the dot passes under it, flares, then breathes gently
+  const hx = on ? toScreen($('head').getPointAtLength(Math.min(h, L - .1)).x) : h > L ? 1200 : -10;
+  $('textRect').setAttribute('width', Math.max(0, hx + 8));
+  const lit = k(t, T.textOut, T.textOut + .5), breathe = t > T.textOut ? .85 + .15 * Math.sin((t - T.textOut) * 2.4) : 1;
+  $('soon').style.opacity = breathe;
+  $('soon').setAttribute('fill', `rgba(0,196,127,${.10 + .22 * out(lit)})`);
+  $('soon').setAttribute('stroke-width', 2.2 + 1.2 * Math.exp(-Math.abs(t - T.textOut - .15) / .2));
+  $('halo').style.opacity = out(k(t, T.textIn, T.textOut + .3)) * (.8 + .2 * Math.sin(t * 2));
   // icons: revealed by the scan, a short hologram flicker, a rack focus from soft to sharp, then a slow float;
   // the whole layer pushes in gently like a camera move, and far icons stay softer and dimmer
-  const push = 1.12 - .12 * out(k(t, 0, 9));
+  const push = 1.12 - .12 * out(k(t, 0, T.len));
   $('icons').setAttribute('transform', `translate(540 960) scale(${push}) translate(-540 -960)`);
   icons.forEach(({ p, el, blur, arc, echo }, i) => {
     const [, x, y, d, far] = p;

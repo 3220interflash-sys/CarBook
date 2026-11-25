@@ -1,23 +1,23 @@
-// Turns clip.html (the teaser: neon pulse traces the car, faint icons behind) into a 9-second vertical video, 1080 x 1920, 30 fps.
+// Turns clip.html (the teaser: neon icons revealed by a scan, then the pulse lights up "Coming soon") into a 10-second vertical video, 1080 x 1920, 30 fps.
 // Run from the project folder: node marketing/coming-soon/render-clip.js          (the video)
 //                              node marketing/coming-soon/render-clip.js stills   (a few frames to check the look)
 // Needs Playwright and ffmpeg (both are in Claude's cloud sessions) and internet for the font.
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const path = require('path');
-const DIR = __dirname, FPS = 30, SECS = 9;
+const DIR = __dirname, FPS = 30, SECS = 10;
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
   await p.goto('file://' + path.join(DIR, 'clip.html') + '?still');
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(600);
   if (process.argv[2] === 'stills') {
-    for (const t of [2.4, 3.3, 4.3, 5.6, 5.75, 7.3]) {
+    for (const t of [3.0, 4.8, 5.8, 6.6, 7.3, 8.5]) {
       await p.evaluate(t => seek(t), t);
       await p.screenshot({ path: path.join(DIR, `check-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 80 });
     }
   } else {
-    const file = path.join(DIR, 'motorpal-teaser-car-clip.mp4');
+    const file = path.join(DIR, 'motorpal-teaser-clip.mp4');
     const ff = spawn('ffmpeg', ['-y', '-loglevel', 'error', '-f', 'image2pipe', '-framerate', String(FPS), '-i', '-',
       '-f', 'lavfi', '-i', 'anullsrc=r=44100:cl=stereo', '-shortest',
       '-c:v', 'libx264', '-preset', 'medium', '-crf', '18', '-pix_fmt', 'yuv420p', '-r', String(FPS),
