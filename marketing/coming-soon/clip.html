@@ -4,7 +4,7 @@
      warning lights, fuel, battery) that beat like a heartbeat; then the neon pulse runs across and lights up
      "Coming soon" letter by letter. No logo or name.
      Every frame is drawn by seek(t); render-clip.js steps through it. Open in a browser to watch it play. -->
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#030B08}
@@ -32,8 +32,8 @@ svg{position:absolute;inset:0}
   <g clip-path="url(#reveal)"><g id="icons"></g></g>
   <ellipse id="halo" cx="540" cy="960" rx="520" ry="300" fill="url(#halo)"/>
   <clipPath id="textReveal"><rect id="textRect" x="0" y="0" width="0" height="1920"/></clipPath>
-  <filter id="tglow" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <g clip-path="url(#textReveal)"><text id="soon" x="540" y="984" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-weight="800" font-size="122" letter-spacing="-2" fill="rgba(0,196,127,.10)" stroke="#3EE0A4" stroke-width="2.2" stroke-linejoin="round" filter="url(#tglow)">Coming soon</text></g>
+  <filter id="tglow" x="-10%" y="-40%" width="120%" height="180%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <g clip-path="url(#textReveal)"><text id="soon" x="540" y="984" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-weight="200" font-size="128" letter-spacing="1" fill="#3EE0A4" filter="url(#tglow)">Coming soon</text></g>
   <g id="world">
     <path id="trace" fill="none" stroke="#00C47F" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
     <path id="tail" fill="none" stroke="#00C47F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
@@ -126,9 +126,9 @@ window.seek = function (t) {
   const hx = on ? toScreen($('head').getPointAtLength(Math.min(h, L - .1)).x) : h > L ? 1200 : -10;
   $('textRect').setAttribute('width', Math.max(0, hx + 8));
   const lit = k(t, T.textOut, T.textOut + .5), breathe = t > T.textOut ? .85 + .15 * Math.sin((t - T.textOut) * 2.4) : 1;
-  $('soon').style.opacity = breathe;
-  $('soon').setAttribute('fill', `rgba(0,196,127,${.10 + .22 * out(lit)})`);
-  $('soon').setAttribute('stroke-width', 2.2 + 1.2 * Math.exp(-Math.abs(t - T.textOut - .15) / .2));
+  const flare = Math.exp(-Math.abs(t - T.textOut - .15) / .2);
+  $('soon').style.opacity = Math.min(1, (.82 + .18 * out(lit)) * breathe + .3 * flare);
+  $('soon').setAttribute('fill', flare > .4 ? '#7CF5C8' : '#3EE0A4');
   $('halo').style.opacity = out(k(t, T.textIn, T.textOut + .3)) * (.8 + .2 * Math.sin(t * 2));
   // icons: revealed by the scan, a short hologram flicker, a rack focus from soft to sharp, then a slow float;
   // the whole layer pushes in gently like a camera move, and far icons stay softer and dimmer
