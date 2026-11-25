@@ -4,7 +4,7 @@
      warning lights, fuel, battery) that beat like a heartbeat; then the neon pulse runs across and lights up
      "Coming soon" letter by letter. No logo or name.
      Every frame is drawn by seek(t); render-clip.js steps through it. Open in a browser to watch it play. -->
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#030B08}
@@ -34,7 +34,7 @@ svg{position:absolute;inset:0}
   <clipPath id="textReveal"><rect id="textRect" x="0" y="0" width="0" height="1920"/></clipPath>
   <!-- neon tube: a near-white core, a tight mint glow and a wide soft haze -->
   <filter id="tglow" filterUnits="userSpaceOnUse" x="0" y="800" width="1080" height="320"><feMorphology in="SourceAlpha" operator="dilate" radius=".45" result="thick"/><feFlood flood-color="#00E08F"/><feComposite in2="thick" operator="in" result="tube"/><feGaussianBlur in="tube" stdDeviation="1.4" result="g1"/><feGaussianBlur in="tube" stdDeviation="5" result="g2"/><feGaussianBlur in="tube" stdDeviation="14" result="g3"/><feMerge><feMergeNode in="g3"/><feMergeNode in="g2"/><feMergeNode in="g2"/><feMergeNode in="g1"/><feMergeNode in="g1"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-  <g clip-path="url(#textReveal)"><text id="soon" x="540" y="1005" text-anchor="middle" font-family="Plus Jakarta Sans, system-ui, sans-serif" font-weight="200" font-size="46" letter-spacing="2" fill="#E6FFF4" filter="url(#tglow)"></text></g>
+  <g clip-path="url(#textReveal)"><text id="soon" x="548" y="1004" text-anchor="middle" font-family="Raleway, system-ui, sans-serif" font-weight="200" font-size="40" letter-spacing="16" fill="#E6FFF4" filter="url(#tglow)"></text></g>
   <g id="world">
     <path id="trace" fill="none" stroke="#00C47F" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round" filter="url(#glow)"/>
     <path id="tail" fill="none" stroke="#00C47F" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
