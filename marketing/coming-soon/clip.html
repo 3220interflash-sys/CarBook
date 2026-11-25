@@ -10,7 +10,8 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#030B08}
   linear-gradient(rgba(0,196,127,.05) 1px,transparent 1px) 0 0/40px 40px,
   linear-gradient(90deg,rgba(0,196,127,.05) 1px,transparent 1px) 0 0/40px 40px}
 #vig{position:absolute;inset:0;background:radial-gradient(900px 1100px at 50% 1000px,transparent 25%,rgba(3,11,8,.9) 80%)}
-#scan{position:absolute;left:0;right:0;height:220px;background:linear-gradient(transparent,rgba(0,196,127,.05),transparent)}
+#scan{position:absolute;left:0;right:0;height:260px;background:linear-gradient(transparent,rgba(0,196,127,.07) 85%,rgba(124,245,200,.35) 99%,transparent);border-bottom:1.5px solid rgba(124,245,200,.6)}
+#scan::after{content:"";position:absolute;left:0;right:0;bottom:-18px;height:36px;background:radial-gradient(60% 50% at 50% 50%,rgba(0,196,127,.35),transparent 70%)}
 svg{position:absolute;inset:0}
 #black{position:absolute;inset:0;background:#000;opacity:0}
 </style></head>
@@ -25,7 +26,8 @@ svg{position:absolute;inset:0}
     <radialGradient id="dotg"><stop offset="0" stop-color="#7CF5C8" stop-opacity=".9"/><stop offset="1" stop-color="#00C47F" stop-opacity="0"/></radialGradient>
     <radialGradient id="lamp" cx="0" cy=".5" r="1"><stop offset="0" stop-color="#7CF5C8" stop-opacity=".35"/><stop offset="1" stop-color="#00C47F" stop-opacity="0"/></radialGradient>
   </defs>
-  <g id="icons"></g>
+  <clipPath id="reveal"><rect id="revealRect" x="-200" y="-200" width="1480" height="0"/></clipPath>
+  <g clip-path="url(#reveal)"><g id="icons"></g></g>
   <ellipse id="halo" cx="540" cy="960" rx="520" ry="300" fill="url(#halo)"/>
   <g id="world">
     <path id="beam" d="M1127 62 L1178 50 L1178 78 Z" fill="url(#lamp)"/>
@@ -53,23 +55,42 @@ const L = $('head').getTotalLength(), CL = $('carGlow').getTotalLength();
 let c0 = 0; while ($('head').getPointAtLength(c0).x < 800) c0 += 1;
 const c1 = c0 + CL;
 
-// Faint neon icons behind the car (24 x 24 line drawings), each with where it sits, its size and when it appears.
+// Background icons: fine hairline instrument graphics on a 48 grid, each inside a thin ring with tick marks
+// and a slowly turning arc, like a head-up display. Revealed by the scan line, then they flicker on and focus.
 const IC = {
-  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="M7.5 13.5h2M11 13.5h2M14.5 13.5h2M7.5 17h2M11 17h2"/>',
-  chart: '<path d="M3.5 3.5v17h17"/><path d="M6.5 16l4-5 3.5 3 5.5-7"/><circle cx="19.5" cy="7" r="1.2"/>',
-  engine: '<path d="M5 9.5h2.5V7.5h4V6h3v1.5h2.5l2 2h2.5v6H19l-2 2.5H8.5l-2-2.5H5z"/><path d="M2.5 10.5v4.5M5 12.5H2.5"/>',
-  oil: '<path d="M3 10.5h8.5l2.5 2.5h3.5l3-3v6.5a1 1 0 0 1-1 1H6a3 3 0 0 1-3-3z"/><path d="M7 10.5V8h4M8 8V6.5h2M20.5 5.5c0 1.2.9 1.7.9 2.6a.9.9 0 0 1-1.8 0c0-.9.9-1.4.9-2.6z"/>',
-  fuel: '<path d="M4 20V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v15M3 20h12M14 9h2.5a1.5 1.5 0 0 1 1.5 1.5V16a1.5 1.5 0 0 0 3 0V8l-3-3"/><path d="M7 7h4"/>',
-  battery: '<rect x="3" y="7" width="18" height="12" rx="2"/><path d="M7 7V5h3v2M14 7V5h3v2M7 13h3M15.5 11.5v3M14 13h3"/>',
-  tyre: '<path d="M7 5.5C4 8 3.5 13 5.5 16.5l1.5 2h10l1.5-2c2-3.5 1.5-8.5-1.5-11"/><path d="M12 8.5v4.5M12 15.5v.2"/>'
+  calendar: '<rect x="7" y="10" width="34" height="31" rx="2.5"/><path d="M7 18h34M16 6v8M32 6v8"/>' +
+    [0, 1, 2].map(r => [0, 1, 2, 3, 4].map(c => `<circle cx="${12.5 + c * 5.8}" cy="${23.5 + r * 5.6}" r=".75" class="f"/>`).join('')).join('') +
+    '<rect x="28.6" y="32.4" width="6.4" height="5.6" rx="1"/>',
+  chart: '<path d="M7 6v35h35"/><path d="M7 32h-2.5M7 23h-2.5M7 14h-2.5M16 41v2.5M25 41v2.5M34 41v2.5"/>' +
+    '<path d="M7 23h35M7 14h35" stroke-dasharray="1 2.4" opacity=".5"/>' +
+    '<path d="M9 36 C15 34 16 27 21.5 27.5 S29 19 33.5 18 S39 12 42 10.5 V41 H9 Z" class="a"/>' +
+    '<path d="M9 36 C15 34 16 27 21.5 27.5 S29 19 33.5 18 S39 12 42 10.5"/>' +
+    '<circle cx="21.5" cy="27.5" r="1.4" class="f"/><circle cx="33.5" cy="18" r="1.4" class="f"/><circle cx="42" cy="10.5" r="1.8" class="f"/>',
+  engine: '<path d="M11 19h5v-4h12v4h4.5l4 4.5H40v-3h3.5v14H40v-3h-3.5l-5 5.5H16.5L11 31.5H8.5v3.5H5V21h3.5v4H11z"/><path d="M19 15v-3h6v3"/>',
+  oil: '<path d="M5 23h15.5l3.5 3.5h8.5L41 21v12.5a2.5 2.5 0 0 1-2.5 2.5h-27A6.5 6.5 0 0 1 5 29.5z"/><path d="M12 23v-4.5h8M14 18.5v-3h4"/><path d="M41 21l3-1.5"/><path d="M44.5 25.5c0 1.8 1.6 2.6 1.6 4.2a1.6 1.6 0 0 1-3.2 0c0-1.6 1.6-2.4 1.6-4.2z"/>',
+  battery: '<rect x="5" y="14" width="38" height="24" rx="2"/><path d="M11 14v-4h7v4M30 14v-4h7v4"/><path d="M11.5 26h7M30 26h7M33.5 22.5v7"/>',
+  fuel: '<rect x="9" y="7" width="19" height="35" rx="2"/><path d="M6 42h25"/><rect x="13" y="12" width="11" height="8.5" rx="1"/><path d="M28 21h4.5a3 3 0 0 1 3 3v10.5a2.5 2.5 0 0 0 5 0V17l-5-6"/>'
 };
-const PLACE = [
-  ['calendar', 170, 470, 190, -8, 1.7], ['chart', 880, 430, 200, 6, 2.1], ['engine', 150, 1430, 180, 5, 2.6],
-  ['oil', 900, 1460, 170, -6, 3.0], ['fuel', 300, 700, 120, 4, 3.4], ['battery', 820, 760, 120, -4, 3.7], ['tyre', 560, 1620, 150, 0, 4.0]];
-$('icons').innerHTML = PLACE.map(([n, x, y, s, r], i) => `<g id="ic${i}" transform="translate(${x} ${y}) rotate(${r}) scale(${s / 24}) translate(-12 -12)"><g class="ici" fill="none" stroke="#00C47F" stroke-width="${1.3 * 24 / s * 1.6}" stroke-linecap="round" stroke-linejoin="round" filter="url(#iglow)">${IC[n]}</g></g>`).join('');
-const icons = PLACE.map((p, i) => ({ p, el: $('ic' + i), inner: $('ic' + i).firstChild }));
-icons.forEach(o => o.inner.querySelectorAll('path,rect,circle').forEach(e => { const l = e.getTotalLength ? e.getTotalLength() : 60; e.style.strokeDasharray = l; e.dataset.l = l; }));
-
+// name, x, y, ring diameter in px, depth (0 near, 1 far)
+const PLACE = [['calendar', 200, 500, 300, 0], ['chart', 880, 470, 320, 0], ['engine', 205, 1490, 300, 0],
+  ['battery', 870, 1450, 290, 0], ['oil', 560, 300, 210, 1], ['fuel', 560, 1720, 210, 1]];
+const ring = i => `<circle cx="24" cy="24" r="30" class="r"/>` +
+  [0, 90, 180, 270].map(a => `<path d="M24 -8.5v4.5" transform="rotate(${a} 24 24)" class="r"/>`).join('') +
+  Array.from({ length: 36 }, (_, j) => `<path d="M24 -6v${j % 3 ? 1 : 2}" transform="rotate(${j * 10} 24 24)" class="r t"/>`).join('') +
+  `<path id="arc${i}" d="M24 -8 A32 32 0 0 1 51.7 8" class="arc"/>`;
+$('icons').innerHTML = PLACE.map(([n, x, y, d], i) =>
+  `<filter id="bl${i}" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur id="blv${i}" stdDeviation="0"/></filter>` +
+  `<g id="ic${i}" filter="url(#bl${i})"><g transform="translate(${x} ${y}) scale(${d / 64}) translate(-24 -24)" fill="none" stroke="#3EE0A4" stroke-linecap="round" stroke-linejoin="round">` +
+  `<g class="ico" transform="translate(4.8 4.8) scale(.8)">${IC[n]}</g>${ring(i)}</g></g>`).join('');
+document.querySelectorAll('#icons path, #icons rect, #icons circle').forEach(e => { e.setAttribute('vector-effect', 'non-scaling-stroke'); e.setAttribute('stroke-width', e.classList.contains('t') ? .8 : e.classList.contains('r') ? 1 : 1.6); });
+document.querySelectorAll('#icons .f').forEach(e => { e.setAttribute('fill', '#3EE0A4'); e.setAttribute('stroke', 'none'); });
+document.querySelectorAll('#icons .a').forEach(e => { e.setAttribute('fill', 'rgba(0,196,127,.12)'); e.setAttribute('stroke', 'none'); });
+document.querySelectorAll('#icons .r').forEach(e => e.setAttribute('opacity', e.classList.contains('t') ? .35 : .45));
+document.querySelectorAll('#icons .arc').forEach(e => { e.setAttribute('stroke', '#7CF5C8'); e.setAttribute('stroke-width', 2); });
+const icons = PLACE.map((p, i) => ({ p, el: $('ic' + i), blur: $('blv' + i), arc: $('arc' + i) }));
+// one deliberate scan sweeps down while the car is drawn; a fainter one passes later
+const SCAN = [[1.3, 4.9, 1], [6.2, 8.4, .45]];
+const scanY = t => { for (const [a, b, st] of SCAN) if (t >= a && t <= b) return { y: -260 + 2400 * ((t - a) / (b - a)), st }; return null; };
 const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const k = (t, t0, t1) => cl((t - t0) / (t1 - t0));
 const out = p => 1 - Math.pow(1 - p, 3);
@@ -85,7 +106,10 @@ function dash(id, len, at, op) { const el = $(id); el.style.strokeDasharray = `$
 window.seek = function (t) {
   $('grid').style.opacity = .3 + .7 * out(k(t, 0, 1));
   $('grid').style.transform = `translate(${-(t * 16) % 40}px, 0)`;
-  $('scan').style.top = (-240 + ((t * 240) % 2200)) + 'px';
+  const sc = scanY(t);
+  $('scan').style.opacity = sc ? sc.st : 0; if (sc) $('scan').style.top = (sc.y - 260) + 'px';
+  const firstDone = t > SCAN[0][1];
+  $('revealRect').setAttribute('height', firstDone ? 3000 : sc && t < SCAN[0][1] ? sc.y + 200 : 0);
   const h = headAt(t);
   // the line stays drawn behind the dot; the dot and its bright head make one pass
   $('trace').style.strokeDasharray = `${L} ${L}`;
@@ -103,12 +127,24 @@ window.seek = function (t) {
   document.querySelectorAll('.wheel').forEach((w, i) => { const at = i ? .78 : .2; const p = out(cl((carP - at) / .12)); w.style.opacity = p * breathe; w.setAttribute('r', 15 * (.6 + .4 * p)); });
   $('beam').style.opacity = .9 * out(k(t, 4.2, 5.2)) * breathe;
   $('halo').style.opacity = out(k(t, 2.4, 4.6)) * (.8 + .2 * Math.sin(t * 2));
-  // icons draw themselves in very faintly, then float
-  icons.forEach(({ p, el, inner }, i) => {
-    const [, x, y, s, r, t0] = p, a = out(k(t, t0, t0 + 1.4));
-    inner.querySelectorAll('path,rect,circle').forEach(e => e.style.strokeDashoffset = e.dataset.l * (1 - out(k(t, t0, t0 + 1.8))));
-    el.style.opacity = .16 * a + .03 * Math.sin(t * 1.3 + i) * a;
-    el.setAttribute('transform', `translate(${x + 6 * Math.sin(t * .5 + i)} ${y - 18 * a - 8 * Math.sin(t * .6 + i * 2)}) rotate(${r}) scale(${s / 24}) translate(-12 -12)`);
+  // icons: revealed by the scan, a short hologram flicker, a rack focus from soft to sharp, then a slow float;
+  // the whole layer pushes in gently like a camera move, and far icons stay softer and dimmer
+  const push = 1.12 - .12 * out(k(t, 0, 9));
+  $('icons').setAttribute('transform', `translate(540 960) scale(${push}) translate(-540 -960)`);
+  icons.forEach(({ p, el, blur, arc }, i) => {
+    const [, x, y, d, far] = p;
+    const tr = SCAN[0][0] + (SCAN[0][1] - SCAN[0][0]) * ((y + 260) / 2400);   // when the first scan reaches this icon
+    const age = t - tr;
+    let op = 0;
+    if (age > 0) {
+      const flick = age < .45 ? [1, .25, .9, .15, .8, 1, .55, 1][Math.floor(age / .055)] ?? 1 : 1;
+      op = (far ? .2 : .34) * flick * (age < .1 ? 1.6 : 1);
+      const s2 = scanY(t); if (s2 && s2.st < 1) op += .14 * Math.max(0, 1 - Math.abs(s2.y - y) / 160);   // shimmer on the second scan
+    }
+    el.style.opacity = op;
+    blur.setAttribute('stdDeviation', (far ? 2.4 : 0) + 7 * (1 - out(cl(age / 1.2))));
+    el.setAttribute('transform', `translate(${5 * Math.sin(t * .45 + i)} ${-6 * Math.sin(t * .5 + i * 1.7)})`);
+    arc.setAttribute('transform', `rotate(${t * (i % 2 ? -14 : 18) + i * 60} 24 24)`);
   });
   $('black').style.opacity = k(t, T.fade, T.len);
 };
