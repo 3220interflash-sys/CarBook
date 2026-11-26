@@ -1,10 +1,10 @@
 <!doctype html>
 <html><head><meta charset="utf-8">
-<!-- "Every vehicle has a heartbeat": MotorPal coming-soon story, 1080 x 1920, 15 seconds.
+<!-- "Every vehicle has a heartbeat": MotorPal coming-soon story, 1080 x 1920, 19 seconds.
      1. A heart-monitor trace sweeps a black screen (steady mint beats).
      2. The rhythm skips and turns honey, faint warning lights flicker, then it flatlines.
-     3. A jolt restarts it; on four beats the four pillars rise out of the spikes as words.
-     4. The words drift up and dissolve into the four segments of the MotorPal gauge, which fades in softly;
+     3. A jolt restarts it; on four beats the four pillars rise out of the spikes (an icon in a thin ring, with its name).
+     4. The icons and words drift up and dissolve into the four segments of the MotorPal gauge, which fades in softly;
         the needle moves up; the name sits below the logo, then the tagline, and Coming soon below the line.
      Every frame is drawn by seek(t); render with: node marketing/coming-soon/render-heartbeat.js -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Plus+Jakarta+Sans:wght@500;800&display=swap" rel="stylesheet">
@@ -18,15 +18,15 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#020806;color:#E
 #flash{position:absolute;inset:0;background:radial-gradient(700px 500px at 50% 1000px,rgba(124,245,200,.55),transparent 70%);opacity:0}
 svg{position:absolute;inset:0}
 .say{position:absolute;left:70px;right:70px;top:600px;text-align:center;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:70px;letter-spacing:1.5px;line-height:1.25;opacity:0;
-  text-shadow:0 0 22px rgba(0,196,127,.45)}
-.lab{position:absolute;width:360px;margin-left:-180px;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:42px;letter-spacing:.5px;color:#D6F5E6;opacity:0;white-space:nowrap;
-  text-shadow:0 0 16px rgba(0,196,127,.55);transform-origin:50% 50%}
+  text-shadow:0 0 14px rgba(0,196,127,.3)}
+.lab{position:absolute;width:360px;margin-left:-180px;text-align:center;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:34px;letter-spacing:1px;color:#D6F5E6;opacity:0;white-space:nowrap;
+  text-shadow:0 0 10px rgba(0,196,127,.3);transform-origin:50% 50%}
 #end{position:absolute;left:0;right:0;top:722px;text-align:center}
 #soonWrap{position:absolute;left:0;right:0;top:1062px;text-align:center}
 .name{font-family:'Plus Jakarta Sans',sans-serif;font-size:118px;font-weight:800;letter-spacing:-.035em;line-height:1;white-space:nowrap}
 .name span{display:inline-block;opacity:0}
 .name .pal{color:#00C47F}
-.tag{margin-top:18px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:44px;letter-spacing:.5px;color:#C4DDD2;opacity:0}
+.tag{margin-top:18px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:42px;letter-spacing:1px;color:#C4DDD2;opacity:0}
 .soon{display:inline-block;padding:12px 42px;border-radius:999px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:42px;letter-spacing:6px;color:#9DF7D3;
   background:rgba(0,196,127,.07);opacity:0}
 #black{position:absolute;inset:0;background:#000;opacity:1}
@@ -72,7 +72,7 @@ const BEATS = [
   [3.72, .55], [3.98, 1.25], [4.9, .35], [5.12, 1.5],     // it skips
   [6.3, 1.7],                                            // the jolt that restarts it (after a flatline)
   [7.05, 1.05], [7.95, 1.05], [8.85, 1.05], [9.75, 1.05], // the four pillars rise from these
-  [10.65, .8], [11.55, .65], [12.45, .45], [13.35, .4], [14.25, .4]];   // calmer and lower once the brand is on screen
+  [10.65, .8], [11.55, .7], [12.45, .6], [13.35, .5], [14.25, .42], [15.15, .4], [16.05, .4], [16.95, .4], [17.85, .4], [18.75, .4]];   // calmer and lower once the brand is on screen
 const PILLAR_BEATS = [8, 9, 10, 11];
 function wave(tau) {   // height of the trace at moment tau (px, up is negative)
   let y = 0;
@@ -113,7 +113,7 @@ hair($('ghosts'));
 // the four pillars, each in a thin ring, rising from its beat
 const PILL = [['calendar', 'Reminders', 135], ['wrench', 'Service records', 405], ['chart', 'Fuel and costs', 675], ['shield', 'Warranties', 945]];
 const ring = `<circle cx="24" cy="24" r="31" opacity=".5"/>` + Array.from({ length: 24 }, (_, j) => `<path d="M24 -5.5v${j % 6 ? 1.2 : 2.6}" transform="rotate(${j * 15} 24 24)" opacity=".4"/>`).join('');
-$('pillars').innerHTML = ''; void PILL.map(([n], i) => `<g id="pl${i}" opacity="0" filter="url(#glow)"><g fill="none" stroke="#7CF5C8">${ring}</g><g transform="translate(7 7) scale(.71)">${iconSvg(n, '#C9FFE9')}</g></g>`).join('');
+$('pillars').innerHTML = `<filter id="pglow" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="1.3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` + PILL.map(([n], i) => `<g id="pl${i}" opacity="0" filter="url(#pglow)"><g fill="none" stroke="#7CF5C8">${ring}</g><g transform="translate(7 7) scale(.71)">${iconSvg(n, '#C9FFE9')}</g></g>`).join('');
 hair($('pillars'));
 $('labs').innerHTML = PILL.map(([, l, x], i) => `<div class="lab" id="lb${i}" style="left:${x}px;top:0px">${l}</div>`).join('');
 
@@ -134,7 +134,7 @@ $('name').innerHTML = [...'Motor'].map(c => `<span>${c}</span>`).join('') + [...
 const letters = [...document.querySelectorAll('.name span')];
 
 // the needle simply glides up into place
-const needleAngle = t => 135 + (332.5 - 135) * ease(k(t, 12.0, 13.5));
+const needleAngle = t => 135 + (332.5 - 135) * ease(k(t, 13.4, 15.2));
 
 window.seek = function (t) {
   $('black').style.opacity = 1 - k(t, 0, .6);
@@ -174,40 +174,47 @@ window.seek = function (t) {
   PILL.forEach(([, , x], i) => {
     const bt = BEATS[PILLAR_BEATS[i]][0], a = t - bt;
     const rise = out(k(a, 0, .7));
-    const restY = LY - 250, sy = restY + (1 - rise) * 160;
-    const m0 = 10.3 + i * .2, m = ease(k(t, m0, m0 + 1.9));                  // the slow drift into the logo
+    const restY = LY - 230, sy = restY + (1 - rise) * 160;                   // where the word rests; its icon sits above it
+    const m0 = 10.6 + i * .45, m = ease(k(t, m0, m0 + 2.6));                 // a slow, staggered drift into the logo
     const [cx0, cy0] = SEG_C[i], tx = gx(cx0), ty = gy(cy0);
-    const cxp = (x + tx) / 2, cyp = Math.min(restY, ty) - 120;               // a gentle arc, not a straight line
-    const px = (1 - m) * (1 - m) * x + 2 * (1 - m) * m * cxp + m * m * tx, py = (1 - m) * (1 - m) * sy + 2 * (1 - m) * m * cyp + m * m * ty;
+    const cxp = (x + tx) / 2, cyp = Math.min(restY - 160, ty) - 90;          // a gentle arc, not a straight line
+    const bez = (p, a0, c, b0) => (1 - p) * (1 - p) * a0 + 2 * (1 - p) * p * c + p * p * b0;
+    const px = bez(m, x, cxp, tx), py = bez(m, sy, cyp, ty);
+    const fade = a < 0 ? 0 : out(k(a, 0, .6)) * (1 - k(m, .5, 1));
     const lb = $('lb' + i);
-    lb.style.left = px + 'px'; lb.style.top = (py - 26) + 'px';
-    lb.style.opacity = a < 0 ? 0 : out(k(a, 0, .6)) * (1 - k(m, .45, 1));
-    lb.style.transform = `scale(${1 - .5 * m})`;
+    lb.style.left = px + 'px'; lb.style.top = (py - 24) + 'px';
+    lb.style.opacity = fade; lb.style.transform = `scale(${1 - .5 * m})`;
     lb.style.filter = `blur(${(1 - rise) * 8 + m * 9}px)`;
-    // its segment fades in softly underneath as the word dissolves into it
-    const land = ease(k(t, m0 + .9, m0 + 2.3)), sg = $('sg' + i);
+    // the icon, in its thin ring, rises with the word and travels just above it
+    const size = 130 * (1 - .45 * m), iy = py - 120 * (1 - m);
+    const el = $('pl' + i);
+    el.setAttribute('transform', `translate(${px - size / 2} ${iy - size / 2}) scale(${size / 48})`);
+    el.setAttribute('opacity', fade * .95);
+    el.style.filter = `blur(${(1 - rise) * 6 + m * 7}px)`;
+    // its segment fades in softly underneath as the icon and word dissolve into it
+    const land = ease(k(t, m0 + 1.3, m0 + 3.1)), sg = $('sg' + i);
     sg.setAttribute('opacity', .62 * land);
     sg.setAttribute('fill', `rgba(0,196,127,${.2 * land})`);
   });
-  $('halo').setAttribute('opacity', .55 * out(k(t, 11.4, 13)) * (.8 + .2 * Math.sin(t * 2.2)));
+  $('halo').setAttribute('opacity', .55 * out(k(t, 12.4, 15)) * (.8 + .2 * Math.sin(t * 2.2)));
   // ---- the needle: hub pops, needle jerks up, settles ----
-  const ang = needleAngle(t), hub = .85 * out(k(t, 11.7, 12.4));
+  const ang = needleAngle(t), hub = .85 * out(k(t, 13.0, 13.8));
   $('needle').setAttribute('transform', `rotate(${ang - 332.5} 256 282)`);
   $('needle').setAttribute('opacity', hub); $('hub').setAttribute('opacity', hub);
   
   // ---- name, tagline, coming soon ----
-  letters.forEach((el, i) => { const p = out(k(t, 12.9 + i * .07, 13.6 + i * .07)); el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 40}px)`; el.style.filter = `blur(${(1 - p) * 10}px)`; });
-  $('name').style.textShadow = `0 0 40px rgba(0,196,127,${.3 * out(k(t, 13.4, 14))})`;
-  $('tag').style.opacity = out(k(t, 13.7, 14.2));
-  const s = out(k(t, 14.0, 14.5));
+  letters.forEach((el, i) => { const p = out(k(t, 15.3 + i * .09, 16.2 + i * .09)); el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 40}px)`; el.style.filter = `blur(${(1 - p) * 10}px)`; });
+  $('name').style.textShadow = `0 0 40px rgba(0,196,127,${.3 * out(k(t, 16.2, 17))})`;
+  $('tag').style.opacity = out(k(t, 16.6, 17.4));
+  const s = out(k(t, 17.3, 18.0));
   $('soon').style.opacity = s; $('soon').style.transform = `translateY(${(1 - s) * 16}px)`;
   const gp = .5 + .15 * Math.sin(t * 3);
   $('soon').style.boxShadow = `inset 0 0 0 1.5px rgba(124,245,200,.6), 0 0 ${28 + 30 * gp}px -6px rgba(0,196,127,${gp})`;
   // the trace calms and dims a little once the brand is on screen
-  const calm = 1 - .5 * k(t, 12.4, 13.4);
+  const calm = 1 - .5 * k(t, 14.5, 16);
   ['lineHot', 'lineMid'].forEach(id => $(id).style.opacity = (id === 'lineHot' ? 1 : .6) * calm);
 };
 seek(0);
-if (!location.search.includes('still')) { const st = performance.now(); (function f() { seek(((performance.now() - st) / 1000) % 15); requestAnimationFrame(f); })(); }
+if (!location.search.includes('still')) { const st = performance.now(); (function f() { seek(((performance.now() - st) / 1000) % 19); requestAnimationFrame(f); })(); }
 </script>
 </body></html>

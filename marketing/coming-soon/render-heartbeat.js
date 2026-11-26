@@ -1,18 +1,18 @@
-// Turns heartbeat.html ("Every vehicle has a heartbeat") into a 15-second vertical video, 1080 x 1920, 30 fps.
+// Turns heartbeat.html ("Every vehicle has a heartbeat") into a 19-second vertical video, 1080 x 1920, 30 fps.
 // Run from the project folder: node marketing/coming-soon/render-heartbeat.js          (the video)
 //                              node marketing/coming-soon/render-heartbeat.js stills   (a few frames to check the look)
 // Needs Playwright and ffmpeg (both are in Claude's cloud sessions) and internet for the font.
 const { chromium } = require('playwright');
 const { spawn } = require('child_process');
 const path = require('path');
-const DIR = __dirname, FPS = 30, SECS = 15;
+const DIR = __dirname, FPS = 30, SECS = 19;
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
   await p.goto('file://' + path.join(DIR, 'heartbeat.html') + '?still');
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(600);
   if (process.argv[2] === 'stills') {
-    for (const t of [2.0, 4.6, 8.2, 10.2, 11.0, 11.6, 12.2, 12.9, 13.6, 14.9]) {
+    for (const t of [8.2, 10.2, 11.6, 12.6, 13.6, 14.6, 15.8, 17.0, 18.6]) {
       await p.evaluate(t => seek(t), t);
       await p.screenshot({ path: path.join(DIR, `check-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 80 });
     }
