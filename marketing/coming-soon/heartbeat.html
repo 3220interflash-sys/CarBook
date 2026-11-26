@@ -3,10 +3,11 @@
 <!-- "Every vehicle has a heartbeat": MotorPal coming-soon story, 1080 x 1920, 15 seconds.
      1. A heart-monitor trace sweeps a black screen (steady mint beats).
      2. The rhythm skips and turns honey, faint warning lights flicker, then it flatlines.
-     3. A jolt restarts it; on four beats the four pillars rise out of the spikes (calendar, wrench, chart, shield).
-     4. The four icons fly in as the four segments of the MotorPal gauge; the needle jerks up; name, tagline, Coming soon.
+     3. A jolt restarts it; on four beats the four pillars rise out of the spikes as words.
+     4. The words drift up and dissolve into the four segments of the MotorPal gauge, which fades in softly;
+        the needle moves up; the name sits below the logo, then the tagline, and Coming soon below the line.
      Every frame is drawn by seek(t); render with: node marketing/coming-soon/render-heartbeat.js -->
-<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@200;300&family=Plus+Jakarta+Sans:wght@500;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=Plus+Jakarta+Sans:wght@500;800&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{width:1080px;height:1920px;overflow:hidden;background:#020806;color:#EAF2EE}
@@ -14,18 +15,19 @@ html,body{width:1080px;height:1920px;overflow:hidden;background:#020806;color:#E
   linear-gradient(rgba(0,196,127,.045) 1px,transparent 1px) 0 0/45px 45px,
   linear-gradient(90deg,rgba(0,196,127,.045) 1px,transparent 1px) 0 0/45px 45px}
 #vig{position:absolute;inset:0;background:radial-gradient(1000px 1300px at 50% 900px,transparent 30%,rgba(2,8,6,.92) 85%)}
-#flash{position:absolute;inset:0;background:radial-gradient(700px 500px at 50% 960px,rgba(124,245,200,.55),transparent 70%);opacity:0}
+#flash{position:absolute;inset:0;background:radial-gradient(700px 500px at 50% 1000px,rgba(124,245,200,.55),transparent 70%);opacity:0}
 svg{position:absolute;inset:0}
-.say{position:absolute;left:80px;right:80px;top:560px;text-align:center;font-family:Raleway,sans-serif;font-weight:200;font-size:54px;letter-spacing:5px;line-height:1.5;opacity:0;
-  text-shadow:0 0 18px rgba(0,196,127,.55)}
-.lab{position:absolute;width:300px;margin-left:-150px;text-align:center;font-family:Raleway,sans-serif;font-weight:300;font-size:27px;letter-spacing:3px;color:#BDEFD8;opacity:0;
-  text-shadow:0 0 12px rgba(0,196,127,.6)}
-#end{position:absolute;left:0;right:0;top:1060px;text-align:center}
-.name{font-family:'Plus Jakarta Sans',sans-serif;font-size:132px;font-weight:800;letter-spacing:-.035em;line-height:1;white-space:nowrap}
+.say{position:absolute;left:70px;right:70px;top:600px;text-align:center;font-family:'Cormorant Garamond',serif;font-weight:300;font-size:70px;letter-spacing:1.5px;line-height:1.25;opacity:0;
+  text-shadow:0 0 22px rgba(0,196,127,.45)}
+.lab{position:absolute;width:360px;margin-left:-180px;text-align:center;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:42px;letter-spacing:.5px;color:#D6F5E6;opacity:0;white-space:nowrap;
+  text-shadow:0 0 16px rgba(0,196,127,.55);transform-origin:50% 50%}
+#end{position:absolute;left:0;right:0;top:722px;text-align:center}
+#soonWrap{position:absolute;left:0;right:0;top:1062px;text-align:center}
+.name{font-family:'Plus Jakarta Sans',sans-serif;font-size:118px;font-weight:800;letter-spacing:-.035em;line-height:1;white-space:nowrap}
 .name span{display:inline-block;opacity:0}
 .name .pal{color:#00C47F}
-.tag{margin-top:30px;font-family:Raleway,sans-serif;font-weight:300;font-size:36px;letter-spacing:3px;color:#BFD6CC;opacity:0}
-.soon{display:inline-block;margin-top:46px;padding:14px 40px;border-radius:999px;font-family:Raleway,sans-serif;font-weight:300;font-size:36px;letter-spacing:8px;color:#7CF5C8;
+.tag{margin-top:18px;font-family:'Cormorant Garamond',serif;font-style:italic;font-weight:300;font-size:44px;letter-spacing:.5px;color:#C4DDD2;opacity:0}
+.soon{display:inline-block;padding:12px 42px;border-radius:999px;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:42px;letter-spacing:6px;color:#9DF7D3;
   background:rgba(0,196,127,.07);opacity:0}
 #black{position:absolute;inset:0;background:#000;opacity:1}
 </style></head>
@@ -51,11 +53,12 @@ svg{position:absolute;inset:0}
 <div class="say" id="say1">Every vehicle<br>has a heartbeat.</div>
 <div class="say" id="say2">Most of us only notice<br>when it skips.</div>
 <div id="labs"></div>
-<div id="end"><p class="name" id="name"></p><p class="tag" id="tag">Your vehicle’s whole life, in one place.</p><p class="soon" id="soon">Coming soon</p></div>
+<div id="end"><p class="name" id="name"></p><p class="tag" id="tag">Your vehicle’s whole life, in one place.</p></div>
+<div id="soonWrap"><p class="soon" id="soon">Coming soon</p></div>
 <div id="vig"></div><div id="black"></div>
 <script>
 const $ = id => document.getElementById(id);
-const W = 1080, LY = 960, SPEED = 300, GAP = 46;
+const W = 1080, LY = 1000, SPEED = 300, GAP = 46;
 const cl = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const k = (t, a, b) => cl((t - a) / (b - a));
 const out = p => 1 - Math.pow(1 - p, 3);
@@ -69,7 +72,7 @@ const BEATS = [
   [3.72, .55], [3.98, 1.25], [4.9, .35], [5.12, 1.5],     // it skips
   [6.3, 1.7],                                            // the jolt that restarts it (after a flatline)
   [7.05, 1.05], [7.95, 1.05], [8.85, 1.05], [9.75, 1.05], // the four pillars rise from these
-  [10.65, .85], [11.55, .8], [12.45, .75], [13.35, .7], [14.25, .7]];
+  [10.65, .8], [11.55, .65], [12.45, .45], [13.35, .4], [14.25, .4]];   // calmer and lower once the brand is on screen
 const PILLAR_BEATS = [8, 9, 10, 11];
 function wave(tau) {   // height of the trace at moment tau (px, up is negative)
   let y = 0;
@@ -103,14 +106,14 @@ const iconSvg = (name, color) => `<g fill="none" stroke="${color}" stroke-lineca
 const hair = root => { root.querySelectorAll('path,rect,circle').forEach(e => { e.setAttribute('vector-effect', 'non-scaling-stroke'); e.setAttribute('stroke-width', 2); }); root.querySelectorAll('.f').forEach(e => { e.setAttribute('fill', '#7CF5C8'); e.setAttribute('stroke', 'none'); }); };
 
 // faint honey warning lights in the dark while the rhythm skips
-const GHOSTS = [['engine', 230, 420, 150, 3.85], ['oil', 860, 1330, 170, 4.35], ['engine', 820, 520, 110, 4.95], ['oil', 200, 1240, 120, 5.3]];
+const GHOSTS = [];   // no warning icons: the owner wants words only
 $('ghosts').innerHTML = GHOSTS.map(([n, x, y, s], i) => `<g id="gh${i}" transform="translate(${x - s / 2} ${y - s / 2}) scale(${s / 48})" opacity="0" filter="url(#glow)">${iconSvg(n, '#E8B46A')}</g>`).join('');
 hair($('ghosts'));
 
 // the four pillars, each in a thin ring, rising from its beat
 const PILL = [['calendar', 'Reminders', 135], ['wrench', 'Service records', 405], ['chart', 'Fuel and costs', 675], ['shield', 'Warranties', 945]];
 const ring = `<circle cx="24" cy="24" r="31" opacity=".5"/>` + Array.from({ length: 24 }, (_, j) => `<path d="M24 -5.5v${j % 6 ? 1.2 : 2.6}" transform="rotate(${j * 15} 24 24)" opacity=".4"/>`).join('');
-$('pillars').innerHTML = PILL.map(([n], i) => `<g id="pl${i}" opacity="0" filter="url(#glow)"><g fill="none" stroke="#7CF5C8">${ring}</g><g transform="translate(7 7) scale(.71)">${iconSvg(n, '#C9FFE9')}</g></g>`).join('');
+$('pillars').innerHTML = ''; void PILL.map(([n], i) => `<g id="pl${i}" opacity="0" filter="url(#glow)"><g fill="none" stroke="#7CF5C8">${ring}</g><g transform="translate(7 7) scale(.71)">${iconSvg(n, '#C9FFE9')}</g></g>`).join('');
 hair($('pillars'));
 $('labs').innerHTML = PILL.map(([, l, x], i) => `<div class="lab" id="lb${i}" style="left:${x}px;top:0px">${l}</div>`).join('');
 
@@ -121,21 +124,17 @@ const SEG = [
   'M268.11 110.43 A172.0 172.0 0 0 1 412.08 209.73 L372.15 228.22 A128.0 128.0 0 0 0 265.01 154.32 Z',
   'M420.97 233.31 A172.0 172.0 0 0 1 378.32 402.92 L347.03 371.99 A128.0 128.0 0 0 0 378.76 245.77 Z'];
 const SEG_C = [[128, 318], [168, 168], [344, 168], [384, 318]];   // middle of each segment
-const GC = { x: 540, y: 690, s: 1.0 };
+const GC = { x: 540, y: 560, s: 1.0 };
 const gx = x => GC.x + (x - 256) * GC.s, gy = y => GC.y + (y - 282) * GC.s;
 $('gauge').setAttribute('transform', `translate(${GC.x - 256 * GC.s} ${GC.y - 282 * GC.s}) scale(${GC.s})`);
-$('gauge').innerHTML = SEG.map((d, i) => `<path id="sg${i}" d="${d}" stroke="#00C47F" stroke-width="2.2" stroke-linejoin="round" fill="rgba(0,196,127,0)" opacity="0" filter="url(#glow)"/>`).join('')
-  + `<g id="needle" opacity="0"><path d="M256 282 L352 232" stroke="#fff" stroke-width="22" stroke-linecap="round" filter="url(#glow)"/></g><circle id="hub" cx="256" cy="282" r="26" fill="#fff" opacity="0" filter="url(#glow)"/>`;
+$('gauge').innerHTML = `<filter id="gsoft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`
+  + SEG.map((d, i) => `<path id="sg${i}" d="${d}" stroke="#00C47F" stroke-width="1.8" stroke-linejoin="round" fill="rgba(0,196,127,0)" opacity="0" filter="url(#gsoft)"/>`).join('')
+  + `<g id="needle" opacity="0"><path d="M256 282 L352 232" stroke="#DDEFE7" stroke-width="20" stroke-linecap="round" filter="url(#gsoft)"/></g><circle id="hub" cx="256" cy="282" r="24" fill="#DDEFE7" opacity="0" filter="url(#gsoft)"/>`;
 $('name').innerHTML = [...'Motor'].map(c => `<span>${c}</span>`).join('') + [...'Pal'].map(c => `<span class="pal">${c}</span>`).join('');
 const letters = [...document.querySelectorAll('.name span')];
 
-function needleAngle(t) {
-  const p = k(t, 11.6, 12.7);
-  let q = cl(p + .06 * Math.sin(p * Math.PI * 7) * (1 - p), 0, 1.2);
-  let a = 135 + (332.5 - 135) * back(q);
-  if (t > 12.7) a += 6 * Math.sin((t - 12.7) * 26) * Math.pow(1 - k(t, 12.7, 13.5), 2);
-  return a;
-}
+// the needle simply glides up into place
+const needleAngle = t => 135 + (332.5 - 135) * ease(k(t, 12.0, 13.5));
 
 window.seek = function (t) {
   $('black').style.opacity = 1 - k(t, 0, .6);
@@ -171,40 +170,41 @@ window.seek = function (t) {
   // ---- honey warning ghosts while it skips ----
   GHOSTS.forEach((gh, i) => { const a = t - gh[4]; const f = a < 0 ? 0 : a < .4 ? [1, .2, .8, .1, .9, .5, 1, .3][Math.floor(a / .05)] ?? 1 : 1;
     $('gh' + i).setAttribute('opacity', (a > 0 ? .28 * f : 0) * (1 - k(t, 5.9, 6.3))); });
-  // ---- the four pillars rise out of their beats, then fly into the gauge ----
+  // ---- the four pillars rise out of their beats as words, then drift up and dissolve into the gauge ----
   PILL.forEach(([, , x], i) => {
     const bt = BEATS[PILLAR_BEATS[i]][0], a = t - bt;
-    const rise = out(k(a, 0, .55)), fly = ease(k(t, 10.5 + i * .12, 11.5 + i * .12));
-    const sx = x, sy = LY - 300 + (1 - rise) * 200;                 // where it rests above its beat
-    const [cx0, cy0] = SEG_C[i], tx = gx(cx0), ty = gy(cy0);          // where its segment is in the gauge
-    const px = sx + (tx - sx) * fly, py = sy + (ty - sy) * fly, sc = (1 - .55 * fly) * (.7 + .3 * rise);
-    const flick = a < 0 ? 0 : a < .35 ? [1, .3, .9, .4, 1, .7, 1][Math.floor(a / .05)] ?? 1 : 1;
-    const el = $('pl' + i), size = 150;
-    el.setAttribute('transform', `translate(${px - size / 2 * sc} ${py - size / 2 * sc}) scale(${size / 48 * sc})`);
-    el.setAttribute('opacity', a < 0 ? 0 : flick * (1 - k(t, 11.2 + i * .12, 11.6 + i * .12)));
+    const rise = out(k(a, 0, .7));
+    const restY = LY - 250, sy = restY + (1 - rise) * 160;
+    const m0 = 10.3 + i * .2, m = ease(k(t, m0, m0 + 1.9));                  // the slow drift into the logo
+    const [cx0, cy0] = SEG_C[i], tx = gx(cx0), ty = gy(cy0);
+    const cxp = (x + tx) / 2, cyp = Math.min(restY, ty) - 120;               // a gentle arc, not a straight line
+    const px = (1 - m) * (1 - m) * x + 2 * (1 - m) * m * cxp + m * m * tx, py = (1 - m) * (1 - m) * sy + 2 * (1 - m) * m * cyp + m * m * ty;
     const lb = $('lb' + i);
-    lb.style.top = (sy + 92) + 'px'; lb.style.opacity = a < 0 ? 0 : out(k(a, .15, .6)) * (1 - k(t, 10.3, 10.7));
-    // its segment lights as the icon lands
-    const land = k(t, 11.2 + i * .12, 11.6 + i * .12), sg = $('sg' + i);
-    sg.setAttribute('opacity', land);
-    sg.setAttribute('fill', `rgba(0,196,127,${.55 * land + .25 * Math.max(0, 1 - Math.abs(t - 11.55 - i * .12) / .2)})`);
+    lb.style.left = px + 'px'; lb.style.top = (py - 26) + 'px';
+    lb.style.opacity = a < 0 ? 0 : out(k(a, 0, .6)) * (1 - k(m, .45, 1));
+    lb.style.transform = `scale(${1 - .5 * m})`;
+    lb.style.filter = `blur(${(1 - rise) * 8 + m * 9}px)`;
+    // its segment fades in softly underneath as the word dissolves into it
+    const land = ease(k(t, m0 + .9, m0 + 2.3)), sg = $('sg' + i);
+    sg.setAttribute('opacity', .62 * land);
+    sg.setAttribute('fill', `rgba(0,196,127,${.2 * land})`);
   });
-  $('halo').setAttribute('opacity', out(k(t, 11.2, 12.4)) * (.8 + .2 * Math.sin(t * 2.2)));
+  $('halo').setAttribute('opacity', .55 * out(k(t, 11.4, 13)) * (.8 + .2 * Math.sin(t * 2.2)));
   // ---- the needle: hub pops, needle jerks up, settles ----
-  const ang = needleAngle(t), hub = out(k(t, 11.4, 11.8));
+  const ang = needleAngle(t), hub = .85 * out(k(t, 11.7, 12.4));
   $('needle').setAttribute('transform', `rotate(${ang - 332.5} 256 282)`);
   $('needle').setAttribute('opacity', hub); $('hub').setAttribute('opacity', hub);
-  $('hub').setAttribute('r', 26 * (.4 + .6 * back(k(t, 11.4, 11.9))));
+  
   // ---- name, tagline, coming soon ----
-  letters.forEach((el, i) => { const p = out(k(t, 12.5 + i * .06, 13.0 + i * .06)); el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 40}px)`; el.style.filter = `blur(${(1 - p) * 10}px)`; });
-  $('name').style.textShadow = `0 0 40px rgba(0,196,127,${.35 * out(k(t, 13, 13.6))})`;
-  $('tag').style.opacity = out(k(t, 13.2, 13.8));
-  const s = back(k(t, 13.6, 14.1));
-  $('soon').style.opacity = k(t, 13.6, 13.9); $('soon').style.transform = `scale(${.7 + .3 * s})`;
-  const gp = t > 14.1 ? .55 + .3 * Math.sin((t - 14.1) * 3) : .6;
+  letters.forEach((el, i) => { const p = out(k(t, 12.9 + i * .07, 13.6 + i * .07)); el.style.opacity = p; el.style.transform = `translateY(${(1 - p) * 40}px)`; el.style.filter = `blur(${(1 - p) * 10}px)`; });
+  $('name').style.textShadow = `0 0 40px rgba(0,196,127,${.3 * out(k(t, 13.4, 14))})`;
+  $('tag').style.opacity = out(k(t, 13.7, 14.2));
+  const s = out(k(t, 14.0, 14.5));
+  $('soon').style.opacity = s; $('soon').style.transform = `translateY(${(1 - s) * 16}px)`;
+  const gp = .5 + .15 * Math.sin(t * 3);
   $('soon').style.boxShadow = `inset 0 0 0 1.5px rgba(124,245,200,.6), 0 0 ${28 + 30 * gp}px -6px rgba(0,196,127,${gp})`;
   // the trace calms and dims a little once the brand is on screen
-  const calm = 1 - .45 * k(t, 12.4, 13.4);
+  const calm = 1 - .5 * k(t, 12.4, 13.4);
   ['lineHot', 'lineMid'].forEach(id => $(id).style.opacity = (id === 'lineHot' ? 1 : .6) * calm);
 };
 seek(0);

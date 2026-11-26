@@ -12,7 +12,7 @@ const DIR = __dirname, FPS = 30, SECS = 15;
   await p.goto('file://' + path.join(DIR, 'heartbeat.html') + '?still');
   await p.evaluate(() => document.fonts.ready); await p.waitForTimeout(600);
   if (process.argv[2] === 'stills') {
-    for (const t of [1.8, 3.0, 4.4, 5.5, 6.35, 7.4, 9.0, 10.3, 11.0, 11.7, 12.6, 14.5]) {
+    for (const t of [2.0, 4.6, 8.2, 10.2, 11.0, 11.6, 12.2, 12.9, 13.6, 14.9]) {
       await p.evaluate(t => seek(t), t);
       await p.screenshot({ path: path.join(DIR, `check-${String(t).replace('.', '_')}.jpg`), type: 'jpeg', quality: 80 });
     }
