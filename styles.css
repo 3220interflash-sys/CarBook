@@ -911,3 +911,21 @@ body { background: var(--bg); color: var(--fg); }
 .tbl .hint { margin: 4px 0 10px; }
 :root[data-bg="glow"] .duo-t.key { background: rgba(0, 196, 127, .07); box-shadow: inset 0 0 0 1px rgba(0, 196, 127, .45), 0 0 30px -12px rgba(0, 196, 127, .8); }
 :root[data-bg="glow"] .duo-t.key .n { color: #3EE0A4; text-shadow: 0 0 24px rgba(0, 196, 127, .45); }
+
+/* ---------- Reading the pump and dashboard photos (fill-up form, claude.ai preview only) ---------- */
+.reader { margin-top: 12px; }
+.reader .btn svg { width: 20px; height: 20px; margin-right: 8px; vertical-align: -4px; }
+.read-status { margin: 10px 2px 0; font-size: 14px; line-height: 1.45; color: var(--mut); }
+.read-status:empty { display: none; }
+.read-status.ok { color: var(--green-ink); }
+.read-status.busy::before { content: ""; display: inline-block; width: 12px; height: 12px; margin-right: 8px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; vertical-align: -1px; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.read-warn { display: flex; gap: 12px; align-items: flex-start; margin-top: 10px; padding: 12px; border-radius: 16px; background: var(--surface-2); }
+.read-warn .rw-t { margin: 0; font-weight: 800; }
+.read-warn .rw-s { margin: 2px 0 6px; font-size: 13.5px; color: var(--mut); }
+.read-warn.bad .rw-t { color: var(--red-text); } .read-warn.warn .rw-t { color: var(--amber-text); }
+.read-warn .rw-c { display: flex; align-items: center; gap: 8px; min-height: 44px; font-weight: 600; font-size: 14px; }
+.read-warn .rw-c input { width: 22px; height: 22px; accent-color: var(--green); }
+#dlg input.filled { box-shadow: 0 0 0 2px var(--green); transition: box-shadow .3s; }
+.read-notes { margin: 8px 0 0; padding-left: 18px; color: var(--fg); }
+.read-notes li + li { margin-top: 6px; }

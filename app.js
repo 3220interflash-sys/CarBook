@@ -631,7 +631,9 @@ function renewForm(d) {
 function fuelForm(r) {
   const v = veh(), isNew = !r;
   sheet(t(isNew ? 'addFuelTitle' : 'editFuelTitle'),
-    photoField(r?.photo, 'dashPhoto') + `<div class="help">${esc(t('fuelPhotoHelp'))}</div>` +
+    `<div id="pumpBox" hidden><label for="f_pump">${esc(t('pumpPhoto'))}</label><input id="f_pump" name="pump" type="file" accept="image/*" capture="environment"></div>` +
+    photoField(r?.photo, 'dashPhoto') + `<div class="help" id="photoHelp">${esc(t('fuelPhotoHelp'))}</div>` +
+    `<div class="reader" id="reader" hidden><button type="button" class="btn quiet wide" id="readBtn">${svg(ICONS.camera)}${esc(t('readBtn'))}</button><p class="read-status" id="readStatus" aria-live="polite"></p><div id="readWarn"></div></div>` +
     `<div class="two"><div>${field(t('litres'), 'litres', { type: 'number', step: '0.01', mode: 'decimal', value: r?.litres, req: true })}</div><div>${field(t('totalRs'), 'total', { type: 'number', step: '0.01', mode: 'decimal', value: r?.total, req: true })}</div></div>` +
     field(t('odometer'), 'odo', { type: 'number', mode: 'numeric', value: r?.odo ?? v.odo, req: true }) +
     field(t('date'), 'date', { type: 'date', value: r?.date || todayISO(), req: true }),
@@ -641,9 +643,74 @@ function fuelForm(r) {
       const rec = r || newRecord(v);
       Object.assign(rec, { litres, total, odo, date: fd.get('date') });
       if (!isNew) rec.updatedAt = Date.now();
-      await savePhoto(fd, rec); if (isNew) db.fuel.push(rec); v.odo = Math.max(v.odo, odo); save();
+      await savePhoto(fd, rec); if (isNew) db.fuel.push(rec); v.odo = Math.max(v.odo, odo);
+      // warning lights the owner chose to record from the dashboard photo
+      fd.getAll('warn').forEach(code => { if (lightOf(code) && !openAlerts(v).some(a => a.code === code))
+        db.alerts.push({ ...newRecord(v), code, date: rec.date, odo, still: 'on', note: t('fromPhotoNote') }); });
+      save();
     },
-    { del: !isNew && (async () => { db.fuel = db.fuel.filter(x => x.id !== r.id); if (r.photo) delPhoto(r.id); save(); }), after: f => r?.photo && showThumb(f, r.id) });
+    { del: !isNew && (async () => { db.fuel = db.fuel.filter(x => x.id !== r.id); if (r.photo) delPhoto(r.id); save(); }), after: f => { if (r?.photo) showThumb(f, r.id); photoReader(f, v); } });
+}
+
+// ---------- reading the pump and dashboard photos (only where the app can ask Claude, e.g. the claude.ai preview) ----------
+// Reads the amount, litres and price from the pump and the odometer from the dashboard, and fills the form for the owner
+// to check. MotorPal works in Sri Lankan units: rupees, litres and km. An amount in another currency is not copied;
+// miles are converted to km. Only real warning lights are flagged, never normal ones such as the parking brake when parked.
+async function photoReader(f, v) {
+  if (!aiSample?.json) return;
+  const caps = await aiSample.limits().catch(() => null); if (!caps?.images || !f.isConnected) return;
+  const pumpIn = f.querySelector('#f_pump'), dashIn = f.querySelector('#f_photo'), btn = f.querySelector('#readBtn'), st = f.querySelector('#readStatus'), warnBox = f.querySelector('#readWarn');
+  f.querySelector('#pumpBox').hidden = false; f.querySelector('#reader').hidden = false;
+  f.querySelector('#photoHelp').textContent = t('readHelp');
+  const picked = () => [pumpIn.files[0], dashIn.files[0]];
+  const update = () => { btn.disabled = !picked().some(Boolean); }; update();
+  pumpIn.addEventListener('change', update); dashIn.addEventListener('change', update);
+  const setField = (name, val) => { const el = f.querySelector(`[name="${name}"]`); if (!el) return; el.value = val; el.classList.add('filled'); setTimeout(() => el.classList.remove('filled'), 2500); };
+  btn.onclick = async () => {
+    const [pump, dash] = picked(), images = [pump, dash].filter(Boolean);
+    btn.disabled = true; st.className = 'read-status busy'; st.textContent = t('reading'); warnBox.innerHTML = '';
+    const which = pump && dash ? 'Image 1 is a fuel pump display. Image 2 is the vehicle dashboard.' : pump ? 'The image is a fuel pump display.' : 'The image is a vehicle dashboard.';
+    const codes = LIGHTS.filter(l => l.level !== 'info').map(l => `${l.code}: ${STRINGS.en['light_' + l.code + '_name'] || l.code}`).join('\n');
+    const prompt = `You read photos for MotorPal, a vehicle records app. ${which}
+Read only what is clearly visible. Use null for anything you cannot read with confidence; never guess.
+Reply with only this JSON:
+{"pump":{"total":number|null,"currency":string|null,"litres":number|null,"pricePerLitre":number|null,"fuel":"petrol"|"diesel"|null},
+ "dashboard":{"odometer":number|null,"unit":"km"|"miles"|null,"warnings":[string]}}
+Pump: "total" is the amount of this sale, "litres" the volume delivered, "pricePerLitre" the price of the grade that was dispensed (the highlighted one), in the same money unit as the total (158.9 pence next to a pound total is 1.589). "currency" is an ISO code from the symbol or label: Rs or LKR is "LKR", £ is "GBP"; null if no symbol is shown. Use null for the whole pump object's fields if there is no pump photo.
+Dashboard: "odometer" is the vehicle's total distance (the odometer, not a trip meter and not the range left), with its unit. "warnings" lists codes from the list below, only for lights that signal a fault or a problem. Leave out normal status lights: the parking brake or brake light while the vehicle is parked or the handbrake is on, the seat belt reminder, door open, headlights, fog lights, high beam, turn signals, cruise control, eco or ready lights. If unsure, leave it out.
+Codes:
+${codes}`;
+    try {
+      const res = await aiSample.json(prompt, { images, cache: false });
+      const p = res?.pump || {}, d = res?.dashboard || {}, notes = [];
+      const num = x => (typeof x === 'number' && isFinite(x) && x > 0) ? x : null;
+      const litres = num(p.litres), total = num(p.total), price = num(p.pricePerLitre), odo = num(d.odometer);
+      const cur = typeof p.currency === 'string' ? p.currency.toUpperCase() : null, rupees = !cur || cur === 'LKR';
+      let filled = 0;
+      if (litres) { setField('litres', +litres.toFixed(2)); filled++; }
+      if (total && rupees) { setField('total', +total.toFixed(2)); filled++; }
+      if (total && !rupees) { let amt; try { amt = new Intl.NumberFormat(loc(), { style: 'currency', currency: cur }).format(total); } catch (_) { amt = `${cur} ${total.toFixed(2)}`; } notes.push(t('readForeign', amt)); }
+      if (litres && total && price && Math.abs(litres * price - total) / total > .03) notes.push(t('readMismatch'));
+      if (odo) {
+        const miles = d.unit === 'miles', km = Math.round(miles ? odo * 1.609344 : odo);
+        setField('odo', km); filled++;
+        if (miles) notes.push(t('readMiles', n0(odo), n0(km)));
+        if (km < v.odo - 50) notes.push(t('readOdoLow', n0(v.odo)));
+      }
+      const fuelSeen = p.fuel === 'diesel' ? 'Diesel' : p.fuel === 'petrol' ? 'Petrol' : null;
+      if (fuelSeen && (v.fuel === 'Petrol' || v.fuel === 'Diesel') && fuelSeen !== v.fuel) notes.push(t('readFuelOther', t('fuel_' + fuelSeen).toLowerCase(), t('fuel_' + v.fuel).toLowerCase()));
+      const warns = [...new Set(Array.isArray(d.warnings) ? d.warnings : [])].map(c => lightOf(String(c))).filter(l => l && l.level !== 'info');
+      if (warns.length) warnBox.innerHTML = warns.map(l => { const open = openAlerts(v).find(a => a.code === l.code);
+        return `<div class="read-warn ${LEVEL_TAG[l.level]}">${lightArt(l)}<div><p class="rw-t">${esc(t('readWarnTitle', lightName(l)))}</p><p class="rw-s">${esc(t('lvlLong_' + l.level))}</p>
+        ${open ? `<p class="rw-s">${esc(t('readWarnKnown', fmtD(open.date)))}</p>` : `<label class="rw-c"><input type="checkbox" name="warn" value="${esc(l.code)}" checked> ${esc(t('readWarnRecord'))}</label>`}</div></div>`; }).join('');
+      st.className = 'read-status ' + (filled ? 'ok' : 'none');
+      st.innerHTML = `<span>${esc(filled ? t('readDone') : t('readNone'))}</span>${notes.length ? `<ul class="read-notes">${notes.map(n => `<li>${esc(n)}</li>`).join('')}</ul>` : ''}`;
+    } catch (e) {
+      st.className = 'read-status none';
+      if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed', 'images_unavailable'].includes(e?.code)) { f.querySelector('#reader').hidden = true; f.querySelector('#pumpBox').hidden = true; f.querySelector('#photoHelp').textContent = t('fuelPhotoHelp'); }
+      else st.textContent = t(e?.code === 'rate_limited' ? 'readBusy' : e?.code === 'image_rejected' ? 'readBadImage' : 'readFailed');
+    } finally { btn.disabled = !picked().some(Boolean); }
+  };
 }
 
 function serviceForm(s, kind) {

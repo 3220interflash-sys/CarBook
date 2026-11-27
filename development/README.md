@@ -16,4 +16,6 @@ The public website is in `website/` (live at https://3220interflash-sys.github.i
 | `tools/build-catalogue.py` | Rebuilds the parts catalogue (`catalogue.js` and its wording in `strings.js`) from `research/maintenance-checklist/items.json`. Run `python3 development/tools/build-catalogue.py`, then bump `VERSION` in `sw.js`. |
 | `tools/app-screenshots.js` | Retakes the six app screenshots the website shows. Start the app with `python3 -m http.server 8080`, then run `node development/tools/app-screenshots.js`. |
 
+| `tools/build-preview.py` | Builds a one-file copy of the app for the claude.ai preview, where the Ask chat gives real AI answers and fill-up photos can be read. Run `python3 development/tools/build-preview.py <output.html>` and publish it to https://claude.ai/artifact/CUDveuD7fsTdbfHFifAzKB with capabilities `{"sample": {"images": true}}`. |
+
 New development notes, scripts and technical plans (for example the photo-reading server or the Play Store packaging) go in this folder.
